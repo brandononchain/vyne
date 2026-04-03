@@ -1,14 +1,17 @@
 "use client";
 
+import { motion } from "framer-motion";
 import {
   PanelLeftClose,
   PanelLeftOpen,
   Play,
+  Square,
   Save,
   Share2,
   Settings,
   Undo2,
   Redo2,
+  Loader2,
 } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
 import type { VyneNodeData } from "@/lib/types";
@@ -22,7 +25,7 @@ function TopBarButton({
 }: {
   children: React.ReactNode;
   onClick?: () => void;
-  variant?: "ghost" | "primary" | "success";
+  variant?: "ghost" | "primary" | "success" | "danger";
   label: string;
   disabled?: boolean;
 }) {
@@ -35,6 +38,8 @@ function TopBarButton({
       "bg-[var(--vyne-accent)] text-white hover:opacity-90 shadow-sm",
     success:
       "bg-[var(--vyne-success)] text-white hover:opacity-90 shadow-sm",
+    danger:
+      "bg-[var(--vyne-error)] text-white hover:opacity-90 shadow-sm",
   };
 
   return (
@@ -50,10 +55,21 @@ function TopBarButton({
 }
 
 export function TopBar() {
-  const { sidebarOpen, toggleSidebar, nodes, edges, undoStack, redoStack, undo, redo } =
-    useWorkflowStore();
+  const {
+    sidebarOpen,
+    toggleSidebar,
+    nodes,
+    edges,
+    undoStack,
+    redoStack,
+    undo,
+    redo,
+    isSimulating,
+    simulationProgress,
+    startSimulation,
+    stopSimulation,
+  } = useWorkflowStore();
 
-  // Count by node type
   const agentCount = nodes.filter((n) => (n.data as VyneNodeData).type === "agent").length;
   const taskCount = nodes.filter((n) => (n.data as VyneNodeData).type === "task").length;
   const toolCount = nodes.filter((n) => (n.data as VyneNodeData).type === "tool").length;
@@ -69,30 +85,31 @@ export function TopBar() {
 
   return (
     <header
-      className="h-[var(--topbar-height)] bg-white border-b border-[var(--vyne-border)]
-                    flex items-center justify-between px-4 shrink-0"
+      className={`
+        h-[var(--topbar-height)] border-b border-[var(--vyne-border)]
+        flex items-center justify-between px-4 shrink-0 transition-colors duration-300
+        ${isSimulating ? "bg-[var(--vyne-bg-warm)]" : "bg-white"}
+      `}
     >
       {/* Left section */}
       <div className="flex items-center gap-3">
         <button
           onClick={toggleSidebar}
-          className="w-8 h-8 rounded-lg flex items-center justify-center
-                     text-[var(--vyne-text-secondary)] hover:text-[var(--vyne-text-primary)]
-                     hover:bg-[var(--vyne-bg-warm)] transition-colors"
+          disabled={isSimulating}
+          className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors
+            ${isSimulating ? "text-[var(--vyne-text-tertiary)] cursor-not-allowed" : "text-[var(--vyne-text-secondary)] hover:text-[var(--vyne-text-primary)] hover:bg-[var(--vyne-bg-warm)]"}`}
           title={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
         >
-          {sidebarOpen ? (
-            <PanelLeftClose size={16} />
-          ) : (
-            <PanelLeftOpen size={16} />
-          )}
+          {sidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
         </button>
 
         <div className="w-px h-6 bg-[var(--vyne-border)]" />
 
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-[var(--vyne-accent)] flex items-center justify-center">
+          <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors duration-300 ${
+            isSimulating ? "bg-[var(--vyne-success)]" : "bg-[var(--vyne-accent)]"
+          }`}>
             <span className="text-white text-[11px] font-black">V</span>
           </div>
           <div>
@@ -100,56 +117,99 @@ export function TopBar() {
               Vyne
             </h1>
             <p className="text-[10px] text-[var(--vyne-text-tertiary)]">
-              Untitled Workflow
+              {isSimulating ? "Simulation Mode" : "Untitled Workflow"}
             </p>
           </div>
         </div>
 
-        <div className="w-px h-6 bg-[var(--vyne-border)]" />
+        {isSimulating && (
+          <>
+            <div className="w-px h-6 bg-[var(--vyne-border)]" />
+            {/* Simulation progress indicator */}
+            <div className="flex items-center gap-2">
+              <div className="w-24 h-1.5 rounded-full bg-[var(--vyne-border)] overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-[var(--vyne-success)]"
+                  animate={{ width: `${simulationProgress}%` }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                />
+              </div>
+              <span className="text-[10px] font-semibold text-[var(--vyne-success)]">
+                {simulationProgress}%
+              </span>
+            </div>
+          </>
+        )}
 
-        {/* Functional undo/redo */}
-        <div className="flex items-center gap-0.5">
-          <TopBarButton label="Undo (Ctrl+Z)" onClick={undo} disabled={undoStack.length === 0}>
-            <Undo2 size={14} />
-          </TopBarButton>
-          <TopBarButton label="Redo (Ctrl+Shift+Z)" onClick={redo} disabled={redoStack.length === 0}>
-            <Redo2 size={14} />
-          </TopBarButton>
-        </div>
+        {!isSimulating && (
+          <>
+            <div className="w-px h-6 bg-[var(--vyne-border)]" />
+            <div className="flex items-center gap-0.5">
+              <TopBarButton label="Undo (Ctrl+Z)" onClick={undo} disabled={undoStack.length === 0}>
+                <Undo2 size={14} />
+              </TopBarButton>
+              <TopBarButton label="Redo (Ctrl+Shift+Z)" onClick={redo} disabled={redoStack.length === 0}>
+                <Redo2 size={14} />
+              </TopBarButton>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Center status */}
       <div className="flex items-center gap-2">
-        <span className="text-[11px] text-[var(--vyne-text-tertiary)] font-medium">
-          {summary}
-        </span>
+        {isSimulating ? (
+          <div className="flex items-center gap-2">
+            <Loader2 size={12} className="text-[var(--vyne-accent)] animate-spin" />
+            <span className="text-[11px] text-[var(--vyne-accent)] font-semibold">
+              Simulating workflow...
+            </span>
+          </div>
+        ) : (
+          <span className="text-[11px] text-[var(--vyne-text-tertiary)] font-medium">
+            {summary}
+          </span>
+        )}
       </div>
 
       {/* Right section */}
       <div className="flex items-center gap-1.5">
-        <TopBarButton label="Save workflow">
-          <Save size={14} />
-          <span>Save</span>
-        </TopBarButton>
+        {!isSimulating && (
+          <>
+            <TopBarButton label="Save workflow">
+              <Save size={14} />
+              <span>Save</span>
+            </TopBarButton>
+            <TopBarButton label="Share">
+              <Share2 size={14} />
+            </TopBarButton>
+            <TopBarButton label="Settings">
+              <Settings size={14} />
+            </TopBarButton>
+            <div className="w-px h-6 bg-[var(--vyne-border)] mx-1" />
+          </>
+        )}
 
-        <TopBarButton label="Share">
-          <Share2 size={14} />
-        </TopBarButton>
-
-        <TopBarButton label="Settings">
-          <Settings size={14} />
-        </TopBarButton>
-
-        <div className="w-px h-6 bg-[var(--vyne-border)] mx-1" />
-
-        <TopBarButton
-          variant="success"
-          label="Run workflow"
-          disabled={nodes.length === 0}
-        >
-          <Play size={13} />
-          <span>Run Workflow</span>
-        </TopBarButton>
+        {isSimulating ? (
+          <TopBarButton
+            variant="danger"
+            label="Stop simulation"
+            onClick={stopSimulation}
+          >
+            <Square size={11} />
+            <span>Stop Simulation</span>
+          </TopBarButton>
+        ) : (
+          <TopBarButton
+            variant="success"
+            label="Run workflow"
+            disabled={nodes.length === 0}
+            onClick={startSimulation}
+          >
+            <Play size={13} />
+            <span>Run Workflow</span>
+          </TopBarButton>
+        )}
       </div>
     </header>
   );

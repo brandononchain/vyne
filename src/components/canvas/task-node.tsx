@@ -12,20 +12,28 @@ function TaskNodeComponent({ id, data, selected }: NodeProps) {
   const nodeData = data as unknown as TaskNodeData;
   const removeNode = useWorkflowStore((s) => s.removeNode);
   const openConfigPanel = useWorkflowStore((s) => s.openConfigPanel);
+  const isSimulating = useWorkflowStore((s) => s.isSimulating);
+  const isActiveInSim = useWorkflowStore((s) => s.simulationActiveNodeId === id);
+
+  const isComplete = nodeData.status === "complete";
 
   return (
     <motion.div
       initial={{ scale: 0.8, opacity: 0, y: 12 }}
-      animate={{ scale: 1, opacity: 1, y: 0 }}
+      animate={{
+        scale: isActiveInSim ? 1.02 : 1,
+        opacity: 1,
+        y: 0,
+      }}
       transition={{ type: "spring", stiffness: 320, damping: 22 }}
       className={`
         group relative w-[240px] rounded-2xl bg-white border-[1.5px]
-        transition-all duration-200 cursor-grab active:cursor-grabbing
-        ${
-          selected
-            ? "border-[var(--vyne-task)] shadow-[0_0_20px_rgba(0,184,148,0.15)]"
-            : "border-[var(--vyne-border)] hover:border-[var(--vyne-border-hover)] shadow-[var(--shadow-md)]"
-        }
+        transition-all duration-300 cursor-grab active:cursor-grabbing
+        ${isActiveInSim ? "border-[var(--vyne-task)] shadow-[0_0_24px_rgba(0,184,148,0.25)] ring-2 ring-[var(--vyne-task)]/20" : ""}
+        ${isComplete && isSimulating ? "border-[var(--vyne-success)] shadow-[0_0_16px_rgba(0,184,148,0.15)]" : ""}
+        ${!isActiveInSim && !isComplete && selected ? "border-[var(--vyne-task)] shadow-[0_0_20px_rgba(0,184,148,0.15)]" : ""}
+        ${!isActiveInSim && !isComplete && !selected ? "border-[var(--vyne-border)] hover:border-[var(--vyne-border-hover)] shadow-[var(--shadow-md)]" : ""}
+        ${isSimulating ? "cursor-default" : ""}
       `}
     >
       {/* Top accent — dashed to differentiate from agents */}

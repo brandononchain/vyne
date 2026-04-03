@@ -18,6 +18,8 @@ import { TaskNode } from "./task-node";
 import { ToolNode } from "./tool-node";
 import { VyneEdge } from "./vyne-edge";
 import { OnboardingWizard } from "../onboarding/onboarding-wizard";
+import { SimulationOverlay } from "../simulation/simulation-overlay";
+import { OutputDrawer } from "../simulation/output-drawer";
 import type { DragPayload, VyneNodeData } from "@/lib/types";
 
 const DRAG_KEY = "application/vyne-node";
@@ -163,6 +165,7 @@ export function WorkflowCanvas() {
     addTaskFromTemplate,
     addToolFromTemplate,
     setIsDraggingOver,
+    isSimulating,
   } = useWorkflowStore();
 
   // ── Drag enter/leave for drop zone overlay ──────────
@@ -257,24 +260,29 @@ export function WorkflowCanvas() {
       className="relative flex-1 h-full"
       onDragLeave={onDragLeave}
     >
-      {nodes.length === 0 && <EmptyCanvasPrompt />}
-      <DropZoneOverlay />
-      <ContextualTooltip />
+      {nodes.length === 0 && !isSimulating && <EmptyCanvasPrompt />}
+      {!isSimulating && <DropZoneOverlay />}
+      {!isSimulating && <ContextualTooltip />}
+      <SimulationOverlay />
 
       <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
+        onConnect={isSimulating ? undefined : onConnect}
+        onDragOver={isSimulating ? undefined : onDragOver}
+        onDrop={isSimulating ? undefined : onDrop}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         isValidConnection={isValidConnection}
+        nodesDraggable={!isSimulating}
+        nodesConnectable={!isSimulating}
+        elementsSelectable={!isSimulating}
         fitView
         snapToGrid
         snapGrid={[16, 16]}
+        className={isSimulating ? "simulation-mode" : ""}
         defaultEdgeOptions={{
           type: "vyneEdge",
           animated: true,
@@ -304,7 +312,8 @@ export function WorkflowCanvas() {
         />
       </ReactFlow>
 
-      <OnboardingWizard />
+      {!isSimulating && <OnboardingWizard />}
+      <OutputDrawer />
     </div>
   );
 }
