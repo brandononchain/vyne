@@ -19,12 +19,15 @@ import {
   CheckCircle2,
   XCircle,
   Activity,
+  CreditCard,
 } from "lucide-react";
 import {
   useDeployStore,
   type DeployedWorkflow,
   type WorkflowStatus,
 } from "@/store/deploy-store";
+import { CreditTracker } from "../billing/credit-tracker";
+import { UsageHistory } from "../billing/usage-history";
 import { Sparkline } from "./sparkline";
 import { useState } from "react";
 
@@ -299,6 +302,7 @@ export function Dashboard() {
   const { deployedWorkflows, setCurrentView, openDeployModal } = useDeployStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | WorkflowStatus>("all");
+  const [dashTab, setDashTab] = useState<"workflows" | "usage">("workflows");
 
   const filtered = deployedWorkflows.filter((w) => {
     const matchesSearch =
@@ -336,32 +340,67 @@ export function Dashboard() {
           </div>
         </div>
 
-        <button
-          onClick={() => {
-            setCurrentView("canvas");
-            openDeployModal();
-          }}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[var(--vyne-accent)]
-                     text-white text-[12px] font-semibold hover:opacity-90 transition-opacity shadow-sm"
-        >
-          <Plus size={14} />
-          Deploy New
-        </button>
+        <div className="flex items-center gap-3">
+          <CreditTracker />
+          <div className="w-px h-6 bg-[var(--vyne-border)]" />
+          <button
+            onClick={() => {
+              setCurrentView("canvas");
+              openDeployModal();
+            }}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[var(--vyne-accent)]
+                       text-white text-[12px] font-semibold hover:opacity-90 transition-opacity shadow-sm"
+          >
+            <Plus size={14} />
+            Deploy New
+          </button>
+        </div>
       </header>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-[960px] mx-auto px-6 py-8 space-y-6">
-          {/* Page title */}
-          <div>
-            <h2 className="text-[22px] font-bold text-[var(--vyne-text-primary)] mb-1">
-              Active Workflows
-            </h2>
-            <p className="text-[13px] text-[var(--vyne-text-secondary)]">
-              Monitor, manage, and control your deployed agent workflows.
-            </p>
+          {/* Page title + tabs */}
+          <div className="flex items-end justify-between">
+            <div>
+              <h2 className="text-[22px] font-bold text-[var(--vyne-text-primary)] mb-1">
+                {dashTab === "workflows" ? "Active Workflows" : "Usage & Credits"}
+              </h2>
+              <p className="text-[13px] text-[var(--vyne-text-secondary)]">
+                {dashTab === "workflows"
+                  ? "Monitor, manage, and control your deployed agent workflows."
+                  : "Track how your workflows consume credits and manage your plan."}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-[var(--vyne-bg-warm)]">
+              <button
+                onClick={() => setDashTab("workflows")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                  dashTab === "workflows"
+                    ? "bg-white text-[var(--vyne-text-primary)] shadow-sm border border-[var(--vyne-border)]"
+                    : "text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-secondary)]"
+                }`}
+              >
+                <Activity size={12} />
+                Workflows
+              </button>
+              <button
+                onClick={() => setDashTab("usage")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                  dashTab === "usage"
+                    ? "bg-white text-[var(--vyne-text-primary)] shadow-sm border border-[var(--vyne-border)]"
+                    : "text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-secondary)]"
+                }`}
+              >
+                <CreditCard size={12} />
+                Usage
+              </button>
+            </div>
           </div>
 
+          {dashTab === "workflows" && (
+            <>
           {/* Stats bar */}
           <StatsSummary workflows={deployedWorkflows} />
 
@@ -421,6 +460,10 @@ export function Dashboard() {
               filtered.map((w) => <WorkflowCard key={w.id} workflow={w} />)
             )}
           </div>
+            </>
+          )}
+
+          {dashTab === "usage" && <UsageHistory />}
         </div>
       </div>
     </div>

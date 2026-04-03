@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
 import { useDeployStore } from "@/store/deploy-store";
+import { useBillingStore, CREDIT_COSTS } from "@/store/billing-store";
+import { CreditTracker } from "../billing/credit-tracker";
 import type { VyneNodeData } from "@/lib/types";
 
 function TopBarButton({
@@ -73,6 +75,7 @@ export function TopBar() {
     stopSimulation,
   } = useWorkflowStore();
   const { openDeployModal, setCurrentView, deployedWorkflows } = useDeployStore();
+  const { canAffordSimulation, canAffordDeployment, openUpgradeModal } = useBillingStore();
 
   const agentCount = nodes.filter((n) => (n.data as VyneNodeData).type === "agent").length;
   const taskCount = nodes.filter((n) => (n.data as VyneNodeData).type === "task").length;
@@ -180,6 +183,8 @@ export function TopBar() {
       <div className="flex items-center gap-1.5">
         {!isSimulating && (
           <>
+            <CreditTracker />
+            <div className="w-px h-6 bg-[var(--vyne-border)] mx-0.5" />
             <TopBarButton label="Dashboard" onClick={() => setCurrentView("dashboard")}>
               <LayoutDashboard size={14} />
               <span>Dashboard</span>
@@ -191,14 +196,21 @@ export function TopBar() {
             </TopBarButton>
             <TopBarButton label="Save workflow">
               <Save size={14} />
-              <span>Save</span>
             </TopBarButton>
             <div className="w-px h-6 bg-[var(--vyne-border)] mx-1" />
             <TopBarButton
               variant="primary"
               label="Deploy workflow"
               disabled={nodes.length === 0}
-              onClick={openDeployModal}
+              onClick={() => {
+                if (!canAffordDeployment()) {
+                  openUpgradeModal(
+                    `Deploying a workflow costs ${CREDIT_COSTS.deployment} credits. You don't have enough credits remaining.`
+                  );
+                  return;
+                }
+                openDeployModal();
+              }}
             >
               <Rocket size={13} />
               <span>Deploy</span>
@@ -220,7 +232,15 @@ export function TopBar() {
             variant="success"
             label="Run workflow"
             disabled={nodes.length === 0}
-            onClick={startSimulation}
+            onClick={() => {
+              if (!canAffordSimulation()) {
+                openUpgradeModal(
+                  `Running a simulation costs ${CREDIT_COSTS.simulation} credits. You don't have enough credits remaining.`
+                );
+                return;
+              }
+              startSimulation();
+            }}
           >
             <Play size={13} />
             <span>Run Workflow</span>
