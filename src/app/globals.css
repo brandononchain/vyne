@@ -1,0 +1,196 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+:root {
+  /* Core palette - warm, approachable, Flora-inspired */
+  --vyne-bg: #faf9f7;
+  --vyne-bg-warm: #f5f3ef;
+  --vyne-bg-card: #ffffff;
+  --vyne-border: #e8e5e0;
+  --vyne-border-hover: #d4cfc8;
+  --vyne-text-primary: #1a1715;
+  --vyne-text-secondary: #6b6560;
+  --vyne-text-tertiary: #9c9690;
+
+  /* Accent colors */
+  --vyne-accent: #6c5ce7;
+  --vyne-accent-light: #a29bfe;
+  --vyne-accent-bg: #f0eeff;
+  --vyne-accent-glow: rgba(108, 92, 231, 0.15);
+
+  /* Role colors */
+  --vyne-agent: #6c5ce7;
+  --vyne-agent-bg: #f0eeff;
+  --vyne-task: #00b894;
+  --vyne-task-bg: #e6faf5;
+  --vyne-tool: #fdcb6e;
+  --vyne-tool-bg: #fef9ec;
+
+  /* Status */
+  --vyne-success: #00b894;
+  --vyne-warning: #fdcb6e;
+  --vyne-error: #e17055;
+
+  /* Sizing */
+  --sidebar-width: 300px;
+  --topbar-height: 56px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(26, 23, 21, 0.04);
+  --shadow-md: 0 4px 12px rgba(26, 23, 21, 0.06);
+  --shadow-lg: 0 8px 24px rgba(26, 23, 21, 0.08);
+  --shadow-glow: 0 0 20px var(--vyne-accent-glow);
+}
+
+@theme inline {
+  --color-background: var(--vyne-bg);
+  --color-foreground: var(--vyne-text-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--vyne-bg);
+  color: var(--vyne-text-primary);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+/* React Flow overrides - strip the default look entirely */
+.react-flow {
+  background: var(--vyne-bg) !important;
+}
+
+.react-flow__background {
+  opacity: 0.4;
+}
+
+.react-flow__edge-path {
+  stroke: var(--vyne-border-hover) !important;
+  stroke-width: 2px !important;
+}
+
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: var(--vyne-accent) !important;
+  stroke-width: 2.5px !important;
+}
+
+.react-flow__handle {
+  width: 10px !important;
+  height: 10px !important;
+  background: var(--vyne-border-hover) !important;
+  border: 2px solid var(--vyne-bg-card) !important;
+  transition: all 0.15s ease;
+}
+
+.react-flow__handle:hover {
+  background: var(--vyne-accent) !important;
+  box-shadow: var(--shadow-glow);
+}
+
+.react-flow__controls {
+  box-shadow: var(--shadow-md) !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--vyne-border) !important;
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  background: var(--vyne-bg-card) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--vyne-border) !important;
+  color: var(--vyne-text-secondary) !important;
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--vyne-bg-warm) !important;
+  color: var(--vyne-text-primary) !important;
+}
+
+.react-flow__minimap {
+  border-radius: 12px !important;
+  border: 1px solid var(--vyne-border) !important;
+  box-shadow: var(--shadow-md) !important;
+  overflow: hidden;
+}
+
+.react-flow__attribution {
+  display: none !important;
+}
+
+/* Dot grid pattern for canvas */
+.react-flow__background pattern circle {
+  fill: var(--vyne-border) !important;
+}
+
+/* Smooth edge animation */
+.react-flow__edge-path {
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+/* Connection line while dragging */
+.react-flow__connection-path {
+  stroke: var(--vyne-accent) !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: 5 5;
+  animation: dash 0.5s linear infinite;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+/* Pulse animation for onboarding glow */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--vyne-accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 12px transparent;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vyne-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vyne-border-hover);
+}
