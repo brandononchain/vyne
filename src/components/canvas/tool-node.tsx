@@ -3,19 +3,15 @@
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { motion } from "framer-motion";
-import { Trash2, Wrench } from "lucide-react";
+import { Trash2, Wrench, Settings } from "lucide-react";
 import { DynamicIcon } from "@/lib/icons";
 import { useWorkflowStore } from "@/store/workflow-store";
 import type { ToolNodeData } from "@/lib/types";
 
-/**
- * Tool nodes are intentionally compact — they're "accessories" that
- * attach to agents. The visual language is: small, rounded, warm amber accent.
- * Only a source handle on the right (tools connect *to* agents).
- */
 function ToolNodeComponent({ id, data, selected }: NodeProps) {
   const nodeData = data as unknown as ToolNodeData;
   const removeNode = useWorkflowStore((s) => s.removeNode);
+  const openConfigPanel = useWorkflowStore((s) => s.openConfigPanel);
 
   return (
     <motion.div
@@ -33,19 +29,13 @@ function ToolNodeComponent({ id, data, selected }: NodeProps) {
       `}
     >
       <div className="p-3 flex items-center gap-2.5">
-        {/* Icon */}
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
           style={{ backgroundColor: `${nodeData.color}14` }}
         >
-          <DynamicIcon
-            name={nodeData.icon}
-            size={15}
-            style={{ color: nodeData.color }}
-          />
+          <DynamicIcon name={nodeData.icon} size={15} style={{ color: nodeData.color }} />
         </div>
 
-        {/* Label */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 mb-0.5">
             <Wrench size={8} className="text-[var(--vyne-tool)]" />
@@ -58,34 +48,41 @@ function ToolNodeComponent({ id, data, selected }: NodeProps) {
           </h3>
         </div>
 
-        {/* Delete */}
-        <button
-          className="w-5 h-5 rounded flex items-center justify-center
-                     text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-error)]
-                     hover:bg-red-50 transition-colors
-                     opacity-0 group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            removeNode(id);
-          }}
-        >
-          <Trash2 size={10} />
-        </button>
+        <div className="flex flex-col gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            className="w-5 h-5 rounded flex items-center justify-center
+                       text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-tool)]
+                       hover:bg-[var(--vyne-tool-bg)] transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              openConfigPanel(id);
+            }}
+            title="Tool details"
+          >
+            <Settings size={10} />
+          </button>
+          <button
+            className="w-5 h-5 rounded flex items-center justify-center
+                       text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-error)]
+                       hover:bg-red-50 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              removeNode(id);
+            }}
+            title="Delete tool"
+          >
+            <Trash2 size={10} />
+          </button>
+        </div>
       </div>
 
-      {/* Compact description */}
       <div className="px-3 pb-2.5">
         <p className="text-[10px] text-[var(--vyne-text-tertiary)] leading-snug line-clamp-2">
           {nodeData.description}
         </p>
       </div>
 
-      {/* Only a source handle — tools connect outward to agents */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!-right-[5px]"
-      />
+      <Handle type="source" position={Position.Right} className="!-right-[5px]" />
     </motion.div>
   );
 }

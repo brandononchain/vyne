@@ -6,6 +6,7 @@ import { WorkflowCanvas } from "./workflow-canvas";
 import { Sidebar } from "../sidebar/sidebar";
 import { TopBar } from "../topbar/topbar";
 import { ToastContainer } from "../toast/toast-container";
+import { ConfigPanel } from "../config-panel/config-panel";
 import { useWorkflowStore } from "@/store/workflow-store";
 
 function KeyboardShortcuts() {
@@ -45,6 +46,7 @@ export function CanvasProvider() {
           <WorkflowCanvas />
         </div>
       </div>
+      <ConfigPanel />
       <ToastContainer />
     </ReactFlowProvider>
   );

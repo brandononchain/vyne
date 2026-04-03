@@ -3,7 +3,7 @@
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { motion } from "framer-motion";
-import { Trash2, ChevronRight, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { Trash2, Settings, ChevronRight, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { DynamicIcon } from "@/lib/icons";
 import { useWorkflowStore } from "@/store/workflow-store";
 import type { TaskNodeData } from "@/lib/types";
@@ -11,6 +11,7 @@ import type { TaskNodeData } from "@/lib/types";
 function TaskNodeComponent({ id, data, selected }: NodeProps) {
   const nodeData = data as unknown as TaskNodeData;
   const removeNode = useWorkflowStore((s) => s.removeNode);
+  const openConfigPanel = useWorkflowStore((s) => s.openConfigPanel);
 
   return (
     <motion.div
@@ -58,18 +59,32 @@ function TaskNodeComponent({ id, data, selected }: NodeProps) {
           </h3>
         </div>
 
-        <button
-          className="w-6 h-6 rounded-lg flex items-center justify-center
-                     text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-error)]
-                     hover:bg-red-50 transition-colors
-                     opacity-0 group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            removeNode(id);
-          }}
-        >
-          <Trash2 size={12} />
-        </button>
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            className="w-6 h-6 rounded-lg flex items-center justify-center
+                       text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-task)]
+                       hover:bg-[var(--vyne-task-bg)] transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              openConfigPanel(id);
+            }}
+            title="Configure task"
+          >
+            <Settings size={12} />
+          </button>
+          <button
+            className="w-6 h-6 rounded-lg flex items-center justify-center
+                       text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-error)]
+                       hover:bg-red-50 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              removeNode(id);
+            }}
+            title="Delete task"
+          >
+            <Trash2 size={12} />
+          </button>
+        </div>
       </div>
 
       {/* Description */}
@@ -78,6 +93,18 @@ function TaskNodeComponent({ id, data, selected }: NodeProps) {
           {nodeData.description}
         </p>
       </div>
+
+      {/* Config indicator */}
+      {nodeData.config.detailedInstructions && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--vyne-task-bg)]">
+            <div className="w-1 h-1 rounded-full bg-[var(--vyne-task)]" />
+            <span className="text-[9px] font-semibold text-[var(--vyne-task)] uppercase tracking-wide">
+              Instructions set
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Input/Output badges */}
       <div className="px-4 pb-3 space-y-1.5">
@@ -113,22 +140,20 @@ function TaskNodeComponent({ id, data, selected }: NodeProps) {
             {nodeData.status}
           </span>
         </div>
-        <button className="flex items-center gap-0.5 text-[10px] text-[var(--vyne-task)] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          className="flex items-center gap-0.5 text-[10px] text-[var(--vyne-task)] font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => {
+            e.stopPropagation();
+            openConfigPanel(id);
+          }}
+        >
           Edit Task <ChevronRight size={10} />
         </button>
       </div>
 
       {/* Handles */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="!-left-[5px]"
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!-right-[5px]"
-      />
+      <Handle type="target" position={Position.Left} className="!-left-[5px]" />
+      <Handle type="source" position={Position.Right} className="!-right-[5px]" />
     </motion.div>
   );
 }

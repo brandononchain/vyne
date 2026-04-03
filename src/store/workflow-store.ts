@@ -20,6 +20,7 @@ import type {
   TaskTemplate,
   ToolTemplate,
 } from "@/lib/types";
+import { DEFAULT_AGENT_PERSONA, DEFAULT_TASK_CONFIG } from "@/lib/types";
 import {
   validateConnection,
   isDuplicateConnection,
@@ -55,6 +56,12 @@ interface WorkflowState {
   ) => void;
   removeNode: (nodeId: string) => void;
   getNodeById: (nodeId: string) => VyneNode | undefined;
+  updateNodeData: (nodeId: string, updates: Partial<VyneNodeData>) => void;
+
+  // ── Config panel ─────────────────────────────────────
+  configPanelNodeId: string | null;
+  openConfigPanel: (nodeId: string) => void;
+  closeConfigPanel: () => void;
 
   // ── Undo / Redo ──────────────────────────────────────
   undoStack: Snapshot[];
@@ -105,12 +112,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   onEdgesChange: (changes) => {
-    // Snapshot before edge deletion
-    const hasDeletions = changes.some(
-      (c) => c.type === "remove"
-    );
+    const hasDeletions = changes.some((c) => c.type === "remove");
     if (hasDeletions) get().pushSnapshot();
-
     set({ edges: applyEdgeChanges(changes, get().edges) });
   },
 
@@ -119,34 +122,28 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
     const sourceNode = nodes.find((n) => n.id === connection.source);
     const targetNode = nodes.find((n) => n.id === connection.target);
-
     if (!sourceNode || !targetNode) return;
 
-    // ── Validation: self-connection ────────────────────
     if (isSelfConnection(connection.source, connection.target)) {
       addToast({
         type: "info",
         title: "Can't connect to itself",
-        message:
-          "An agent can't send data to itself. Connect it to a different node to create a flow.",
+        message: "An agent can't send data to itself. Connect it to a different node to create a flow.",
         duration: 4000,
       });
       return;
     }
 
-    // ── Validation: duplicate ──────────────────────────
     if (isDuplicateConnection(connection.source, connection.target, edges)) {
       addToast({
         type: "info",
         title: "Already connected",
-        message:
-          "These two nodes are already linked. Each connection only needs to be made once.",
+        message: "These two nodes are already linked. Each connection only needs to be made once.",
         duration: 3000,
       });
       return;
     }
 
-    // ── Validation: rule engine ────────────────────────
     const result = validateConnection(sourceNode, targetNode);
 
     if (!result.allowed) {
@@ -162,7 +159,6 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       return;
     }
 
-    // ── Compatibility warning (allowed but suboptimal) ─
     if (result.compatibilityWarning) {
       addToast({
         type: "warning",
@@ -172,7 +168,6 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       });
     }
 
-    // ── Success: make the connection ───────────────────
     pushSnapshot();
 
     const newEdge: VyneEdge = {
@@ -186,7 +181,6 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
     set({ edges: addEdge(newEdge, get().edges) as VyneEdge[] });
 
-    // Educational success toast
     if (result.rule) {
       addToast({
         type: "success",
@@ -196,7 +190,6 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       });
     }
 
-    // Advance onboarding
     const step = get().onboardingStep;
     if (step === "connect" || step === "configure-agent" || step === "add-task") {
       set({ onboardingStep: "complete" });
@@ -217,19 +210,12 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       icon: template.icon,
       color: template.color,
       tools: template.defaultTools,
+      persona: { ...DEFAULT_AGENT_PERSONA },
       status: "idle",
     };
 
-    const newNode: VyneNode = {
-      id,
-      type: "agentNode",
-      position,
-      data,
-    };
+    set({ nodes: [...get().nodes, { id, type: "agentNode", position, data }] });
 
-    set({ nodes: [...get().nodes, newNode] });
-
-    // Advance onboarding
     const step = get().onboardingStep;
     if (step === "welcome" || step === "drag-agent") {
       set({ onboardingStep: "configure-agent" });
@@ -249,19 +235,12 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       color: template.color,
       expectedInput: template.expectedInput,
       expectedOutput: template.expectedOutput,
+      config: { ...DEFAULT_TASK_CONFIG },
       status: "pending",
     };
 
-    const newNode: VyneNode = {
-      id,
-      type: "taskNode",
-      position,
-      data,
-    };
+    set({ nodes: [...get().nodes, { id, type: "taskNode", position, data }] });
 
-    set({ nodes: [...get().nodes, newNode] });
-
-    // Advance onboarding
     const step = get().onboardingStep;
     if (step === "add-task" || step === "configure-agent") {
       set({ onboardingStep: "connect" });
@@ -282,27 +261,45 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       compatibleWith: template.compatibleWith,
     };
 
-    const newNode: VyneNode = {
-      id,
-      type: "toolNode",
-      position,
-      data,
-    };
-
-    set({ nodes: [...get().nodes, newNode] });
+    set({ nodes: [...get().nodes, { id, type: "toolNode", position, data }] });
   },
 
   removeNode: (nodeId) => {
     get().pushSnapshot();
+    // Close config panel if this node was being configured
+    if (get().configPanelNodeId === nodeId) {
+      set({ configPanelNodeId: null });
+    }
     set({
       nodes: get().nodes.filter((n) => n.id !== nodeId),
-      edges: get().edges.filter(
-        (e) => e.source !== nodeId && e.target !== nodeId
-      ),
+      edges: get().edges.filter((e) => e.source !== nodeId && e.target !== nodeId),
     });
   },
 
   getNodeById: (nodeId) => get().nodes.find((n) => n.id === nodeId),
+
+  updateNodeData: (nodeId, updates) => {
+    set({
+      nodes: get().nodes.map((node) => {
+        if (node.id !== nodeId) return node;
+        return {
+          ...node,
+          data: { ...node.data, ...updates } as VyneNodeData,
+        };
+      }),
+    });
+  },
+
+  // ── Config panel ─────────────────────────────────────
+  configPanelNodeId: null,
+
+  openConfigPanel: (nodeId) => {
+    set({ configPanelNodeId: nodeId });
+  },
+
+  closeConfigPanel: () => {
+    set({ configPanelNodeId: null });
+  },
 
   // ── Undo / Redo ──────────────────────────────────────
   undoStack: [],
@@ -315,8 +312,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       edges: JSON.parse(JSON.stringify(edges)),
     };
     set({
-      undoStack: [...undoStack.slice(-30), snapshot], // keep last 30
-      redoStack: [], // clear redo on new action
+      undoStack: [...undoStack.slice(-30), snapshot],
+      redoStack: [],
     });
   },
 
@@ -364,7 +361,6 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     const newToast: Toast = { ...toast, id };
     set({ toasts: [...get().toasts, newToast] });
 
-    // Auto-dismiss
     const duration = toast.duration || 4000;
     setTimeout(() => {
       set({ toasts: get().toasts.filter((t) => t.id !== id) });

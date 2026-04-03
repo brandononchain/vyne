@@ -11,6 +11,7 @@ import type { AgentNodeData } from "@/lib/types";
 function AgentNodeComponent({ id, data, selected }: NodeProps) {
   const nodeData = data as unknown as AgentNodeData;
   const removeNode = useWorkflowStore((s) => s.removeNode);
+  const openConfigPanel = useWorkflowStore((s) => s.openConfigPanel);
 
   return (
     <motion.div
@@ -58,11 +59,13 @@ function AgentNodeComponent({ id, data, selected }: NodeProps) {
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             className="w-6 h-6 rounded-lg flex items-center justify-center
-                       text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-secondary)]
-                       hover:bg-[var(--vyne-bg-warm)] transition-colors"
+                       text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-accent)]
+                       hover:bg-[var(--vyne-accent-bg)] transition-colors"
             onClick={(e) => {
               e.stopPropagation();
+              openConfigPanel(id);
             }}
+            title="Configure agent"
           >
             <Settings size={12} />
           </button>
@@ -74,6 +77,7 @@ function AgentNodeComponent({ id, data, selected }: NodeProps) {
               e.stopPropagation();
               removeNode(id);
             }}
+            title="Delete agent"
           >
             <Trash2 size={12} />
           </button>
@@ -86,6 +90,18 @@ function AgentNodeComponent({ id, data, selected }: NodeProps) {
           {nodeData.description}
         </p>
       </div>
+
+      {/* Persona indicator (shows when configured) */}
+      {nodeData.persona.goal && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--vyne-accent-bg)]">
+            <div className="w-1 h-1 rounded-full bg-[var(--vyne-accent)]" />
+            <span className="text-[9px] font-semibold text-[var(--vyne-accent)] uppercase tracking-wide">
+              Persona configured
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Tools section */}
       {nodeData.tools.length > 0 && (
@@ -121,7 +137,13 @@ function AgentNodeComponent({ id, data, selected }: NodeProps) {
             {nodeData.status}
           </span>
         </div>
-        <button className="flex items-center gap-0.5 text-[10px] text-[var(--vyne-accent)] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          className="flex items-center gap-0.5 text-[10px] text-[var(--vyne-accent)] font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => {
+            e.stopPropagation();
+            openConfigPanel(id);
+          }}
+        >
           Configure <ChevronRight size={10} />
         </button>
       </div>
