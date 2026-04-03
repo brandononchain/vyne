@@ -65,6 +65,7 @@ interface WorkflowState {
   removeNode: (nodeId: string) => void;
   getNodeById: (nodeId: string) => VyneNode | undefined;
   updateNodeData: (nodeId: string, updates: Partial<VyneNodeData>) => void;
+  loadTemplate: (nodes: VyneNode[], edges: VyneEdge[]) => void;
 
   // ── Config panel ─────────────────────────────────────
   configPanelNodeId: string | null;
@@ -245,6 +246,16 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   getNodeById: (nodeId) => get().nodes.find((n) => n.id === nodeId),
+
+  loadTemplate: (templateNodes, templateEdges) => {
+    get().pushSnapshot();
+    // Deep clone to avoid mutation of template data
+    const nodes: VyneNode[] = JSON.parse(JSON.stringify(templateNodes));
+    const edges: VyneEdge[] = JSON.parse(JSON.stringify(templateEdges));
+    set({ nodes, edges, configPanelNodeId: null });
+    // Dismiss onboarding since they're using a template
+    set({ onboardingDismissed: true });
+  },
 
   updateNodeData: (nodeId, updates) => {
     set({

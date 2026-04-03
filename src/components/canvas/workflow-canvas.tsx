@@ -11,8 +11,9 @@ import {
   type IsValidConnection,
 } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
+import { useDeployStore } from "@/store/deploy-store";
 import { AgentNode } from "./agent-node";
 import { TaskNode } from "./task-node";
 import { ToolNode } from "./tool-node";
@@ -39,6 +40,7 @@ const edgeTypes = {
 // ── Empty canvas placeholder ─────────────────────────────────────────
 function EmptyCanvasPrompt() {
   const onboardingDismissed = useWorkflowStore((s) => s.onboardingDismissed);
+  const setCurrentView = useDeployStore((s) => s.setCurrentView);
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
@@ -52,9 +54,18 @@ function EmptyCanvasPrompt() {
         <h3 className="text-[15px] font-semibold text-[var(--vyne-text-primary)] mb-1">
           {onboardingDismissed ? "Start building" : "Your canvas is ready"}
         </h3>
-        <p className="text-[12px] text-[var(--vyne-text-tertiary)] max-w-[260px] leading-relaxed">
-          Drag agents, tasks, or tools from the sidebar to begin assembling your AI workflow.
+        <p className="text-[12px] text-[var(--vyne-text-tertiary)] max-w-[280px] leading-relaxed mb-3">
+          Drag agents, tasks, or tools from the sidebar to build from scratch.
         </p>
+        <button
+          onClick={() => setCurrentView("templates")}
+          className="pointer-events-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-xl
+                     bg-[var(--vyne-accent)] text-white text-[12px] font-semibold
+                     hover:opacity-90 transition-opacity shadow-sm"
+        >
+          <Sparkles size={13} />
+          Or start with a template
+        </button>
       </div>
     </div>
   );
