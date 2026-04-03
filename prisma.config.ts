@@ -1,5 +1,12 @@
-import "dotenv/config";
 import { defineConfig } from "prisma/config";
+
+// Only load dotenv if a .env file exists (not on Railway/CI where
+// env vars are injected by the platform)
+try {
+  require("dotenv/config");
+} catch {
+  // No .env file — that's fine on Railway
+}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
@@ -7,9 +14,8 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    // Fallback to a dummy URL during `prisma generate` on CI/Railway
-    // where DATABASE_URL may not be available at build time.
-    // The real URL is only needed at runtime (prisma db push / app start).
+    // Fallback to a dummy URL during `prisma generate` on CI/Railway.
+    // Generation only reads the schema — it doesn't connect to a database.
     url: process.env["DATABASE_URL"] || "postgresql://placeholder:placeholder@localhost:5432/placeholder",
   },
 });
