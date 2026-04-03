@@ -12,8 +12,11 @@ import {
   Undo2,
   Redo2,
   Loader2,
+  Rocket,
+  LayoutDashboard,
 } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
+import { useDeployStore } from "@/store/deploy-store";
 import type { VyneNodeData } from "@/lib/types";
 
 function TopBarButton({
@@ -69,6 +72,7 @@ export function TopBar() {
     startSimulation,
     stopSimulation,
   } = useWorkflowStore();
+  const { openDeployModal, setCurrentView, deployedWorkflows } = useDeployStore();
 
   const agentCount = nodes.filter((n) => (n.data as VyneNodeData).type === "agent").length;
   const taskCount = nodes.filter((n) => (n.data as VyneNodeData).type === "task").length;
@@ -176,17 +180,29 @@ export function TopBar() {
       <div className="flex items-center gap-1.5">
         {!isSimulating && (
           <>
+            <TopBarButton label="Dashboard" onClick={() => setCurrentView("dashboard")}>
+              <LayoutDashboard size={14} />
+              <span>Dashboard</span>
+              {deployedWorkflows.filter((w) => w.status === "live").length > 0 && (
+                <span className="text-[9px] px-1 py-px rounded bg-emerald-50 text-[var(--vyne-success)] font-bold">
+                  {deployedWorkflows.filter((w) => w.status === "live").length}
+                </span>
+              )}
+            </TopBarButton>
             <TopBarButton label="Save workflow">
               <Save size={14} />
               <span>Save</span>
             </TopBarButton>
-            <TopBarButton label="Share">
-              <Share2 size={14} />
-            </TopBarButton>
-            <TopBarButton label="Settings">
-              <Settings size={14} />
-            </TopBarButton>
             <div className="w-px h-6 bg-[var(--vyne-border)] mx-1" />
+            <TopBarButton
+              variant="primary"
+              label="Deploy workflow"
+              disabled={nodes.length === 0}
+              onClick={openDeployModal}
+            >
+              <Rocket size={13} />
+              <span>Deploy</span>
+            </TopBarButton>
           </>
         )}
 

@@ -21,6 +21,8 @@ import {
   Table,
   Terminal,
   Plug,
+  Rocket,
+  Activity,
   type LucideProps,
 } from "lucide-react";
 import type { FC } from "react";
@@ -46,6 +48,8 @@ const iconMap: Record<string, FC<LucideProps>> = {
   Table,
   Terminal,
   Plug,
+  Rocket,
+  Activity,
 };
 
 export function DynamicIcon({
