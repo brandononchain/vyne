@@ -1,33 +1,33 @@
-import { PrismaClient } from "@/generated/prisma/client";
-
 // ── Prisma Client Singleton ──────────────────────────────────────────
-// Lazy initialization — only connects when first accessed at RUNTIME,
-// not during Next.js build/SSG which would fail without a database.
+// Uses dynamic require() so Turbopack doesn't resolve the generated
+// Prisma client at build time (which fails if it doesn't exist yet).
+// The actual import only happens at runtime when an API route calls db.
 
-const globalForPrisma = globalThis as unknown as {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  prisma: any;
-};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const globalForPrisma = globalThis as unknown as { prisma: any };
 
-function createClient() {
+function getClient() {
+  if (globalForPrisma.prisma) return globalForPrisma.prisma;
+
   const url = process.env.DATABASE_URL;
-  if (!url) {
-    throw new Error("DATABASE_URL is not set");
+  if (!url) throw new Error("DATABASE_URL is not set");
+
+  // Dynamic require — invisible to Turbopack's static analysis
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mod = require("@/generated/prisma/client");
+  const client = new mod.PrismaClient({ accelerateUrl: url });
+
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = client;
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new (PrismaClient as any)({ accelerateUrl: url });
+
+  return client;
 }
 
-// Lazy getter — the client is only created when `db` is first used
-// in an API route or server action, never during build.
-export const db: InstanceType<typeof PrismaClient> = new Proxy(
-  {} as InstanceType<typeof PrismaClient>,
-  {
-    get(_target, prop) {
-      if (!globalForPrisma.prisma) {
-        globalForPrisma.prisma = createClient();
-      }
-      return (globalForPrisma.prisma as Record<string | symbol, unknown>)[prop];
-    },
-  }
-);
+// Lazy proxy — defers all property access to runtime
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const db: any = new Proxy({} as any, {
+  get(_target, prop) {
+    return getClient()[prop];
+  },
+});
