@@ -11,17 +11,20 @@ import {
   Redo2,
 } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
+import type { VyneNodeData } from "@/lib/types";
 
 function TopBarButton({
   children,
   onClick,
   variant = "ghost",
   label,
+  disabled,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   variant?: "ghost" | "primary" | "success";
   label: string;
+  disabled?: boolean;
 }) {
   const base =
     "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150";
@@ -37,7 +40,8 @@ function TopBarButton({
   return (
     <button
       onClick={onClick}
-      className={`${base} ${variants[variant]}`}
+      disabled={disabled}
+      className={`${base} ${variants[variant]} ${disabled ? "opacity-30 pointer-events-none" : ""}`}
       title={label}
     >
       {children}
@@ -46,7 +50,22 @@ function TopBarButton({
 }
 
 export function TopBar() {
-  const { sidebarOpen, toggleSidebar, nodes } = useWorkflowStore();
+  const { sidebarOpen, toggleSidebar, nodes, edges, undoStack, redoStack, undo, redo } =
+    useWorkflowStore();
+
+  // Count by node type
+  const agentCount = nodes.filter((n) => (n.data as VyneNodeData).type === "agent").length;
+  const taskCount = nodes.filter((n) => (n.data as VyneNodeData).type === "task").length;
+  const toolCount = nodes.filter((n) => (n.data as VyneNodeData).type === "tool").length;
+
+  const parts: string[] = [];
+  if (agentCount > 0) parts.push(`${agentCount} agent${agentCount !== 1 ? "s" : ""}`);
+  if (taskCount > 0) parts.push(`${taskCount} task${taskCount !== 1 ? "s" : ""}`);
+  if (toolCount > 0) parts.push(`${toolCount} tool${toolCount !== 1 ? "s" : ""}`);
+
+  const summary = parts.length > 0
+    ? `${parts.join(", ")} · ${edges.length} connection${edges.length !== 1 ? "s" : ""}`
+    : "Empty canvas";
 
   return (
     <header
@@ -71,7 +90,7 @@ export function TopBar() {
 
         <div className="w-px h-6 bg-[var(--vyne-border)]" />
 
-        {/* Logo / Project name */}
+        {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-[var(--vyne-accent)] flex items-center justify-center">
             <span className="text-white text-[11px] font-black">V</span>
@@ -88,23 +107,21 @@ export function TopBar() {
 
         <div className="w-px h-6 bg-[var(--vyne-border)]" />
 
-        {/* Undo / Redo */}
+        {/* Functional undo/redo */}
         <div className="flex items-center gap-0.5">
-          <TopBarButton label="Undo">
+          <TopBarButton label="Undo (Ctrl+Z)" onClick={undo} disabled={undoStack.length === 0}>
             <Undo2 size={14} />
           </TopBarButton>
-          <TopBarButton label="Redo">
+          <TopBarButton label="Redo (Ctrl+Shift+Z)" onClick={redo} disabled={redoStack.length === 0}>
             <Redo2 size={14} />
           </TopBarButton>
         </div>
       </div>
 
-      {/* Center - agent count */}
+      {/* Center status */}
       <div className="flex items-center gap-2">
         <span className="text-[11px] text-[var(--vyne-text-tertiary)] font-medium">
-          {nodes.length === 0
-            ? "No agents on canvas"
-            : `${nodes.length} agent${nodes.length !== 1 ? "s" : ""} on team`}
+          {summary}
         </span>
       </div>
 
@@ -125,7 +142,11 @@ export function TopBar() {
 
         <div className="w-px h-6 bg-[var(--vyne-border)] mx-1" />
 
-        <TopBarButton variant="success" label="Run workflow">
+        <TopBarButton
+          variant="success"
+          label="Run workflow"
+          disabled={nodes.length === 0}
+        >
           <Play size={13} />
           <span>Run Workflow</span>
         </TopBarButton>

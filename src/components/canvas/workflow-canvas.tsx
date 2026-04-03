@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, type DragEvent } from "react";
+import { useCallback, useRef, useState, type DragEvent } from "react";
 import {
   ReactFlow,
   Background,
@@ -8,16 +8,33 @@ import {
   MiniMap,
   BackgroundVariant,
   useReactFlow,
+  type IsValidConnection,
 } from "@xyflow/react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
 import { AgentNode } from "./agent-node";
+import { TaskNode } from "./task-node";
+import { ToolNode } from "./tool-node";
+import { VyneEdge } from "./vyne-edge";
 import { OnboardingWizard } from "../onboarding/onboarding-wizard";
-import type { AgentTemplate } from "@/lib/types";
+import type { DragPayload, VyneNodeData } from "@/lib/types";
 
+const DRAG_KEY = "application/vyne-node";
+
+// Register all custom node types
 const nodeTypes = {
   agentNode: AgentNode,
+  taskNode: TaskNode,
+  toolNode: ToolNode,
 };
 
+// Register custom edge type
+const edgeTypes = {
+  vyneEdge: VyneEdge,
+};
+
+// ── Empty canvas placeholder ─────────────────────────────────────────
 function EmptyCanvasPrompt() {
   const onboardingDismissed = useWorkflowStore((s) => s.onboardingDismissed);
 
@@ -28,52 +45,110 @@ function EmptyCanvasPrompt() {
           className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--vyne-accent-bg)]
                       flex items-center justify-center"
         >
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--vyne-accent)"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
+          <Plus size={28} strokeWidth={1.5} className="text-[var(--vyne-accent)]" />
         </div>
         <h3 className="text-[15px] font-semibold text-[var(--vyne-text-primary)] mb-1">
           {onboardingDismissed ? "Start building" : "Your canvas is ready"}
         </h3>
-        <p className="text-[12px] text-[var(--vyne-text-tertiary)] max-w-[240px] leading-relaxed">
-          Drag agents from the sidebar to begin assembling your AI team.
+        <p className="text-[12px] text-[var(--vyne-text-tertiary)] max-w-[260px] leading-relaxed">
+          Drag agents, tasks, or tools from the sidebar to begin assembling your AI workflow.
         </p>
       </div>
     </div>
   );
 }
 
-function ContextualTooltip() {
-  const { edges } = useWorkflowStore();
-
-  if (edges.length === 0) return null;
+// ── Drop zone overlay (visible while dragging over canvas) ───────────
+function DropZoneOverlay() {
+  const isDraggingOver = useWorkflowStore((s) => s.isDraggingOver);
 
   return (
-    <div
-      className="absolute top-4 left-1/2 -translate-x-1/2 z-40
-                  px-4 py-2.5 rounded-xl bg-white border border-[var(--vyne-border)]
-                  shadow-[var(--shadow-md)] max-w-[360px]"
-    >
-      <p className="text-[11px] text-[var(--vyne-text-secondary)] leading-snug">
-        <span className="font-semibold text-[var(--vyne-accent)]">
-          Connection made!
-        </span>{" "}
-        Data will flow from the first agent to the second. The output of one
-        becomes the input of the next — like passing a baton in a relay race.
-      </p>
-    </div>
+    <AnimatePresence>
+      {isDraggingOver && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="absolute inset-0 z-20 pointer-events-none"
+        >
+          {/* Subtle border pulse */}
+          <div
+            className="absolute inset-4 rounded-2xl border-2 border-dashed border-[var(--vyne-accent-light)]
+                       bg-[var(--vyne-accent-bg)] opacity-30"
+          />
+
+          {/* Center prompt */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <motion.div
+              initial={{ scale: 0.9, y: 8 }}
+              animate={{ scale: 1, y: 0 }}
+              className="flex items-center gap-2 px-5 py-3 rounded-2xl
+                         bg-white/80 backdrop-blur-sm border border-[var(--vyne-accent-light)]
+                         shadow-[var(--shadow-lg)]"
+            >
+              <div className="w-8 h-8 rounded-xl bg-[var(--vyne-accent-bg)] flex items-center justify-center">
+                <Plus size={16} className="text-[var(--vyne-accent)]" />
+              </div>
+              <span className="text-[13px] font-semibold text-[var(--vyne-accent)]">
+                Drop to add to canvas
+              </span>
+            </motion.div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
+// ── Contextual education tooltip (appears on first connection) ───────
+function ContextualTooltip() {
+  const { edges, nodes } = useWorkflowStore();
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed || edges.length === 0 || edges.length > 2) return null;
+
+  // Find what types are connected
+  const firstEdge = edges[0];
+  const sourceNode = nodes.find((n) => n.id === firstEdge.source);
+  const targetNode = nodes.find((n) => n.id === firstEdge.target);
+  if (!sourceNode || !targetNode) return null;
+
+  const sourceType = (sourceNode.data as VyneNodeData).type;
+  const targetType = (targetNode.data as VyneNodeData).type;
+
+  let tip = "Data flows from left to right — the output of one node becomes the input of the next.";
+  if (sourceType === "agent" && targetType === "agent") {
+    tip =
+      "Agent relay chain active! The first agent will complete its work, then hand the results to the second agent automatically.";
+  } else if (sourceType === "agent" && targetType === "task") {
+    tip =
+      "Task assigned! This agent will work on the connected task using its equipped tools.";
+  } else if (sourceType === "tool" && targetType === "agent") {
+    tip =
+      "Tool equipped! This agent can now use this tool when working on tasks. Think of it like giving a worker a new instrument.";
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="absolute top-4 left-1/2 -translate-x-1/2 z-40
+                  px-4 py-2.5 rounded-xl bg-white border border-[var(--vyne-border)]
+                  shadow-[var(--shadow-md)] max-w-[380px] cursor-pointer"
+      onClick={() => setDismissed(true)}
+    >
+      <p className="text-[11px] text-[var(--vyne-text-secondary)] leading-snug">
+        <span className="font-semibold text-[var(--vyne-accent)]">
+          Connection made!{" "}
+        </span>
+        {tip}
+      </p>
+    </motion.div>
+  );
+}
+
+// ── Main canvas ──────────────────────────────────────────────────────
 export function WorkflowCanvas() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
@@ -85,34 +160,105 @@ export function WorkflowCanvas() {
     onEdgesChange,
     onConnect,
     addAgentFromTemplate,
+    addTaskFromTemplate,
+    addToolFromTemplate,
+    setIsDraggingOver,
   } = useWorkflowStore();
 
-  const onDragOver = useCallback((event: DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  }, []);
+  // ── Drag enter/leave for drop zone overlay ──────────
+  const onDragOver = useCallback(
+    (event: DragEvent) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = "move";
+      setIsDraggingOver(true);
+    },
+    [setIsDraggingOver]
+  );
 
+  const onDragLeave = useCallback(
+    (event: DragEvent) => {
+      // Only trigger if leaving the canvas itself, not entering a child
+      if (
+        reactFlowWrapper.current &&
+        !reactFlowWrapper.current.contains(event.relatedTarget as Node)
+      ) {
+        setIsDraggingOver(false);
+      }
+    },
+    [setIsDraggingOver]
+  );
+
+  // ── Drop handler — routes to correct addX method ────
   const onDrop = useCallback(
     (event: DragEvent) => {
       event.preventDefault();
+      setIsDraggingOver(false);
 
-      const data = event.dataTransfer.getData("application/vyne-agent");
-      if (!data) return;
+      // Try new unified key first, fall back to legacy key
+      let raw = event.dataTransfer.getData(DRAG_KEY);
+      if (!raw) {
+        raw = event.dataTransfer.getData("application/vyne-agent");
+        if (raw) {
+          // Legacy: bare agent template
+          const template = JSON.parse(raw);
+          const position = screenToFlowPosition({
+            x: event.clientX,
+            y: event.clientY,
+          });
+          addAgentFromTemplate(template, position);
+          return;
+        }
+        return;
+      }
 
-      const template: AgentTemplate = JSON.parse(data);
+      const payload: DragPayload = JSON.parse(raw);
       const position = screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
       });
 
-      addAgentFromTemplate(template, position);
+      switch (payload.kind) {
+        case "agent":
+          addAgentFromTemplate(payload.template, position);
+          break;
+        case "task":
+          addTaskFromTemplate(payload.template, position);
+          break;
+        case "tool":
+          addToolFromTemplate(payload.template, position);
+          break;
+      }
     },
-    [screenToFlowPosition, addAgentFromTemplate]
+    [
+      screenToFlowPosition,
+      addAgentFromTemplate,
+      addTaskFromTemplate,
+      addToolFromTemplate,
+      setIsDraggingOver,
+    ]
+  );
+
+  // ── Connection validation at the React Flow level ───
+  // (This provides immediate visual feedback — the edge turns red
+  //  before they even release. The store's onConnect does the full
+  //  validation with toast messages.)
+  const isValidConnection: IsValidConnection = useCallback(
+    (connection) => {
+      if (connection.source === connection.target) return false;
+      // Let the store handle detailed validation with toasts
+      return true;
+    },
+    []
   );
 
   return (
-    <div ref={reactFlowWrapper} className="relative flex-1 h-full">
+    <div
+      ref={reactFlowWrapper}
+      className="relative flex-1 h-full"
+      onDragLeave={onDragLeave}
+    >
       {nodes.length === 0 && <EmptyCanvasPrompt />}
+      <DropZoneOverlay />
       <ContextualTooltip />
 
       <ReactFlow
@@ -124,12 +270,19 @@ export function WorkflowCanvas() {
         onDragOver={onDragOver}
         onDrop={onDrop}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        isValidConnection={isValidConnection}
         fitView
         snapToGrid
         snapGrid={[16, 16]}
         defaultEdgeOptions={{
-          type: "smoothstep",
+          type: "vyneEdge",
           animated: true,
+        }}
+        connectionLineStyle={{
+          stroke: "var(--vyne-accent)",
+          strokeWidth: 2,
+          strokeDasharray: "5 5",
         }}
         proOptions={{ hideAttribution: true }}
       >
@@ -139,10 +292,7 @@ export function WorkflowCanvas() {
           size={1}
           color="var(--vyne-border)"
         />
-        <Controls
-          showInteractive={false}
-          position="bottom-right"
-        />
+        <Controls showInteractive={false} position="bottom-right" />
         <MiniMap
           position="top-right"
           nodeColor={(node) => {

@@ -11,6 +11,16 @@ import {
   Zap,
   Search,
   FileText,
+  FileSearch,
+  ListChecks,
+  FileEdit,
+  Repeat,
+  ShieldCheck,
+  Send,
+  LinkIcon,
+  Table,
+  Terminal,
+  Plug,
   type LucideProps,
 } from "lucide-react";
 import type { FC } from "react";
@@ -26,6 +36,16 @@ const iconMap: Record<string, FC<LucideProps>> = {
   Zap,
   Search,
   FileText,
+  FileSearch,
+  ListChecks,
+  FileEdit,
+  Repeat,
+  ShieldCheck,
+  Send,
+  LinkIcon,
+  Table,
+  Terminal,
+  Plug,
 };
 
 export function DynamicIcon({

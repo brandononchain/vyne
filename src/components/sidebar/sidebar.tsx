@@ -7,31 +7,59 @@ import {
   ChevronDown,
   Sparkles,
   GripVertical,
+  Users,
+  Zap,
+  Wrench,
 } from "lucide-react";
 import { DynamicIcon } from "@/lib/icons";
 import {
   agentTemplates,
-  categoryLabels,
-  categoryOrder,
+  agentCategoryLabels,
+  agentCategoryOrder,
+  taskTemplates,
+  taskCategoryLabels,
+  taskCategoryOrder,
+  toolTemplates,
+  toolCategoryLabels,
+  toolCategoryOrder,
 } from "@/lib/agent-templates";
-import type { AgentTemplate } from "@/lib/types";
+import type {
+  AgentTemplate,
+  TaskTemplate,
+  ToolTemplate,
+  DragPayload,
+} from "@/lib/types";
 import { useWorkflowStore } from "@/store/workflow-store";
 
-function TemplateCard({ template }: { template: AgentTemplate }) {
-  const onboardingStep = useWorkflowStore((s) => s.onboardingStep);
+// ── Drag data serializer ─────────────────────────────────────────────
+const DRAG_KEY = "application/vyne-node";
 
-  const onDragStart = (e: DragEvent<HTMLDivElement>) => {
-    e.dataTransfer.setData(
-      "application/vyne-agent",
-      JSON.stringify(template)
-    );
-    e.dataTransfer.effectAllowed = "move";
-  };
+function encodeDrag(payload: DragPayload): string {
+  return JSON.stringify(payload);
+}
 
-  const isHighlighted =
-    (onboardingStep === "welcome" || onboardingStep === "drag-agent") &&
-    template.id === "web-researcher";
-
+// ── Generic draggable card ───────────────────────────────────────────
+function DraggableCard({
+  label: _label,
+  name,
+  description,
+  icon,
+  color,
+  badge,
+  badgeColor,
+  highlighted,
+  onDragStart,
+}: {
+  label?: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  badge?: string;
+  badgeColor?: string;
+  highlighted?: boolean;
+  onDragStart: (e: DragEvent<HTMLDivElement>) => void;
+}) {
   return (
     <div
       draggable
@@ -41,7 +69,8 @@ function TemplateCard({ template }: { template: AgentTemplate }) {
         active:cursor-grabbing transition-all duration-200
         border border-transparent
         hover:bg-white hover:border-[var(--vyne-border)] hover:shadow-[var(--shadow-sm)]
-        ${isHighlighted ? "bg-[var(--vyne-accent-bg)] border-[var(--vyne-accent-light)] animate-pulse-glow" : ""}
+        active:scale-[0.97] active:shadow-md
+        ${highlighted ? "bg-[var(--vyne-accent-bg)] border-[var(--vyne-accent-light)] animate-pulse-glow" : ""}
       `}
     >
       <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-40 transition-opacity">
@@ -50,33 +79,38 @@ function TemplateCard({ template }: { template: AgentTemplate }) {
 
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-        style={{ backgroundColor: `${template.color}14` }}
+        style={{ backgroundColor: `${color}14` }}
       >
-        <DynamicIcon
-          name={template.icon}
-          size={18}
-          style={{ color: template.color }}
-        />
+        <DynamicIcon name={icon} size={18} style={{ color }} />
       </div>
 
       <div className="flex-1 min-w-0">
+        {badge && (
+          <span
+            className="inline-block text-[8px] font-bold uppercase tracking-widest mb-0.5 px-1.5 py-px rounded"
+            style={{ color: badgeColor, backgroundColor: `${badgeColor}14` }}
+          >
+            {badge}
+          </span>
+        )}
         <h4 className="text-[12px] font-semibold text-[var(--vyne-text-primary)] truncate">
-          {template.name}
+          {name}
         </h4>
         <p className="text-[11px] text-[var(--vyne-text-tertiary)] leading-snug line-clamp-2 mt-0.5">
-          {template.description}
+          {description}
         </p>
       </div>
     </div>
   );
 }
 
+// ── Collapsible category section ─────────────────────────────────────
 function CategorySection({
   category,
-  templates,
+  children,
 }: {
   category: string;
-  templates: AgentTemplate[];
+  children: React.ReactNode;
 }) {
   const [expanded, setExpanded] = useState(true);
 
@@ -105,11 +139,7 @@ function CategorySection({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="space-y-0.5 pb-2">
-              {templates.map((t) => (
-                <TemplateCard key={t.id} template={t} />
-              ))}
-            </div>
+            <div className="space-y-0.5 pb-2">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -117,22 +147,186 @@ function CategorySection({
   );
 }
 
-export function Sidebar() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const sidebarOpen = useWorkflowStore((s) => s.sidebarOpen);
+// ── Tab content: Agents ──────────────────────────────────────────────
+function AgentsTab({ query }: { query: string }) {
+  const onboardingStep = useWorkflowStore((s) => s.onboardingStep);
 
-  const filteredTemplates = agentTemplates.filter(
+  const filtered = agentTemplates.filter(
     (t) =>
-      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.description.toLowerCase().includes(searchQuery.toLowerCase())
+      t.name.toLowerCase().includes(query.toLowerCase()) ||
+      t.description.toLowerCase().includes(query.toLowerCase())
   );
 
-  const grouped = categoryOrder
+  const grouped = agentCategoryOrder
     .map((cat) => ({
-      category: categoryLabels[cat],
-      templates: filteredTemplates.filter((t) => t.category === cat),
+      category: agentCategoryLabels[cat],
+      templates: filtered.filter((t) => t.category === cat),
     }))
     .filter((g) => g.templates.length > 0);
+
+  return (
+    <>
+      {grouped.map((g) => (
+        <CategorySection key={g.category} category={g.category}>
+          {g.templates.map((t) => (
+            <DraggableCard
+              key={t.id}
+              name={t.name}
+              description={t.description}
+              icon={t.icon}
+              color={t.color}
+              highlighted={
+                (onboardingStep === "welcome" || onboardingStep === "drag-agent") &&
+                t.id === "web-researcher"
+              }
+              onDragStart={(e) => {
+                e.dataTransfer.setData(DRAG_KEY, encodeDrag({ kind: "agent", template: t }));
+                e.dataTransfer.effectAllowed = "move";
+              }}
+            />
+          ))}
+        </CategorySection>
+      ))}
+    </>
+  );
+}
+
+// ── Tab content: Tasks ───────────────────────────────────────────────
+function TasksTab({ query }: { query: string }) {
+  const filtered = taskTemplates.filter(
+    (t) =>
+      t.name.toLowerCase().includes(query.toLowerCase()) ||
+      t.description.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const grouped = taskCategoryOrder
+    .map((cat) => ({
+      category: taskCategoryLabels[cat],
+      templates: filtered.filter((t) => t.category === cat),
+    }))
+    .filter((g) => g.templates.length > 0);
+
+  return (
+    <>
+      {grouped.map((g) => (
+        <CategorySection key={g.category} category={g.category}>
+          {g.templates.map((t) => (
+            <DraggableCard
+              key={t.id}
+              name={t.name}
+              description={t.description}
+              icon={t.icon}
+              color={t.color}
+              badge="Task"
+              badgeColor="var(--vyne-task)"
+              onDragStart={(e) => {
+                e.dataTransfer.setData(DRAG_KEY, encodeDrag({ kind: "task", template: t }));
+                e.dataTransfer.effectAllowed = "move";
+              }}
+            />
+          ))}
+        </CategorySection>
+      ))}
+    </>
+  );
+}
+
+// ── Tab content: Tools ───────────────────────────────────────────────
+function ToolsTab({ query }: { query: string }) {
+  const filtered = toolTemplates.filter(
+    (t) =>
+      t.name.toLowerCase().includes(query.toLowerCase()) ||
+      t.description.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const grouped = toolCategoryOrder
+    .map((cat) => ({
+      category: toolCategoryLabels[cat],
+      templates: filtered.filter((t) => t.category === cat),
+    }))
+    .filter((g) => g.templates.length > 0);
+
+  return (
+    <>
+      {grouped.map((g) => (
+        <CategorySection key={g.category} category={g.category}>
+          {g.templates.map((t) => (
+            <DraggableCard
+              key={t.id}
+              name={t.name}
+              description={t.description}
+              icon={t.icon}
+              color={t.color}
+              badge="Tool"
+              badgeColor="var(--vyne-tool)"
+              onDragStart={(e) => {
+                e.dataTransfer.setData(DRAG_KEY, encodeDrag({ kind: "tool", template: t }));
+                e.dataTransfer.effectAllowed = "move";
+              }}
+            />
+          ))}
+        </CategorySection>
+      ))}
+    </>
+  );
+}
+
+// ── Tab button ───────────────────────────────────────────────────────
+function TabButton({
+  active,
+  icon,
+  label,
+  count,
+  onClick,
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  count: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg
+        text-[11px] font-semibold transition-all duration-150
+        ${
+          active
+            ? "bg-white text-[var(--vyne-text-primary)] shadow-[var(--shadow-sm)] border border-[var(--vyne-border)]"
+            : "text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-secondary)]"
+        }
+      `}
+    >
+      {icon}
+      {label}
+      <span
+        className={`text-[9px] px-1 py-px rounded ${
+          active
+            ? "bg-[var(--vyne-accent-bg)] text-[var(--vyne-accent)]"
+            : "bg-[var(--vyne-bg-warm)] text-[var(--vyne-text-tertiary)]"
+        }`}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
+
+// ── Sidebar tips per tab ─────────────────────────────────────────────
+const tabTips = {
+  agents:
+    "Pro tip: Connect agents together to create multi-step relay workflows.",
+  tasks:
+    "Pro tip: Chain tasks between agents to define exactly what each team member does.",
+  tools:
+    "Pro tip: Connect a tool to an agent to expand their capabilities.",
+};
+
+// ── Main Sidebar component ───────────────────────────────────────────
+export function Sidebar() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const { sidebarOpen, sidebarTab, setSidebarTab } = useWorkflowStore();
 
   return (
     <AnimatePresence>
@@ -150,12 +344,34 @@ export function Sidebar() {
             <div className="flex items-center gap-2 mb-3">
               <Sparkles size={16} className="text-[var(--vyne-accent)]" />
               <h2 className="text-[13px] font-bold text-[var(--vyne-text-primary)]">
-                Hire Your Team
+                Build Your Workflow
               </h2>
             </div>
-            <p className="text-[11px] text-[var(--vyne-text-secondary)] leading-relaxed mb-3">
-              Drag an agent onto the canvas to add them to your workflow team.
-            </p>
+
+            {/* Tab bar */}
+            <div className="flex gap-1 p-1 rounded-xl bg-[var(--vyne-bg)] mb-3">
+              <TabButton
+                active={sidebarTab === "agents"}
+                icon={<Users size={12} />}
+                label="Agents"
+                count={agentTemplates.length}
+                onClick={() => setSidebarTab("agents")}
+              />
+              <TabButton
+                active={sidebarTab === "tasks"}
+                icon={<Zap size={12} />}
+                label="Tasks"
+                count={taskTemplates.length}
+                onClick={() => setSidebarTab("tasks")}
+              />
+              <TabButton
+                active={sidebarTab === "tools"}
+                icon={<Wrench size={12} />}
+                label="Tools"
+                count={toolTemplates.length}
+                onClick={() => setSidebarTab("tools")}
+              />
+            </div>
 
             {/* Search */}
             <div className="relative">
@@ -167,7 +383,7 @@ export function Sidebar() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search agents..."
+                placeholder={`Search ${sidebarTab}...`}
                 className="w-full pl-8 pr-3 py-2 rounded-lg bg-white border border-[var(--vyne-border)]
                            text-[12px] text-[var(--vyne-text-primary)] placeholder:text-[var(--vyne-text-tertiary)]
                            focus:outline-none focus:border-[var(--vyne-accent)] focus:ring-2 focus:ring-[var(--vyne-accent-glow)]
@@ -176,15 +392,21 @@ export function Sidebar() {
             </div>
           </div>
 
-          {/* Templates list */}
+          {/* Scrollable list */}
           <div className="flex-1 overflow-y-auto px-2 pb-4">
-            {grouped.map((g) => (
-              <CategorySection
-                key={g.category}
-                category={g.category}
-                templates={g.templates}
-              />
-            ))}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={sidebarTab}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 8 }}
+                transition={{ duration: 0.15 }}
+              >
+                {sidebarTab === "agents" && <AgentsTab query={searchQuery} />}
+                {sidebarTab === "tasks" && <TasksTab query={searchQuery} />}
+                {sidebarTab === "tools" && <ToolsTab query={searchQuery} />}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Footer hint */}
@@ -192,7 +414,7 @@ export function Sidebar() {
             <div className="flex items-center gap-2 px-2 py-2 rounded-lg bg-[var(--vyne-accent-bg)]">
               <Sparkles size={12} className="text-[var(--vyne-accent)] shrink-0" />
               <p className="text-[10px] text-[var(--vyne-accent)] font-medium leading-snug">
-                Pro tip: Connect agents together to create multi-step workflows
+                {tabTips[sidebarTab]}
               </p>
             </div>
           </div>

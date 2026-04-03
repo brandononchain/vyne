@@ -177,6 +177,27 @@ body {
   animation: float 3s ease-in-out infinite;
 }
 
+/* Custom edge overrides — let vyne-edge.tsx control styling */
+.react-flow__edge.react-flow__edge-vyneEdge .react-flow__edge-path {
+  stroke: var(--vyne-border-hover) !important;
+  stroke-width: 2px !important;
+}
+
+.react-flow__edge.react-flow__edge-vyneEdge.selected .react-flow__edge-path {
+  stroke: var(--vyne-accent) !important;
+  stroke-width: 2.5px !important;
+}
+
+/* Node selection ring for task and tool nodes */
+.react-flow__node.selected {
+  outline: none !important;
+}
+
+/* Drop cursor when dragging over canvas */
+.react-flow.dragging {
+  cursor: copy !important;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

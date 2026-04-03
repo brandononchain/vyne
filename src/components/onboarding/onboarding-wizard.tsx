@@ -27,15 +27,15 @@ const stepConfigs: Record<OnboardingStep, StepConfig> = {
     icon: <Sparkles size={20} />,
     title: "Welcome to Vyne",
     description:
-      "Build powerful AI agent teams visually — no code required. Let's create your first workflow in under 60 seconds.",
-    hint: 'Drag the "Web Researcher" from the sidebar onto the canvas to begin.',
+      "Build powerful AI agent teams visually \u2014 no code required. Let\u2019s create your first workflow in under 60 seconds.",
+    hint: 'Drag the "Web Researcher" from the Agents tab onto the canvas to begin.',
     progress: 0,
   },
   "drag-agent": {
     icon: <GripVertical size={20} />,
     title: "Hire Your First Agent",
     description:
-      "Great start! Each agent has a specialized role. Think of them as team members you're hiring for a project.",
+      "Great start! Each agent has a specialized role. Think of them as team members you\u2019re hiring for a project.",
     hint: "Grab the highlighted agent card and drop it on the canvas.",
     progress: 20,
   },
@@ -43,32 +43,32 @@ const stepConfigs: Record<OnboardingStep, StepConfig> = {
     icon: <Users size={20} />,
     title: "Agent Hired!",
     description:
-      "Your agent is on the canvas. Each agent comes with default tools — like a new employee with their own skill set.",
-    hint: "Try adding a second agent to build a team. The \"Content Writer\" pairs great with researchers.",
+      "Your agent is on the canvas. Each agent comes with default tools \u2014 like a new employee with their own skill set.",
+    hint: 'Now switch to the Tasks tab and drag a "Research Report" task onto the canvas.',
     progress: 40,
   },
   "add-task": {
     icon: <Zap size={20} />,
     title: "Assign a Task",
     description:
-      "Agents need instructions. A Task tells an agent exactly what to do and what output to produce.",
-    hint: "Tasks will be available in the next update. For now, connect your agents!",
+      "Tasks tell agents exactly what to do. Each task defines an input (what it needs) and an output (what it produces).",
+    hint: "Drag a task from the Tasks tab and drop it next to your agent.",
     progress: 60,
   },
   connect: {
     icon: <Link size={20} />,
     title: "Connect the Dots",
     description:
-      "When you connect two agents, data flows between them. The first agent's output becomes the second agent's input.",
-    hint: "Drag from the right handle of one agent to the left handle of another.",
+      "When you connect two nodes, data flows between them. The first node\u2019s output becomes the next node\u2019s input.",
+    hint: "Drag from the right handle (\u25CF) of your agent to the left handle of the task.",
     progress: 80,
   },
   complete: {
     icon: <CheckCircle2 size={20} />,
     title: "You Built a Workflow!",
     description:
-      "You've created your first multi-agent team. They'll work together, passing information along the chain.",
-    hint: "Keep experimenting — add more agents, rearrange your team, and build something amazing.",
+      "You\u2019ve created your first multi-agent pipeline. Agents, tasks, and tools work together, passing information along the chain.",
+    hint: "Keep experimenting \u2014 try adding tools from the Tools tab, or connect two agents in a relay chain.",
     progress: 100,
   },
 };
