@@ -1,64 +1,59 @@
-import { Queue, type ConnectionOptions } from "bullmq";
+import { Queue } from "bullmq";
 import IORedis from "ioredis";
 
-// ── Redis Connection ─────────────────────────────────────────────────
+// ── Constants ────────────────────────────────────────────────────────
 
-const REDIS_URL = process.env.REDIS_URL;
+export const WORKFLOW_QUEUE_NAME = "workflow-execution";
 
-if (!REDIS_URL) {
-  console.warn(
-    "[Vyne Queue] REDIS_URL not set. Queue features will be unavailable."
-  );
-}
+// ── Redis Connection Factory ─────────────────────────────────────────
 
 /**
- * Shared Redis connection factory.
- * BullMQ requires a raw ioredis connection, not a URL string.
+ * Create a new ioredis connection for BullMQ.
+ * Only call this at RUNTIME (in API routes or the worker), never at
+ * module scope — Next.js imports modules during build/SSG and there's
+ * no Redis available at that point.
  */
 export function createRedisConnection(): IORedis | undefined {
-  if (!REDIS_URL) return undefined;
+  const url = process.env.REDIS_URL;
+  if (!url) return undefined;
 
-  return new IORedis(REDIS_URL, {
-    maxRetriesPerRequest: null, // Required by BullMQ
+  return new IORedis(url, {
+    maxRetriesPerRequest: null,
     enableReadyCheck: false,
+    lazyConnect: true, // Don't connect until first command
     retryStrategy(times) {
-      // Exponential backoff: 200ms, 400ms, 800ms... up to 10s
       return Math.min(times * 200, 10000);
     },
   });
 }
 
-const connection: ConnectionOptions | undefined = REDIS_URL
-  ? { url: REDIS_URL }
-  : undefined;
+// ── Lazy Queue Singleton ─────────────────────────────────────────────
+// The queue is created on first use, NOT on module import.
+// This prevents Redis connections during Next.js build/SSG.
 
-// ── Workflow Execution Queue ─────────────────────────────────────────
+let _queue: Queue | null | undefined;
 
-export const WORKFLOW_QUEUE_NAME = "workflow-execution";
+function getQueue(): Queue | null {
+  if (_queue !== undefined) return _queue;
 
-/**
- * The main job queue for executing agent workflows.
- * Jobs are added when a user clicks "Run" or a webhook/cron trigger fires.
- */
-export const workflowQueue = connection
-  ? new Queue(WORKFLOW_QUEUE_NAME, {
-      connection: createRedisConnection()!,
-      defaultJobOptions: {
-        attempts: 3,
-        backoff: {
-          type: "exponential",
-          delay: 2000, // 2s, 4s, 8s
-        },
-        removeOnComplete: {
-          age: 7 * 24 * 3600, // Keep completed jobs for 7 days
-          count: 1000,
-        },
-        removeOnFail: {
-          age: 30 * 24 * 3600, // Keep failed jobs for 30 days
-        },
-      },
-    })
-  : null;
+  const url = process.env.REDIS_URL;
+  if (!url) {
+    _queue = null;
+    return null;
+  }
+
+  _queue = new Queue(WORKFLOW_QUEUE_NAME, {
+    connection: createRedisConnection()!,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 2000 },
+      removeOnComplete: { age: 7 * 24 * 3600, count: 1000 },
+      removeOnFail: { age: 30 * 24 * 3600 },
+    },
+  });
+
+  return _queue;
+}
 
 // ── Job Data Types ───────────────────────────────────────────────────
 
@@ -78,19 +73,22 @@ export interface WorkflowJobResult {
   outputJson: Record<string, unknown>;
 }
 
+// ── Enqueue ──────────────────────────────────────────────────────────
+
 /**
  * Add a workflow execution job to the queue.
- * Returns the BullMQ job ID, or null if the queue is unavailable.
+ * Returns the BullMQ job ID, or null if Redis is unavailable.
  */
 export async function enqueueWorkflowExecution(
   data: WorkflowJobData
 ): Promise<string | null> {
-  if (!workflowQueue) {
-    console.warn("[Vyne Queue] Cannot enqueue — queue not available");
+  const queue = getQueue();
+  if (!queue) {
+    console.warn("[Vyne Queue] Cannot enqueue — REDIS_URL not set");
     return null;
   }
 
-  const job = await workflowQueue.add("execute-workflow", data, {
+  const job = await queue.add("execute-workflow", data, {
     jobId: `exec-${data.executionLogId}`,
   });
 
