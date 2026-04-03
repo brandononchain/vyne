@@ -1,0 +1,140 @@
+// ── Vyne Database Schema ─────────────────────────────────────────────
+// PostgreSQL on Railway, synced with Clerk for auth
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── User ─────────────────────────────────────────────────────────────
+// Synced via Clerk webhook (user.created / user.updated / user.deleted)
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique @map("clerk_id")
+  email     String   @unique
+  name      String?
+  avatarUrl String?  @map("avatar_url")
+  plan      Plan     @default(HOBBY)
+
+  // Credit tracking
+  creditsUsed  Int @default(0) @map("credits_used")
+  creditsTotal Int @default(1000) @map("credits_total")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  workflows     Workflow[]
+  executionLogs ExecutionLog[]
+
+  @@map("users")
+}
+
+enum Plan {
+  HOBBY
+  PRO
+  BUSINESS
+}
+
+// ── Workflow ─────────────────────────────────────────────────────────
+// Stores the compiled graph JSON and deployment metadata
+model Workflow {
+  id          String         @id @default(cuid())
+  userId      String         @map("user_id")
+  name        String
+  description String?
+  status      WorkflowStatus @default(DRAFT)
+
+  // The full graph payload (nodes, edges, compiled agents/tasks)
+  graphJson Json @map("graph_json")
+
+  // Deployment config
+  triggerType TriggerType? @map("trigger_type")
+  endpointUrl String?      @map("endpoint_url")
+  apiKey      String?      @map("api_key") // hashed in production
+  webhookSecret String?    @map("webhook_secret") // hashed in production
+
+  // Metadata
+  agentCount Int @default(0) @map("agent_count")
+  taskCount  Int @default(0) @map("task_count")
+
+  deployedAt DateTime? @map("deployed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  executionLogs ExecutionLog[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("workflows")
+}
+
+enum WorkflowStatus {
+  DRAFT
+  LIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum TriggerType {
+  API
+  WEBHOOK
+  SCHEDULE
+}
+
+// ── Execution Log ────────────────────────────────────────────────────
+// One entry per workflow run (simulation or live execution)
+model ExecutionLog {
+  id         String          @id @default(cuid())
+  workflowId String          @map("workflow_id")
+  userId     String          @map("user_id")
+  status     ExecutionStatus @default(QUEUED)
+  type       ExecutionType   @default(RUN)
+
+  // The BullMQ job ID for tracking
+  jobId String? @map("job_id")
+
+  // Results
+  creditsUsed Int     @default(0) @map("credits_used")
+  durationMs  Int?    @map("duration_ms")
+  stepsTotal  Int     @default(0) @map("steps_total")
+  stepsCompleted Int  @default(0) @map("steps_completed")
+  errorMessage String? @map("error_message")
+
+  // Output data (agent responses, task results)
+  outputJson Json? @map("output_json")
+
+  startedAt   DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("execution_logs")
+}
+
+enum ExecutionStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ExecutionType {
+  SIMULATION
+  DEPLOYMENT
+  RUN
+}
