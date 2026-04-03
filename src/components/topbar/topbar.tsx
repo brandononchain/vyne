@@ -20,6 +20,7 @@ import { useWorkflowStore } from "@/store/workflow-store";
 import { useDeployStore } from "@/store/deploy-store";
 import { useBillingStore, CREDIT_COSTS } from "@/store/billing-store";
 import { CreditTracker } from "../billing/credit-tracker";
+import { UserDropdown } from "../auth/user-dropdown";
 import type { VyneNodeData } from "@/lib/types";
 
 function TopBarButton({
@@ -250,6 +251,10 @@ export function TopBar() {
             <span>Run Workflow</span>
           </TopBarButton>
         )}
+
+        {/* User menu — always visible */}
+        <div className="w-px h-6 bg-[var(--vyne-border)] mx-1" />
+        <UserDropdown />
       </div>
     </header>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthGuard } from "@/components/auth/auth-guard";
 import { CanvasProvider } from "@/components/canvas/canvas-provider";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { TemplateGallery } from "@/components/templates/template-gallery";
@@ -9,7 +10,7 @@ import { PricingPage } from "@/components/billing/pricing-page";
 import { ToastContainer } from "@/components/toast/toast-container";
 import { useDeployStore } from "@/store/deploy-store";
 
-export default function Home() {
+function AppContent() {
   const currentView = useDeployStore((s) => s.currentView);
 
   return (
@@ -27,5 +28,13 @@ export default function Home() {
         </>
       )}
     </>
+  );
+}
+
+export default function Home() {
+  return (
+    <AuthGuard>
+      <AppContent />
+    </AuthGuard>
   );
 }

@@ -27,6 +27,7 @@ import {
   type WorkflowStatus,
 } from "@/store/deploy-store";
 import { CreditTracker } from "../billing/credit-tracker";
+import { UserDropdown } from "../auth/user-dropdown";
 import { UsageHistory } from "../billing/usage-history";
 import { Sparkline } from "./sparkline";
 import { useState } from "react";
@@ -354,6 +355,8 @@ export function Dashboard() {
             <Plus size={14} />
             Deploy New
           </button>
+          <div className="w-px h-6 bg-[var(--vyne-border)]" />
+          <UserDropdown />
         </div>
       </header>
 
