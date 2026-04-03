@@ -1,40 +1,12 @@
 "use client";
 
-import { AuthGuard } from "@/components/auth/auth-guard";
-import { CanvasProvider } from "@/components/canvas/canvas-provider";
-import { Dashboard } from "@/components/dashboard/dashboard";
-import { TemplateGallery } from "@/components/templates/template-gallery";
-import { DeployModal } from "@/components/deploy/deploy-modal";
-import { UpgradeModal } from "@/components/billing/upgrade-modal";
-import { PricingPage } from "@/components/billing/pricing-page";
-import { ToastContainer } from "@/components/toast/toast-container";
-import { useDeployStore } from "@/store/deploy-store";
+import dynamic from "next/dynamic";
 
-function AppContent() {
-  const currentView = useDeployStore((s) => s.currentView);
-
-  return (
-    <>
-      {currentView === "dashboard" && <Dashboard />}
-      {currentView === "templates" && <TemplateGallery />}
-      {currentView === "canvas" && <CanvasProvider />}
-      {/* Global overlays */}
-      <UpgradeModal />
-      <PricingPage />
-      {currentView === "dashboard" && (
-        <>
-          <DeployModal />
-          <ToastContainer />
-        </>
-      )}
-    </>
-  );
-}
+// Load the entire app client-side only — no SSR/SSG prerendering.
+// This prevents framer-motion's useContext from crashing during
+// Next.js static generation of /_global-error.
+const App = dynamic(() => import("@/components/app"), { ssr: false });
 
 export default function Home() {
-  return (
-    <AuthGuard>
-      <AppContent />
-    </AuthGuard>
-  );
+  return <App />;
 }
