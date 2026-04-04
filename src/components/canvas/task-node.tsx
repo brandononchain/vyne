@@ -23,7 +23,7 @@ function TaskNodeComponent({ id, data, selected }: NodeProps) {
       animate={{ scale: isActiveInSim ? 1.03 : 1, opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 22 }}
       className={`
-        group relative w-[252px] rounded-[20px] overflow-hidden
+        group relative w-[252px] rounded-[20px]
         transition-all duration-300 cursor-grab active:cursor-grabbing
         ${isActiveInSim ? "shadow-[0_0_28px_rgba(212,168,75,0.30)] ring-2 ring-[var(--vyne-task)]/25" : ""}
         ${isComplete && isSimulating ? "shadow-[0_0_20px_rgba(90,158,111,0.20)]" : ""}
@@ -138,8 +138,8 @@ function TaskNodeComponent({ id, data, selected }: NodeProps) {
         </div>
       </div>
 
-      <Handle type="target" position={Position.Left} className="!w-[10px] !h-[10px] !-left-[5px] !bg-[var(--vyne-border-hover)] !border-2 !border-white hover:!bg-[var(--vyne-task)] !transition-colors" />
-      <Handle type="source" position={Position.Right} className="!w-[10px] !h-[10px] !-right-[5px] !bg-[var(--vyne-border-hover)] !border-2 !border-white hover:!bg-[var(--vyne-task)] !transition-colors" />
+      <Handle type="target" position={Position.Left} className="!-left-[6px]" />
+      <Handle type="source" position={Position.Right} className="!-right-[6px]" />
     </motion.div>
   );
 }

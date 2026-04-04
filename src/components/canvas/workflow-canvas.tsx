@@ -314,12 +314,19 @@ export function WorkflowCanvas() {
         <Controls showInteractive={false} position="bottom-right" />
         <MiniMap
           position="top-right"
+          pannable
+          zoomable
           nodeColor={(node) => {
             const data = node.data as { color?: string };
-            return data?.color || "var(--vyne-border)";
+            return data?.color || "#c4ccb8";
           }}
-          maskColor="rgba(250, 249, 247, 0.7)"
-          style={{ width: 140, height: 90 }}
+          nodeStrokeColor={(node) => {
+            const data = node.data as { color?: string };
+            return data?.color ? `${data.color}40` : "#dde3d5";
+          }}
+          nodeStrokeWidth={2}
+          maskColor="rgba(248, 249, 244, 0.75)"
+          style={{ width: 160, height: 100, borderRadius: 14, border: "1px solid var(--vyne-border)", boxShadow: "var(--shadow-md)" }}
         />
       </ReactFlow>
 

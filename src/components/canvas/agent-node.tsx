@@ -23,7 +23,7 @@ function AgentNodeComponent({ id, data, selected }: NodeProps) {
       animate={{ scale: isActiveInSim ? 1.03 : 1, opacity: 1 }}
       transition={{ type: "spring", stiffness: 280, damping: 24 }}
       className={`
-        group relative w-[272px] rounded-[20px] overflow-hidden
+        group relative w-[272px] rounded-[20px]
         transition-all duration-300 cursor-grab active:cursor-grabbing
         ${isActiveInSim ? "shadow-[0_0_28px_rgba(74,124,89,0.30)] ring-2 ring-[var(--vyne-accent)]/25" : ""}
         ${isComplete && isSimulating ? "shadow-[0_0_20px_rgba(90,158,111,0.20)]" : ""}

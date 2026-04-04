@@ -2,10 +2,10 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sparkles,
+  Leaf,
   ArrowRight,
   X,
-  Users,
+  Sprout,
   Zap,
   Link,
   CheckCircle2,
@@ -24,26 +24,26 @@ interface StepConfig {
 
 const stepConfigs: Record<OnboardingStep, StepConfig> = {
   welcome: {
-    icon: <Sparkles size={20} />,
+    icon: <Leaf size={20} />,
     title: "Welcome to Vyne",
     description:
-      "Build powerful AI agent teams visually \u2014 no code required. Let\u2019s create your first workflow in under 60 seconds.",
+      "Cultivate powerful AI agent teams visually \u2014 no code required. Let\u2019s plant your first workflow in under 60 seconds.",
     hint: 'Drag the "Web Researcher" from the Agents tab onto the canvas to begin.',
     progress: 0,
   },
   "drag-agent": {
     icon: <GripVertical size={20} />,
-    title: "Hire Your First Agent",
+    title: "Plant Your First Agent",
     description:
-      "Great start! Each agent has a specialized role. Think of them as team members you\u2019re hiring for a project.",
+      "Great start! Each agent has a specialized role. Think of them as seeds you\u2019re planting in your workflow garden.",
     hint: "Grab the highlighted agent card and drop it on the canvas.",
     progress: 20,
   },
   "configure-agent": {
-    icon: <Users size={20} />,
-    title: "Agent Hired!",
+    icon: <Sprout size={20} />,
+    title: "Agent Planted!",
     description:
-      "Your agent is on the canvas. Each agent comes with default tools \u2014 like a new employee with their own skill set.",
+      "Your agent is on the canvas. Each agent comes with default tools \u2014 like a seedling with its own root system.",
     hint: 'Now switch to the Tasks tab and drag a "Research Report" task onto the canvas.',
     progress: 40,
   },
@@ -57,18 +57,18 @@ const stepConfigs: Record<OnboardingStep, StepConfig> = {
   },
   connect: {
     icon: <Link size={20} />,
-    title: "Connect the Dots",
+    title: "Connect the Branches",
     description:
-      "When you connect two nodes, data flows between them. The first node\u2019s output becomes the next node\u2019s input.",
+      "When you connect two nodes, data flows between them like water through vines. The first node\u2019s output becomes the next node\u2019s input.",
     hint: "Drag from the right handle (\u25CF) of your agent to the left handle of the task.",
     progress: 80,
   },
   complete: {
     icon: <CheckCircle2 size={20} />,
-    title: "You Built a Workflow!",
+    title: "Your Workflow Has Sprouted!",
     description:
-      "You\u2019ve created your first multi-agent pipeline. Agents, tasks, and tools work together, passing information along the chain.",
-    hint: "Keep experimenting \u2014 try adding tools from the Tools tab, or connect two agents in a relay chain.",
+      "You\u2019ve cultivated your first multi-agent pipeline. Agents, tasks, and tools work together, passing information like nutrients through a vine network.",
+    hint: "Keep growing \u2014 try adding tools from the Tools tab, or connect two agents in a relay chain.",
     progress: 100,
   },
 };
@@ -166,7 +166,7 @@ export function OnboardingWizard() {
 
           {/* Hint box */}
           <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-[var(--vyne-bg-warm)] border border-[var(--vyne-border)]">
-            <Sparkles
+            <Leaf
               size={13}
               className="text-[var(--vyne-accent)] shrink-0 mt-0.5"
             />

@@ -19,7 +19,7 @@ function ToolNodeComponent({ id, data, selected }: NodeProps) {
       animate={{ scale: 1, opacity: 1, rotate: 0 }}
       transition={{ type: "spring", stiffness: 340, damping: 20 }}
       className={`
-        group relative w-[192px] rounded-[16px] overflow-hidden
+        group relative w-[192px] rounded-[16px]
         transition-all duration-200 cursor-grab active:cursor-grabbing
         ${selected
           ? "shadow-[0_0_22px_rgba(122,158,126,0.25)] ring-2 ring-[var(--vyne-tool)]/20"
@@ -87,7 +87,7 @@ function ToolNodeComponent({ id, data, selected }: NodeProps) {
         </div>
       </div>
 
-      <Handle type="source" position={Position.Right} className="!w-[9px] !h-[9px] !-right-[4.5px] !bg-[var(--vyne-border-hover)] !border-2 !border-white hover:!bg-[var(--vyne-tool)] !transition-colors" />
+      <Handle type="source" position={Position.Right} className="!-right-[6px]" />
     </motion.div>
   );
 }
