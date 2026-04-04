@@ -8,7 +8,7 @@ import {
   EdgeLabelRenderer,
 } from "@xyflow/react";
 import { motion } from "framer-motion";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Leaf } from "lucide-react";
 
 /**
  * Custom edge component that replaces React Flow's default "spaghetti wire"
@@ -99,7 +99,7 @@ function VyneEdgeComponent({
           `}
         >
           {selected ? (
-            <Zap size={10} className="text-[var(--vyne-accent)]" />
+            <Leaf size={10} className="text-[var(--vyne-accent)]" />
           ) : (
             <ArrowRight size={10} className="text-[var(--vyne-text-tertiary)]" />
           )}
