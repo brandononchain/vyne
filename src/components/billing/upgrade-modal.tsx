@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, ArrowRight, Zap, Heart, TrendingUp } from "lucide-react";
+import { X, Leaf, ArrowRight, Sprout, Heart, TrendingUp } from "lucide-react";
 import { useBillingStore, PLANS, type PlanConfig } from "@/store/billing-store";
 
 function PlanCard({
@@ -39,7 +39,7 @@ function PlanCard({
       <ul className="space-y-1.5 mb-4">
         {plan.features.slice(0, 4).map((f) => (
           <li key={f} className="flex items-start gap-1.5">
-            <Sparkles size={10} className="text-[var(--vyne-accent)] shrink-0 mt-0.5" />
+            <Leaf size={10} className="text-[var(--vyne-accent)] shrink-0 mt-0.5" />
             <span className="text-[10px] text-[var(--vyne-text-secondary)] leading-snug">
               {f}
             </span>
@@ -118,8 +118,8 @@ export function UpgradeModal() {
                 <X size={14} />
               </button>
 
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 flex items-center justify-center mb-3">
-                <Zap size={22} className="text-amber-500" />
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-[var(--vyne-task-bg)] flex items-center justify-center mb-3">
+                <Sprout size={22} className="text-[var(--vyne-task)]" />
               </div>
 
               <h2 className="text-[17px] font-bold text-[var(--vyne-text-primary)] mb-1">
