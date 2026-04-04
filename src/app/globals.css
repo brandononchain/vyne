@@ -2,44 +2,53 @@
 @import "@xyflow/react/dist/style.css";
 
 :root {
-  /* Core palette - warm, approachable, Flora-inspired */
-  --vyne-bg: #faf9f7;
-  --vyne-bg-warm: #f5f3ef;
+  /* ── Vyne Brand: Organic Growth ─────────────────────────────────
+     seed → sprout → grow → repeat
+     A living palette of wood greens, warm earth, and golden light */
+
+  /* Core surfaces */
+  --vyne-bg: #f8f9f4;
+  --vyne-bg-warm: #f0f2ea;
   --vyne-bg-card: #ffffff;
-  --vyne-border: #e8e5e0;
-  --vyne-border-hover: #d4cfc8;
-  --vyne-text-primary: #1a1715;
-  --vyne-text-secondary: #6b6560;
-  --vyne-text-tertiary: #9c9690;
+  --vyne-border: #dde3d5;
+  --vyne-border-hover: #c4ccb8;
+  --vyne-text-primary: #1a2316;
+  --vyne-text-secondary: #4d5a45;
+  --vyne-text-tertiary: #8a9482;
 
-  /* Accent colors */
-  --vyne-accent: #6c5ce7;
-  --vyne-accent-light: #a29bfe;
-  --vyne-accent-bg: #f0eeff;
-  --vyne-accent-glow: rgba(108, 92, 231, 0.15);
+  /* Accent — sage-to-forest green gradient */
+  --vyne-accent: #4a7c59;
+  --vyne-accent-light: #7fb685;
+  --vyne-accent-bg: #edf5ef;
+  --vyne-accent-glow: rgba(74, 124, 89, 0.18);
 
-  /* Role colors */
-  --vyne-agent: #6c5ce7;
-  --vyne-agent-bg: #f0eeff;
-  --vyne-task: #00b894;
-  --vyne-task-bg: #e6faf5;
-  --vyne-tool: #fdcb6e;
-  --vyne-tool-bg: #fef9ec;
+  /* Role colors — harmonized earth tones */
+  --vyne-agent: #4a7c59;
+  --vyne-agent-bg: #edf5ef;
+  --vyne-task: #d4a84b;
+  --vyne-task-bg: #faf3e0;
+  --vyne-tool: #7a9e7e;
+  --vyne-tool-bg: #eef4ef;
 
   /* Status */
-  --vyne-success: #00b894;
-  --vyne-warning: #fdcb6e;
-  --vyne-error: #e17055;
+  --vyne-success: #5a9e6f;
+  --vyne-warning: #d4a84b;
+  --vyne-error: #c75a3a;
 
   /* Sizing */
   --sidebar-width: 300px;
   --topbar-height: 56px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(26, 23, 21, 0.04);
-  --shadow-md: 0 4px 12px rgba(26, 23, 21, 0.06);
-  --shadow-lg: 0 8px 24px rgba(26, 23, 21, 0.08);
+  /* Shadows — warmer, greener undertones */
+  --shadow-sm: 0 1px 2px rgba(26, 35, 22, 0.05);
+  --shadow-md: 0 4px 12px rgba(26, 35, 22, 0.07);
+  --shadow-lg: 0 8px 24px rgba(26, 35, 22, 0.10);
   --shadow-glow: 0 0 20px var(--vyne-accent-glow);
+
+  /* Brand gradients */
+  --vyne-gradient-primary: linear-gradient(135deg, #4a7c59 0%, #7fb685 50%, #5a9e6f 100%);
+  --vyne-gradient-warm: linear-gradient(135deg, #4a7c59 0%, #8fbc8f 40%, #d4a84b 100%);
+  --vyne-gradient-soft: linear-gradient(135deg, #edf5ef 0%, #f8f9f4 50%, #faf3e0 100%);
 }
 
 @theme inline {

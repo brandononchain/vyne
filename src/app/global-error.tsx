@@ -17,15 +17,15 @@ export default function GlobalError({
           justifyContent: "center",
           minHeight: "100vh",
           fontFamily: "system-ui, sans-serif",
-          backgroundColor: "#faf9f7",
-          color: "#1a1715",
+          backgroundColor: "#f8f9f4",
+          color: "#1a2316",
         }}
       >
         <div style={{ textAlign: "center", padding: "2rem" }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>
             Something went wrong
           </h2>
-          <p style={{ fontSize: "0.875rem", color: "#6b6560", marginBottom: "1.5rem" }}>
+          <p style={{ fontSize: "0.875rem", color: "#4d5a45", marginBottom: "1.5rem" }}>
             An unexpected error occurred. Please try again.
           </p>
           <button
@@ -34,7 +34,7 @@ export default function GlobalError({
               padding: "0.5rem 1.5rem",
               borderRadius: "0.75rem",
               border: "none",
-              backgroundColor: "#6c5ce7",
+              backgroundColor: "#4a7c59",
               color: "white",
               fontSize: "0.875rem",
               fontWeight: 600,

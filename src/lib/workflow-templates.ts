@@ -23,7 +23,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     description:
       "A Web Researcher gathers information on a topic, then a Content Writer drafts a polished blog post from the findings.",
     icon: "PenTool",
-    color: "#e17055",
+    color: "#b8694a",
     complexity: "beginner",
     timeSaved: "~2 hours",
     category: "content",
@@ -36,7 +36,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 80, y: 120 },
         data: {
           type: "agent", templateId: "web-researcher", name: "Web Researcher", role: "Research Specialist",
-          description: "Searches the web and compiles research reports.", icon: "Globe", color: "#6c5ce7",
+          description: "Searches the web and compiles research reports.", icon: "Globe", color: "#4a7c59",
           tools: ["web-search", "url-reader"], persona: { ...DEFAULT_AGENT_PERSONA, goal: "Find comprehensive, recent information on the given topic" }, status: "idle",
         } as AgentNodeData,
       },
@@ -46,7 +46,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 420, y: 80 },
         data: {
           type: "task", templateId: "research-report", name: "Research Report", description: "Compile a detailed research report with citations.",
-          icon: "FileSearch", color: "#6c5ce7", expectedInput: "Topic or question", expectedOutput: "Structured report with sources",
+          icon: "FileSearch", color: "#4a7c59", expectedInput: "Topic or question", expectedOutput: "Structured report with sources",
           config: { ...DEFAULT_TASK_CONFIG, detailedInstructions: "Search for 5+ recent sources. Summarize key findings. Include citations." }, status: "pending",
         } as TaskNodeData,
       },
@@ -56,7 +56,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 750, y: 120 },
         data: {
           type: "agent", templateId: "content-writer", name: "Content Writer", role: "Creative Writer",
-          description: "Drafts blog posts and marketing copy.", icon: "PenTool", color: "#e17055",
+          description: "Drafts blog posts and marketing copy.", icon: "PenTool", color: "#b8694a",
           tools: ["text-editor", "grammar-checker"], persona: { ...DEFAULT_AGENT_PERSONA, goal: "Write an engaging, SEO-friendly blog post", tone: "friendly" }, status: "idle",
         } as AgentNodeData,
       },
@@ -66,7 +66,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 1080, y: 80 },
         data: {
           type: "task", templateId: "draft-content", name: "Draft Blog Post", description: "Write original content based on the research.",
-          icon: "FileEdit", color: "#e17055", expectedInput: "Research report", expectedOutput: "Polished blog post",
+          icon: "FileEdit", color: "#b8694a", expectedInput: "Research report", expectedOutput: "Polished blog post",
           config: { ...DEFAULT_TASK_CONFIG, detailedInstructions: "Write a 1000-word blog post. Use an engaging introduction. Include subheadings.", outputFormat: "markdown" }, status: "pending",
         } as TaskNodeData,
       },
@@ -96,7 +96,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 80, y: 100 },
         data: {
           type: "agent", templateId: "web-researcher", name: "Company Researcher", role: "Research Specialist",
-          description: "Searches for companies matching the target criteria.", icon: "Globe", color: "#6c5ce7",
+          description: "Searches for companies matching the target criteria.", icon: "Globe", color: "#4a7c59",
           tools: ["web-search", "url-reader"], persona: { ...DEFAULT_AGENT_PERSONA, goal: "Find B2B companies matching the ideal customer profile" }, status: "idle",
         } as AgentNodeData,
       },
@@ -116,7 +116,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 750, y: 100 },
         data: {
           type: "task", templateId: "transform-format", name: "Export Lead List", description: "Format and export the enriched data as a CSV.",
-          icon: "Repeat", color: "#00b894", expectedInput: "Enriched company data", expectedOutput: "CSV lead list",
+          icon: "Repeat", color: "#5a9e6f", expectedInput: "Enriched company data", expectedOutput: "CSV lead list",
           config: { ...DEFAULT_TASK_CONFIG, outputFormat: "csv", detailedInstructions: "Include: Company, Website, Contact Name, Title, Email. Sort by company size." }, status: "pending",
         } as TaskNodeData,
       },
@@ -165,7 +165,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 720, y: 80 },
         data: {
           type: "agent", templateId: "content-writer", name: "Response Drafter", role: "Creative Writer",
-          description: "Drafts a helpful, empathetic response to the customer.", icon: "PenTool", color: "#e17055",
+          description: "Drafts a helpful, empathetic response to the customer.", icon: "PenTool", color: "#b8694a",
           tools: ["text-editor", "web-search"], persona: { ...DEFAULT_AGENT_PERSONA, goal: "Write a helpful, empathetic response", tone: "friendly" }, status: "idle",
         } as AgentNodeData,
       },
@@ -175,7 +175,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 1040, y: 40 },
         data: {
           type: "task", templateId: "review-and-refine", name: "Review & Send", description: "Quality-check the response and send it.",
-          icon: "ShieldCheck", color: "#fdcb6e", expectedInput: "Draft response", expectedOutput: "Sent email confirmation",
+          icon: "ShieldCheck", color: "#d4a84b", expectedInput: "Draft response", expectedOutput: "Sent email confirmation",
           config: { ...DEFAULT_TASK_CONFIG, detailedInstructions: "Check for tone, accuracy, and completeness. Auto-send if quality passes.", constraints: "Must be under 200 words. Must include next steps." }, status: "pending",
         } as TaskNodeData,
       },
@@ -192,7 +192,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     description:
       "Reads a CSV file, analyzes the data for patterns, and generates a summary report with key insights.",
     icon: "BarChart3",
-    color: "#00b894",
+    color: "#5a9e6f",
     complexity: "beginner",
     timeSaved: "~1 hour",
     category: "data",
@@ -243,7 +243,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 80, y: 100 },
         data: {
           type: "agent", templateId: "code-developer", name: "Code Reviewer", role: "Software Engineer",
-          description: "Reviews code for bugs, style issues, and best practices.", icon: "Code2", color: "#00b894",
+          description: "Reviews code for bugs, style issues, and best practices.", icon: "Code2", color: "#5a9e6f",
           tools: ["code-executor"], persona: { ...DEFAULT_AGENT_PERSONA, goal: "Review the code diff for bugs, security issues, and style violations", tone: "analytical" }, status: "idle",
         } as AgentNodeData,
       },
@@ -253,7 +253,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 420, y: 60 },
         data: {
           type: "task", templateId: "review-and-refine", name: "Write Review", description: "Compile findings into a structured code review.",
-          icon: "ShieldCheck", color: "#fdcb6e", expectedInput: "Code diff", expectedOutput: "Review with comments",
+          icon: "ShieldCheck", color: "#d4a84b", expectedInput: "Code diff", expectedOutput: "Review with comments",
           config: { ...DEFAULT_TASK_CONFIG, detailedInstructions: "List each issue with file, line number, severity, and suggested fix.", outputFormat: "markdown" }, status: "pending",
         } as TaskNodeData,
       },
@@ -279,7 +279,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
     description:
       "Takes raw meeting notes and produces a structured summary with action items, decisions, and follow-ups.",
     icon: "ListChecks",
-    color: "#6c5ce7",
+    color: "#4a7c59",
     complexity: "beginner",
     timeSaved: "~20 min",
     category: "automation",
@@ -292,7 +292,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
         position: { x: 80, y: 100 },
         data: {
           type: "agent", templateId: "content-writer", name: "Note Processor", role: "Creative Writer",
-          description: "Processes raw meeting notes into structured summaries.", icon: "PenTool", color: "#e17055",
+          description: "Processes raw meeting notes into structured summaries.", icon: "PenTool", color: "#b8694a",
           tools: ["text-editor", "grammar-checker"], persona: { ...DEFAULT_AGENT_PERSONA, goal: "Transform raw meeting notes into a clear, actionable summary", tone: "professional" }, status: "idle",
         } as AgentNodeData,
       },

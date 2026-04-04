@@ -10,7 +10,7 @@ function UsageBarChart({ entries }: { entries: UsageEntry[] }) {
   // Aggregate by workflow
   const byWorkflow = useMemo(() => {
     const map = new Map<string, { name: string; total: number; color: string }>();
-    const colors = ["#6c5ce7", "#00b894", "#e17055", "#0984e3", "#fdcb6e", "#e84393"];
+    const colors = ["#4a7c59", "#5a9e6f", "#b8694a", "#0984e3", "#d4a84b", "#e84393"];
     let colorIdx = 0;
 
     for (const e of entries) {

@@ -150,7 +150,7 @@ export const AVAILABLE_TOOLS: AvailableTool[] = [
     name: "Web Search",
     description: "Lets this agent search the internet for up-to-date information.",
     icon: "Search",
-    color: "#6c5ce7",
+    color: "#4a7c59",
   },
   {
     id: "url-reader",
@@ -164,7 +164,7 @@ export const AVAILABLE_TOOLS: AvailableTool[] = [
     name: "CSV / Excel Reader",
     description: "Parses structured data from spreadsheets and CSV files.",
     icon: "Table",
-    color: "#00b894",
+    color: "#5a9e6f",
   },
   {
     id: "code-executor",
@@ -185,21 +185,21 @@ export const AVAILABLE_TOOLS: AvailableTool[] = [
     name: "API Connector",
     description: "Makes HTTP requests to external APIs and processes responses.",
     icon: "Plug",
-    color: "#fdcb6e",
+    color: "#d4a84b",
   },
   {
     id: "text-editor",
     name: "Text Editor",
     description: "Creates and edits long-form documents and content.",
     icon: "FileEdit",
-    color: "#e17055",
+    color: "#b8694a",
   },
   {
     id: "grammar-checker",
     name: "Grammar Checker",
     description: "Reviews text for grammar, spelling, and style improvements.",
     icon: "ShieldCheck",
-    color: "#00b894",
+    color: "#5a9e6f",
   },
   {
     id: "chart-generator",

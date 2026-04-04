@@ -35,39 +35,55 @@ function GoogleIcon({ size = 18 }: { size?: number }) {
   );
 }
 
+// ── Vyne leaf/tendril logo mark (SVG) ─────────────────────────────────
+function VyneLogo({ size = 28, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" className={className}>
+      <path d="M20 38C20 38 20 28 20 22C20 16 16 12 12 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.7" />
+      <path d="M20 22C20 22 24 18 28 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.5" />
+      <path d="M8 4C8 4 2 12 6 20C10 28 20 22 20 22C20 22 12 22 8 16C4 10 8 4 8 4Z" fill="currentColor" opacity="0.9" />
+      <path d="M28 10C28 10 34 14 32 20C30 26 22 24 22 24C22 24 28 22 30 18C32 14 28 10 28 10Z" fill="currentColor" opacity="0.6" />
+      <circle cx="12" cy="7" r="2" fill="currentColor" opacity="0.4" />
+    </svg>
+  );
+}
+
 // ── Animated brand visual (left panel) ───────────────────────────────
 function BrandVisual() {
   return (
-    <div className="relative h-full bg-gradient-to-br from-[#6c5ce7] via-[#a29bfe] to-[#6c5ce7] overflow-hidden flex items-center justify-center">
-      {/* Animated mesh gradient orbs */}
+    <div className="relative h-full bg-gradient-to-br from-[#3d6b4a] via-[#4a7c59] to-[#2d5a3a] overflow-hidden flex items-center justify-center">
+      {/* Animated organic gradient orbs */}
       <div className="absolute inset-0">
         <motion.div
-          className="absolute w-[500px] h-[500px] rounded-full bg-white/10 blur-[80px]"
-          animate={{
-            x: [0, 60, -30, 0],
-            y: [0, -40, 50, 0],
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute w-[500px] h-[500px] rounded-full bg-[#7fb685]/20 blur-[80px]"
+          animate={{ x: [0, 60, -30, 0], y: [0, -40, 50, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
           style={{ top: "-10%", left: "-10%" }}
         />
         <motion.div
-          className="absolute w-[400px] h-[400px] rounded-full bg-[#00b894]/15 blur-[60px]"
-          animate={{
-            x: [0, -50, 30, 0],
-            y: [0, 40, -30, 0],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute w-[400px] h-[400px] rounded-full bg-[#d4a84b]/12 blur-[60px]"
+          animate={{ x: [0, -50, 30, 0], y: [0, 40, -30, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
           style={{ bottom: "-5%", right: "-5%" }}
         />
         <motion.div
-          className="absolute w-[300px] h-[300px] rounded-full bg-[#fdcb6e]/10 blur-[50px]"
-          animate={{
-            x: [0, 40, -20, 0],
-            y: [0, -30, 40, 0],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute w-[300px] h-[300px] rounded-full bg-[#8fbc8f]/15 blur-[50px]"
+          animate={{ x: [0, 40, -20, 0], y: [0, -30, 40, 0] }}
+          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
           style={{ top: "40%", left: "30%" }}
         />
+      </div>
+
+      {/* Decorative vine tendrils */}
+      <div className="absolute inset-0 opacity-[0.06]">
+        <svg width="100%" height="100%" viewBox="0 0 400 600" preserveAspectRatio="none">
+          <path d="M50,600 Q100,400 80,300 T120,100 T60,0" stroke="white" strokeWidth="1.5" fill="none" />
+          <path d="M200,600 Q180,450 220,350 T180,150 T220,0" stroke="white" strokeWidth="1" fill="none" />
+          <path d="M350,600 Q300,500 320,400 T280,200 T340,0" stroke="white" strokeWidth="1.5" fill="none" />
+          <circle cx="80" cy="280" r="4" fill="white" opacity="0.5" />
+          <circle cx="220" cy="330" r="3" fill="white" opacity="0.4" />
+          <circle cx="320" cy="380" r="5" fill="white" opacity="0.3" />
+        </svg>
       </div>
 
       {/* Content */}
@@ -77,31 +93,29 @@ function BrandVisual() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          {/* Logo */}
-          <div className="w-14 h-14 mx-auto mb-6 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20">
-            <span className="text-white text-[22px] font-black">V</span>
+          <div className="w-14 h-14 mx-auto mb-6 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/15">
+            <VyneLogo size={30} className="text-white" />
           </div>
 
-          <h1 className="text-[28px] font-bold text-white mb-3 leading-tight">
-            Build AI Agent Teams<br />Visually
+          <h1 className="text-[28px] font-bold text-white mb-3 leading-tight tracking-[-0.01em]">
+            Grow AI Agent Teams<br />Visually
           </h1>
-          <p className="text-[14px] text-white/70 leading-relaxed mb-8">
-            Drag, connect, and deploy multi-agent workflows without writing a single line of code.
+          <p className="text-[14px] text-white/65 leading-relaxed mb-8">
+            Seed, connect, and cultivate multi-agent workflows — watch them grow from idea to deployment.
           </p>
 
-          {/* Social proof pills */}
           <div className="flex flex-col gap-3">
             {[
-              { icon: <Users size={13} />, text: "2,400+ workflows deployed" },
+              { icon: <Users size={13} />, text: "2,400+ workflows cultivated" },
               { icon: <Zap size={13} />, text: "98.7% average success rate" },
               { icon: <Shield size={13} />, text: "SOC 2 compliant" },
             ].map((item) => (
               <div
                 key={item.text}
-                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10"
+                className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/8 backdrop-blur-sm border border-white/10"
               >
-                <span className="text-white/60">{item.icon}</span>
-                <span className="text-[12px] text-white/80 font-medium">{item.text}</span>
+                <span className="text-white/50">{item.icon}</span>
+                <span className="text-[12px] text-white/75 font-medium">{item.text}</span>
               </div>
             ))}
           </div>

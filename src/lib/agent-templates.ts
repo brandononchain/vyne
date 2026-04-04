@@ -9,7 +9,7 @@ export const agentTemplates: AgentTemplate[] = [
     description:
       "Searches the web, reads articles, and compiles research reports on any topic.",
     icon: "Globe",
-    color: "#6c5ce7",
+    color: "#4a7c59",
     defaultTools: ["web-search", "url-reader"],
     category: "research",
   },
@@ -31,7 +31,7 @@ export const agentTemplates: AgentTemplate[] = [
     description:
       "Drafts blog posts, marketing copy, emails, and other written content.",
     icon: "PenTool",
-    color: "#e17055",
+    color: "#b8694a",
     defaultTools: ["text-editor", "grammar-checker"],
     category: "creative",
   },
@@ -42,7 +42,7 @@ export const agentTemplates: AgentTemplate[] = [
     description:
       "Writes, reviews, and debugs code across multiple programming languages.",
     icon: "Code2",
-    color: "#00b894",
+    color: "#5a9e6f",
     defaultTools: ["code-executor", "linter"],
     category: "technical",
   },
@@ -53,7 +53,7 @@ export const agentTemplates: AgentTemplate[] = [
     description:
       "Orchestrates other agents, delegates tasks, and ensures deadlines are met.",
     icon: "Users",
-    color: "#fdcb6e",
+    color: "#d4a84b",
     defaultTools: ["task-tracker", "calendar"],
     category: "operations",
   },
@@ -78,7 +78,7 @@ export const taskTemplates: TaskTemplate[] = [
     description:
       "Compile a detailed research report from gathered sources with citations and key findings.",
     icon: "FileSearch",
-    color: "#6c5ce7",
+    color: "#4a7c59",
     expectedInput: "Topic or question to research",
     expectedOutput: "Structured report with sources",
     category: "generation",
@@ -100,7 +100,7 @@ export const taskTemplates: TaskTemplate[] = [
     description:
       "Write original content like blog posts, emails, or social media copy based on a brief.",
     icon: "FileEdit",
-    color: "#e17055",
+    color: "#b8694a",
     expectedInput: "Content brief or topic outline",
     expectedOutput: "Polished written content",
     category: "generation",
@@ -111,7 +111,7 @@ export const taskTemplates: TaskTemplate[] = [
     description:
       "Convert data between formats (e.g., CSV to JSON, text to structured data, translate).",
     icon: "Repeat",
-    color: "#00b894",
+    color: "#5a9e6f",
     expectedInput: "Data in original format",
     expectedOutput: "Data in target format",
     category: "transformation",
@@ -122,7 +122,7 @@ export const taskTemplates: TaskTemplate[] = [
     description:
       "Quality-check and improve content, code, or data produced by another agent in the chain.",
     icon: "ShieldCheck",
-    color: "#fdcb6e",
+    color: "#d4a84b",
     expectedInput: "Draft content or code",
     expectedOutput: "Reviewed and refined version",
     category: "analysis",
@@ -147,7 +147,7 @@ export const toolTemplates: ToolTemplate[] = [
     name: "Web Search",
     description: "Search the internet for up-to-date information on any topic.",
     icon: "Search",
-    color: "#6c5ce7",
+    color: "#4a7c59",
     compatibleWith: ["web-researcher", "content-writer"],
     category: "search",
   },
@@ -167,7 +167,7 @@ export const toolTemplates: ToolTemplate[] = [
     description:
       "Parse and analyze structured data from CSV, Excel, and tabular files.",
     icon: "Table",
-    color: "#00b894",
+    color: "#5a9e6f",
     compatibleWith: ["data-analyst", "code-developer"],
     category: "data",
   },
@@ -197,7 +197,7 @@ export const toolTemplates: ToolTemplate[] = [
     description:
       "Make HTTP requests to external APIs and process the responses.",
     icon: "Plug",
-    color: "#fdcb6e",
+    color: "#d4a84b",
     compatibleWith: [],
     category: "data",
   },

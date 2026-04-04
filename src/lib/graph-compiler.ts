@@ -231,7 +231,7 @@ export function compileGraphToJSON(
       name: data.name,
       description: (data as AgentNodeData).description || (data as TaskNodeData).description || "",
       icon: (data as AgentNodeData).icon || (data as TaskNodeData).icon || "Zap",
-      color: (data as AgentNodeData).color || (data as TaskNodeData).color || "#6c5ce7",
+      color: (data as AgentNodeData).color || (data as TaskNodeData).color || "#4a7c59",
       simulationMessage: getSimulationMessage(data, nodes, edges, id),
       simulationDuration: 2000 + Math.random() * 2000, // 2-4s per step
     };

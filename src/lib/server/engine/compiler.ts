@@ -328,7 +328,7 @@ export function compileToLangGraph(
         role: "General Purpose Agent",
         systemPrompt: "You are a helpful assistant executing a workflow task.",
         tools: [],
-        color: "#6c5ce7",
+        color: "#4a7c59",
         icon: "Zap",
       };
 
