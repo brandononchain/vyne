@@ -5,7 +5,6 @@ import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   BackgroundVariant,
   useReactFlow,
   type IsValidConnection,
@@ -18,6 +17,7 @@ import { AgentNode } from "./agent-node";
 import { TaskNode } from "./task-node";
 import { ToolNode } from "./tool-node";
 import { VyneEdge } from "./vyne-edge";
+import { LiveMinimap } from "./live-minimap";
 import { OnboardingWizard } from "../onboarding/onboarding-wizard";
 import { SimulationOverlay } from "../simulation/simulation-overlay";
 import { OutputDrawer } from "../simulation/output-drawer";
@@ -312,23 +312,10 @@ export function WorkflowCanvas() {
           color="var(--vyne-border)"
         />
         <Controls showInteractive={false} position="bottom-right" />
-        <MiniMap
-          position="top-right"
-          pannable
-          zoomable
-          nodeColor={(node) => {
-            const data = node.data as { color?: string };
-            return data?.color || "#c4ccb8";
-          }}
-          nodeStrokeColor={(node) => {
-            const data = node.data as { color?: string };
-            return data?.color ? `${data.color}40` : "#dde3d5";
-          }}
-          nodeStrokeWidth={2}
-          maskColor="rgba(248, 249, 244, 0.75)"
-          style={{ width: 160, height: 100, borderRadius: 14, border: "1px solid var(--vyne-border)", boxShadow: "var(--shadow-md)" }}
-        />
       </ReactFlow>
+
+      {/* Custom live minimap */}
+      <LiveMinimap />
 
       {!isSimulating && <OnboardingWizard />}
       <OutputDrawer />

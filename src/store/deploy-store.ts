@@ -118,40 +118,40 @@ function makeSampleNodes(config: { agents: { id: string; name: string; role: str
 
 const sample1 = makeSampleNodes({
   agents: [
-    { id: "s1-a1", name: "Web Researcher", role: "Research Specialist", icon: "Globe", color: "#4a7c59", tools: ["web-search", "url-reader"], x: 80, y: 100 },
-    { id: "s1-a2", name: "Content Writer", role: "Creative Writer", icon: "PenTool", color: "#b8694a", tools: ["text-editor"], x: 700, y: 100 },
+    { id: "s1-a1", name: "Web Researcher", role: "Research Specialist", icon: "Globe", color: "#4a7c59", tools: ["web-search", "url-reader"], x: 100, y: 200 },
+    { id: "s1-a2", name: "Content Writer", role: "Creative Writer", icon: "PenTool", color: "#b8694a", tools: ["text-editor"], x: 1100, y: 200 },
   ],
   tasks: [
-    { id: "s1-t1", name: "Research Topics", desc: "Find trending topics and gather sources.", icon: "FileSearch", color: "#d4a84b", input: "Topic keywords", output: "Research notes", x: 300, y: 60 },
-    { id: "s1-t2", name: "Draft Summary", desc: "Write a concise digest from research.", icon: "FileEdit", color: "#d4a84b", input: "Research notes", output: "Email draft", x: 500, y: 160 },
-    { id: "s1-t3", name: "Send Email", desc: "Deliver the digest via email.", icon: "Send", color: "#d4a84b", input: "Email draft", output: "Sent confirmation", x: 920, y: 100 },
+    { id: "s1-t1", name: "Research Topics", desc: "Find trending topics and gather sources.", icon: "FileSearch", color: "#d4a84b", input: "Topic keywords", output: "Research notes", x: 440, y: 120 },
+    { id: "s1-t2", name: "Draft Summary", desc: "Write a concise digest from research.", icon: "FileEdit", color: "#d4a84b", input: "Research notes", output: "Email draft", x: 760, y: 280 },
+    { id: "s1-t3", name: "Send Email", desc: "Deliver the digest via email.", icon: "Send", color: "#d4a84b", input: "Email draft", output: "Sent confirmation", x: 1440, y: 200 },
   ],
   edges: [{ source: "s1-a1", target: "s1-t1" }, { source: "s1-t1", target: "s1-t2" }, { source: "s1-t2", target: "s1-a2" }, { source: "s1-a2", target: "s1-t3" }],
 });
 
 const sample2 = makeSampleNodes({
   agents: [
-    { id: "s2-a1", name: "Ticket Reader", role: "Support Analyst", icon: "FileSearch", color: "#4a7c59", tools: ["web-search"], x: 80, y: 120 },
-    { id: "s2-a2", name: "Categorizer", role: "Classification Agent", icon: "ListChecks", color: "#5a9e6f", tools: [], x: 400, y: 40 },
-    { id: "s2-a3", name: "Response Drafter", role: "Support Writer", icon: "PenTool", color: "#b8694a", tools: ["text-editor"], x: 400, y: 220 },
+    { id: "s2-a1", name: "Ticket Reader", role: "Support Analyst", icon: "FileSearch", color: "#4a7c59", tools: ["web-search"], x: 100, y: 220 },
+    { id: "s2-a2", name: "Categorizer", role: "Classification Agent", icon: "ListChecks", color: "#5a9e6f", tools: [], x: 520, y: 80 },
+    { id: "s2-a3", name: "Response Drafter", role: "Support Writer", icon: "PenTool", color: "#b8694a", tools: ["text-editor"], x: 520, y: 380 },
   ],
   tasks: [
-    { id: "s2-t1", name: "Classify Ticket", desc: "Determine priority and category.", icon: "ListChecks", color: "#d4a84b", input: "Raw ticket", output: "Category + priority", x: 700, y: 40 },
-    { id: "s2-t2", name: "Draft Response", desc: "Write a helpful reply.", icon: "FileEdit", color: "#d4a84b", input: "Ticket + category", output: "Draft response", x: 700, y: 220 },
+    { id: "s2-t1", name: "Classify Ticket", desc: "Determine priority and category.", icon: "ListChecks", color: "#d4a84b", input: "Raw ticket", output: "Category + priority", x: 960, y: 80 },
+    { id: "s2-t2", name: "Draft Response", desc: "Write a helpful reply.", icon: "FileEdit", color: "#d4a84b", input: "Ticket + category", output: "Draft response", x: 960, y: 380 },
   ],
   edges: [{ source: "s2-a1", target: "s2-a2" }, { source: "s2-a1", target: "s2-a3" }, { source: "s2-a2", target: "s2-t1" }, { source: "s2-a3", target: "s2-t2" }],
 });
 
 const sample3 = makeSampleNodes({
   agents: [
-    { id: "s3-a1", name: "Topic Planner", role: "Content Strategist", icon: "Globe", color: "#4a7c59", tools: ["web-search"], x: 80, y: 120 },
-    { id: "s3-a2", name: "Blog Writer", role: "Creative Writer", icon: "PenTool", color: "#b8694a", tools: ["text-editor", "grammar-checker"], x: 600, y: 120 },
+    { id: "s3-a1", name: "Topic Planner", role: "Content Strategist", icon: "Globe", color: "#4a7c59", tools: ["web-search"], x: 100, y: 200 },
+    { id: "s3-a2", name: "Blog Writer", role: "Creative Writer", icon: "PenTool", color: "#b8694a", tools: ["text-editor", "grammar-checker"], x: 900, y: 200 },
   ],
   tasks: [
-    { id: "s3-t1", name: "Research Brief", desc: "Create a topic brief with outline.", icon: "FileSearch", color: "#d4a84b", input: "Content calendar", output: "Topic brief", x: 300, y: 50 },
-    { id: "s3-t2", name: "Write Draft", desc: "Produce a first draft blog post.", icon: "FileEdit", color: "#d4a84b", input: "Topic brief", output: "Blog draft", x: 300, y: 200 },
-    { id: "s3-t3", name: "Edit & Polish", desc: "Review grammar and improve flow.", icon: "ShieldCheck", color: "#d4a84b", input: "Blog draft", output: "Final post", x: 850, y: 50 },
-    { id: "s3-t4", name: "Send for Review", desc: "Submit to editor for approval.", icon: "Send", color: "#d4a84b", input: "Final post", output: "Review status", x: 850, y: 200 },
+    { id: "s3-t1", name: "Research Brief", desc: "Create a topic brief with outline.", icon: "FileSearch", color: "#d4a84b", input: "Content calendar", output: "Topic brief", x: 440, y: 100 },
+    { id: "s3-t2", name: "Write Draft", desc: "Produce a first draft blog post.", icon: "FileEdit", color: "#d4a84b", input: "Topic brief", output: "Blog draft", x: 440, y: 320 },
+    { id: "s3-t3", name: "Edit & Polish", desc: "Review grammar and improve flow.", icon: "ShieldCheck", color: "#d4a84b", input: "Blog draft", output: "Final post", x: 1280, y: 100 },
+    { id: "s3-t4", name: "Send for Review", desc: "Submit to editor for approval.", icon: "Send", color: "#d4a84b", input: "Final post", output: "Review status", x: 1280, y: 320 },
   ],
   edges: [{ source: "s3-a1", target: "s3-t1" }, { source: "s3-t1", target: "s3-t2" }, { source: "s3-t2", target: "s3-a2" }, { source: "s3-a2", target: "s3-t3" }, { source: "s3-a2", target: "s3-t4" }],
 });
