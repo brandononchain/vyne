@@ -372,7 +372,9 @@ export function DeployModal() {
     const deployed = deployWorkflow(
       compiled,
       deployModal.workflowName,
-      deployModal.triggerType
+      deployModal.triggerType,
+      nodes,
+      edges
     );
 
     // Simulate deployment delay

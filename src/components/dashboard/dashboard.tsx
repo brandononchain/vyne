@@ -26,6 +26,7 @@ import {
   type DeployedWorkflow,
   type WorkflowStatus,
 } from "@/store/deploy-store";
+import { useWorkflowStore } from "@/store/workflow-store";
 import { CreditTracker } from "../billing/credit-tracker";
 import { UserDropdown } from "../auth/user-dropdown";
 import { UsageHistory } from "../billing/usage-history";
@@ -114,7 +115,15 @@ function MetricPill({
 
 // ── Workflow card ─────────────────────────────────────────────────────
 function WorkflowCard({ workflow }: { workflow: DeployedWorkflow }) {
-  const { toggleWorkflowStatus, removeDeployedWorkflow } = useDeployStore();
+  const { toggleWorkflowStatus, removeDeployedWorkflow, setCurrentView } = useDeployStore();
+  const { loadTemplate } = useWorkflowStore();
+
+  const handleOpenWorkflow = () => {
+    if (workflow.sourceNodes && workflow.sourceNodes.length > 0) {
+      loadTemplate(workflow.sourceNodes, workflow.sourceEdges);
+      setCurrentView("canvas");
+    }
+  };
 
   const successRate =
     workflow.metrics.totalRuns > 0
@@ -135,17 +144,20 @@ function WorkflowCard({ workflow }: { workflow: DeployedWorkflow }) {
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
+      onClick={handleOpenWorkflow}
       className="bg-white rounded-2xl border border-[var(--vyne-border)] shadow-[var(--shadow-sm)]
-                 hover:shadow-[var(--shadow-md)] transition-shadow duration-200 overflow-hidden"
+                 hover:shadow-[var(--shadow-md)] transition-all duration-200 overflow-hidden
+                 cursor-pointer hover:border-[var(--vyne-border-hover)]"
     >
       {/* Header */}
       <div className="px-5 pt-4 pb-3 flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-[14px] font-bold text-[var(--vyne-text-primary)] truncate">
+            <h3 className="text-[14px] font-bold text-[var(--vyne-text-primary)] truncate group-hover:text-[var(--vyne-accent)] transition-colors">
               {workflow.name}
             </h3>
             <StatusBadge status={workflow.status} />
+            <ExternalLink size={11} className="text-[var(--vyne-text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
           </div>
           <p className="text-[11px] text-[var(--vyne-text-tertiary)] truncate">
             {workflow.description}
@@ -155,7 +167,7 @@ function WorkflowCard({ workflow }: { workflow: DeployedWorkflow }) {
         {/* Actions */}
         <div className="flex items-center gap-1 ml-3">
           <button
-            onClick={() => toggleWorkflowStatus(workflow.id)}
+            onClick={(e) => { e.stopPropagation(); toggleWorkflowStatus(workflow.id); }}
             className="w-7 h-7 rounded-lg flex items-center justify-center
                        text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-secondary)]
                        hover:bg-[var(--vyne-bg-warm)] transition-colors"
@@ -164,7 +176,7 @@ function WorkflowCard({ workflow }: { workflow: DeployedWorkflow }) {
             {workflow.status === "live" ? <Pause size={13} /> : <Play size={13} />}
           </button>
           <button
-            onClick={() => removeDeployedWorkflow(workflow.id)}
+            onClick={(e) => { e.stopPropagation(); removeDeployedWorkflow(workflow.id); }}
             className="w-7 h-7 rounded-lg flex items-center justify-center
                        text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-error)]
                        hover:bg-red-50 transition-colors"
