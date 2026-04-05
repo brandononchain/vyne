@@ -54,8 +54,8 @@ interface DeployStore {
   setDeployTriggerType: (type: TriggerType) => void;
 
   // ── View routing ───────────────────────────────────
-  currentView: "canvas" | "dashboard" | "templates";
-  setCurrentView: (view: "canvas" | "dashboard" | "templates") => void;
+  currentView: "canvas" | "dashboard" | "templates" | "settings";
+  setCurrentView: (view: "canvas" | "dashboard" | "templates" | "settings") => void;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────

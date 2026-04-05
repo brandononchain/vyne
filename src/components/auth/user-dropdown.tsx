@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useBillingStore, PLANS } from "@/store/billing-store";
+import { useDeployStore } from "@/store/deploy-store";
 
 function UserAvatar({ name, size = 28 }: { name: string; size?: number }) {
   const initials = name
@@ -34,6 +35,7 @@ function UserAvatar({ name, size = 28 }: { name: string; size?: number }) {
 export function UserDropdown() {
   const { user, userMenuOpen, toggleUserMenu, closeUserMenu, logout } = useAuthStore();
   const { creditsUsed, creditsTotal, currentPlan, openPricing } = useBillingStore();
+  const { setCurrentView } = useDeployStore();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const remaining = creditsTotal - creditsUsed;
@@ -146,6 +148,10 @@ export function UserDropdown() {
                 Manage Plan
               </button>
               <button
+                onClick={() => {
+                  closeUserMenu();
+                  setCurrentView("settings");
+                }}
                 className="w-full flex items-center gap-2.5 px-4 py-2 text-[12px] text-[var(--vyne-text-secondary)]
                            hover:bg-[var(--vyne-bg-warm)] hover:text-[var(--vyne-text-primary)] transition-colors"
               >
