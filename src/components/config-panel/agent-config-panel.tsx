@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
-  Sparkles,
+  Leaf,
   Eye,
   EyeOff,
   Info,
@@ -203,7 +203,7 @@ function ToolToggle({
             className="overflow-hidden"
           >
             <div className="flex items-start gap-2 px-3 py-2 mt-1 rounded-lg bg-[var(--vyne-bg-warm)] border border-[var(--vyne-border)]">
-              <Sparkles size={11} className="text-[var(--vyne-accent)] shrink-0 mt-0.5" />
+              <Leaf size={11} className="text-[var(--vyne-accent)] shrink-0 mt-0.5" />
               <p className="text-[10px] text-[var(--vyne-text-secondary)] leading-snug">
                 {tool.description}
               </p>
@@ -372,7 +372,7 @@ export function AgentConfigPanel({ nodeId }: { nodeId: string }) {
             >
               <div className="p-3 rounded-xl bg-[var(--vyne-bg)] border border-[var(--vyne-border)]">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles size={11} className="text-[var(--vyne-accent)]" />
+                  <Leaf size={11} className="text-[var(--vyne-accent)]" />
                   <span className="text-[10px] font-semibold text-[var(--vyne-accent)]">
                     What the AI model actually sees
                   </span>

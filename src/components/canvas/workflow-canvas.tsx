@@ -10,7 +10,7 @@ import {
   type IsValidConnection,
 } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Sparkles } from "lucide-react";
+import { Plus, Leaf } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
 import { useDeployStore } from "@/store/deploy-store";
 import { AgentNode } from "./agent-node";
@@ -63,7 +63,7 @@ function EmptyCanvasPrompt() {
                      bg-[var(--vyne-accent)] text-white text-[12px] font-semibold
                      hover:opacity-90 transition-opacity shadow-sm"
         >
-          <Sparkles size={13} />
+          <Leaf size={13} />
           Or start with a template
         </button>
       </div>

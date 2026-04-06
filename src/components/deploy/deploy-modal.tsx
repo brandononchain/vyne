@@ -13,7 +13,7 @@ import {
   Key,
   Link,
   Shield,
-  Sparkles,
+  Leaf,
   ArrowRight,
   Loader2,
   CheckCircle2,

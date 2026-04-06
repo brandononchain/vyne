@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   ChevronDown,
-  Sparkles,
+  Leaf,
   GripVertical,
   Users,
   Zap,
@@ -342,7 +342,7 @@ export function Sidebar() {
           {/* Header */}
           <div className="p-4 pb-3">
             <div className="flex items-center gap-2 mb-3">
-              <Sparkles size={16} className="text-[var(--vyne-accent)]" />
+              <Leaf size={16} className="text-[var(--vyne-accent)]" />
               <h2 className="text-[13px] font-bold text-[var(--vyne-text-primary)]">
                 Build Your Workflow
               </h2>
@@ -412,7 +412,7 @@ export function Sidebar() {
           {/* Footer hint */}
           <div className="p-3 border-t border-[var(--vyne-border)]">
             <div className="flex items-center gap-2 px-2 py-2 rounded-lg bg-[var(--vyne-accent-bg)]">
-              <Sparkles size={12} className="text-[var(--vyne-accent)] shrink-0" />
+              <Leaf size={12} className="text-[var(--vyne-accent)] shrink-0" />
               <p className="text-[10px] text-[var(--vyne-accent)] font-medium leading-snug">
                 {tabTips[sidebarTab]}
               </p>

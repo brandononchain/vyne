@@ -63,10 +63,23 @@
 body {
   background: var(--vyne-bg);
   color: var(--vyne-text-primary);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  letter-spacing: -0.01em;
+}
+
+/* Display font for headings and brand text */
+.font-display {
+  font-family: "Instrument Serif", Georgia, serif;
+}
+
+/* Refined focus ring for all interactive elements */
+:focus-visible {
+  outline: 2px solid var(--vyne-accent);
+  outline-offset: 2px;
+  border-radius: 8px;
 }
 
 /* React Flow overrides - strip the default look entirely */
@@ -244,7 +257,7 @@ body {
 
 /* Config panel form inputs */
 .config-panel-input {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "DM Sans", system-ui, sans-serif;
 }
 
 /* Textarea auto-grow visual hint */
@@ -257,9 +270,27 @@ textarea:focus {
   transition: all 0.15s ease;
 }
 
+/* ── Refined button hover states ──────────────────────────────── */
+.btn-press {
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* ── Subtle grain texture overlay ─────────────────────────────── */
+.grain-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {

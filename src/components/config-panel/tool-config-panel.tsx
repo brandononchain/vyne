@@ -4,7 +4,7 @@ import { DynamicIcon } from "@/lib/icons";
 import { useWorkflowStore } from "@/store/workflow-store";
 import { agentTemplates } from "@/lib/agent-templates";
 import type { ToolNodeData, VyneNodeData } from "@/lib/types";
-import { Sparkles, Check, ArrowRight } from "lucide-react";
+import { Leaf, Check, ArrowRight } from "lucide-react";
 
 export function ToolConfigPanel({ nodeId }: { nodeId: string }) {
   const node = useWorkflowStore((s) => s.nodes.find((n) => n.id === nodeId));
@@ -121,7 +121,7 @@ export function ToolConfigPanel({ nodeId }: { nodeId: string }) {
       {/* Usage tip */}
       <div className="p-3 rounded-xl bg-[var(--vyne-accent-bg)] border border-[var(--vyne-accent)]/10">
         <div className="flex items-start gap-2">
-          <Sparkles size={12} className="text-[var(--vyne-accent)] shrink-0 mt-0.5" />
+          <Leaf size={12} className="text-[var(--vyne-accent)] shrink-0 mt-0.5" />
           <div>
             <p className="text-[11px] text-[var(--vyne-accent)] font-semibold mb-1">
               How tools work in Vyne

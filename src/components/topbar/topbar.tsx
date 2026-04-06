@@ -14,7 +14,7 @@ import {
   Loader2,
   Rocket,
   LayoutDashboard,
-  Sparkles,
+  Leaf,
 } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
 import { useDeployStore } from "@/store/deploy-store";
@@ -188,7 +188,7 @@ export function TopBar() {
             <CreditTracker />
             <div className="w-px h-6 bg-[var(--vyne-border)] mx-0.5" />
             <TopBarButton label="Templates" onClick={() => setCurrentView("templates")}>
-              <Sparkles size={14} />
+              <Leaf size={14} />
             </TopBarButton>
             <TopBarButton label="Dashboard" onClick={() => setCurrentView("dashboard")}>
               <LayoutDashboard size={14} />

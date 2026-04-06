@@ -7,7 +7,7 @@ import {
   Mail,
   Loader2,
   CheckCircle2,
-  Sparkles,
+  Leaf,
   Zap,
   Users,
   Shield,
@@ -317,7 +317,7 @@ export function LoginPage() {
                     {authStep === "sending-magic-link" ? (
                       <Loader2 size={14} className="animate-spin" />
                     ) : (
-                      <Sparkles size={14} />
+                      <Leaf size={14} />
                     )}
                     Send Magic Link
                   </button>

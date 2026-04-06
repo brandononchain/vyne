@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Clock, Users, Zap, Sparkles, Search } from "lucide-react";
+import { ArrowRight, Clock, Users, Zap, Leaf, Search } from "lucide-react";
 import { DynamicIcon } from "@/lib/icons";
 import {
   workflowTemplates,
@@ -152,7 +152,7 @@ export function TemplateGallery() {
           {/* Hero */}
           <div className="text-center mb-8">
             <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[var(--vyne-accent-bg)] flex items-center justify-center">
-              <Sparkles size={24} className="text-[var(--vyne-accent)]" />
+              <Leaf size={24} className="text-[var(--vyne-accent)]" />
             </div>
             <h2 className="text-[26px] font-bold text-[var(--vyne-text-primary)] mb-2">
               Start with a Template

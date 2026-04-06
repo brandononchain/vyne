@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
-  Sparkles,
+  Leaf,
   Eye,
   EyeOff,
   ArrowDownToLine,
@@ -298,7 +298,7 @@ export function TaskConfigPanel({ nodeId }: { nodeId: string }) {
             >
               <div className="p-3 rounded-xl bg-[var(--vyne-bg)] border border-[var(--vyne-border)]">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles size={11} className="text-[var(--vyne-task)]" />
+                  <Leaf size={11} className="text-[var(--vyne-task)]" />
                   <span className="text-[10px] font-semibold text-[var(--vyne-task)]">
                     What the task instruction looks like
                   </span>

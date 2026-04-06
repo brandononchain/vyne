@@ -8,7 +8,7 @@ import {
   Users,
   Zap,
   Wrench,
-  Sparkles,
+  Leaf,
 } from "lucide-react";
 import { DynamicIcon } from "@/lib/icons";
 import type { WorkflowTemplate } from "@/lib/workflow-templates";
@@ -271,7 +271,7 @@ export function TemplatePreviewModal({
                            bg-[var(--vyne-accent)] text-white text-[13px] font-semibold
                            hover:opacity-90 transition-opacity shadow-md"
               >
-                <Sparkles size={15} />
+                <Leaf size={15} />
                 Use This Template
                 <ArrowRight size={14} />
               </button>
