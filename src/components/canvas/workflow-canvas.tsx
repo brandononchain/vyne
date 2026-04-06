@@ -18,7 +18,7 @@ import { TaskNode } from "./task-node";
 import { ToolNode } from "./tool-node";
 import { VyneEdge } from "./vyne-edge";
 import { LiveMinimap } from "./live-minimap";
-import { VyneChat } from "../vyne-chat/vyne-chat";
+import { CopilotOmnibar } from "../vyne-chat/vyne-chat";
 import { OnboardingWizard } from "../onboarding/onboarding-wizard";
 import { SimulationOverlay } from "../simulation/simulation-overlay";
 import { OutputDrawer } from "../simulation/output-drawer";
@@ -318,7 +318,7 @@ export function WorkflowCanvas() {
       {/* Custom live minimap */}
       <LiveMinimap />
 
-      {!isSimulating && <VyneChat />}
+      {!isSimulating && <CopilotOmnibar />}
       {!isSimulating && <OnboardingWizard />}
       <OutputDrawer />
     </div>
