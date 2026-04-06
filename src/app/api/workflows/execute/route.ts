@@ -1,110 +1,80 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/server/db";
 import { enqueueWorkflowExecution } from "@/lib/server/queue";
 
 // ── POST /api/workflows/execute — Trigger a workflow run ─────────────
-//
-// This does NOT execute the workflow synchronously. It:
-// 1. Validates the request and checks credits
-// 2. Creates an ExecutionLog entry (status: QUEUED)
-// 3. Adds a job to the BullMQ Redis queue
-// 4. Returns the jobId immediately (< 200ms response time)
-//
-// The actual execution happens in the worker process (worker.ts).
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = request.headers.get("x-user-id");
+    const { userId: clerkId } = await auth();
+    if (!clerkId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
-      );
+    const user = await db.user.findUnique({ where: { clerkId } });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await request.json();
-    const { workflowId, type = "run" } = body as {
+    const { workflowId, type = "run", input } = body as {
       workflowId: string;
       type?: "simulation" | "run";
+      input?: Record<string, unknown>;
     };
 
     if (!workflowId) {
-      return NextResponse.json(
-        { error: "Missing required field: workflowId" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing workflowId" }, { status: 400 });
     }
 
-    // ── 1. Load workflow and user ──────────────────────
-    const [workflow, user] = await Promise.all([
-      db.workflow.findFirst({
-        where: { id: workflowId, userId },
-      }),
-      db.user.findUnique({
-        where: { id: userId },
-      }),
-    ]);
+    // Load workflow
+    const workflow = await db.workflow.findFirst({
+      where: { id: workflowId, userId: user.id },
+    });
 
     if (!workflow) {
-      return NextResponse.json(
-        { error: "Workflow not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Workflow not found" }, { status: 404 });
     }
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    // ── 2. Check credits ───────────────────────────────
+    // Check credits
     const creditCost = type === "simulation" ? 5 : 10;
     const remaining = user.creditsTotal - user.creditsUsed;
 
     if (remaining < creditCost) {
-      return NextResponse.json(
-        {
-          error: "Insufficient credits",
-          required: creditCost,
-          remaining,
-          message: `This ${type} costs ${creditCost} credits. You have ${remaining} remaining.`,
-        },
-        { status: 402 }
-      );
+      return NextResponse.json({
+        error: "Insufficient credits",
+        required: creditCost,
+        remaining,
+      }, { status: 402 });
     }
 
-    // ── 3. Parse graph for step count ──────────────────
+    // Parse step count
     const graphJson = workflow.graphJson as Record<string, unknown>;
-    const executionOrder = (graphJson as { executionOrder?: unknown[] })
-      .executionOrder;
-    const stepsTotal = Array.isArray(executionOrder)
-      ? executionOrder.length
-      : 0;
+    const executionOrder = (graphJson as { executionOrder?: unknown[] }).executionOrder;
+    const stepsTotal = Array.isArray(executionOrder) ? executionOrder.length : 0;
 
-    // ── 4. Create execution log ────────────────────────
+    // Create execution log
     const executionLog = await db.executionLog.create({
       data: {
         workflowId,
-        userId,
+        userId: user.id,
         type: type === "simulation" ? "SIMULATION" : "RUN",
         status: "QUEUED",
         stepsTotal,
+        inputJson: input || null,
       },
     });
 
-    // ── 5. Enqueue the job ─────────────────────────────
+    // Enqueue to Redis/BullMQ
     const jobId = await enqueueWorkflowExecution({
       executionLogId: executionLog.id,
       workflowId,
-      userId,
+      userId: user.id,
       graphJson,
       type,
     });
 
-    // Update the execution log with the job ID
     if (jobId) {
       await db.executionLog.update({
         where: { id: executionLog.id },
@@ -112,23 +82,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ── 6. Return immediately ──────────────────────────
-    return NextResponse.json(
-      {
-        executionId: executionLog.id,
-        jobId: jobId ?? "queue-unavailable",
-        status: "QUEUED",
-        stepsTotal,
-        creditCost,
-        message: `Workflow queued for ${type}. Track progress with the execution ID.`,
-      },
-      { status: 202 }
-    );
+    return NextResponse.json({
+      executionId: executionLog.id,
+      jobId: jobId ?? "queue-unavailable",
+      status: "QUEUED",
+      stepsTotal,
+      creditCost,
+    }, { status: 202 });
   } catch (error) {
     console.error("[API] POST /api/workflows/execute error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

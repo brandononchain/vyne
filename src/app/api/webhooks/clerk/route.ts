@@ -2,21 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/server/db";
 
 // ── Clerk Webhook Handler ────────────────────────────────────────────
-//
-// Syncs Clerk user events with the Prisma User table.
-// Configure this endpoint in your Clerk Dashboard → Webhooks:
-//   URL: https://your-domain.com/api/webhooks/clerk
-//   Events: user.created, user.updated, user.deleted
-//
-// In production, you MUST verify the webhook signature using
-// the Clerk webhook secret (svix). This skeleton shows the
-// data flow without signature verification for clarity.
 
 interface ClerkWebhookEvent {
   type: string;
   data: {
     id: string;
-    email_addresses: { email_address: string; id: string }[];
+    email_addresses: { email_address: string }[];
     first_name: string | null;
     last_name: string | null;
     image_url: string | null;
@@ -29,18 +20,24 @@ export async function POST(request: NextRequest) {
     const { type, data } = body;
 
     const primaryEmail = data.email_addresses?.[0]?.email_address;
-    const fullName = [data.first_name, data.last_name]
-      .filter(Boolean)
-      .join(" ") || null;
+    const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
 
     switch (type) {
       case "user.created": {
         if (!primaryEmail) {
-          return NextResponse.json(
-            { error: "No email on user" },
-            { status: 400 }
-          );
+          return NextResponse.json({ error: "No email" }, { status: 400 });
         }
+
+        // Create a default organization for the user
+        const slug = primaryEmail.split("@")[0].toLowerCase().replace(/[^a-z0-9]/g, "-");
+        const org = await db.organization.create({
+          data: {
+            name: fullName ? `${fullName}'s Workspace` : "My Workspace",
+            slug: `${slug}-${Date.now().toString(36)}`,
+            plan: "HOBBY",
+            creditsTotal: 1000,
+          },
+        });
 
         await db.user.create({
           data: {
@@ -51,10 +48,12 @@ export async function POST(request: NextRequest) {
             plan: "HOBBY",
             creditsTotal: 1000,
             creditsUsed: 0,
+            organizationId: org.id,
+            orgRole: "OWNER",
           },
         });
 
-        console.log(`[Clerk Webhook] Created user ${data.id} (${primaryEmail})`);
+        console.log(`[Clerk] Created user ${data.id} + org ${org.id}`);
         break;
       }
 
@@ -67,32 +66,30 @@ export async function POST(request: NextRequest) {
             avatarUrl: data.image_url,
           },
         });
-
-        console.log(`[Clerk Webhook] Updated user ${data.id}`);
+        console.log(`[Clerk] Updated user ${data.id}`);
         break;
       }
 
       case "user.deleted": {
-        await db.user
-          .delete({ where: { clerkId: data.id } })
-          .catch(() => {
-            // User may already be deleted — that's fine
-          });
-
-        console.log(`[Clerk Webhook] Deleted user ${data.id}`);
+        const user = await db.user.findUnique({ where: { clerkId: data.id } });
+        if (user) {
+          // Delete org if this user was the only owner
+          if (user.organizationId) {
+            const orgMembers = await db.user.count({ where: { organizationId: user.organizationId } });
+            if (orgMembers <= 1) {
+              await db.organization.delete({ where: { id: user.organizationId } }).catch(() => {});
+            }
+          }
+          await db.user.delete({ where: { clerkId: data.id } }).catch(() => {});
+        }
+        console.log(`[Clerk] Deleted user ${data.id}`);
         break;
       }
-
-      default:
-        console.log(`[Clerk Webhook] Unhandled event: ${type}`);
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error("[Clerk Webhook] Error:", error);
-    return NextResponse.json(
-      { error: "Webhook processing failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
   }
 }

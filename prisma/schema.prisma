@@ -1,5 +1,5 @@
-// ── Vyne Database Schema ─────────────────────────────────────────────
-// PostgreSQL on Railway, synced with Clerk for auth
+// ── Vyne Production Database Schema ──────────────────────────────────
+// PostgreSQL on Railway | Auth via Clerk | Queue via Redis/BullMQ
 
 generator client {
   provider = "prisma-client"
@@ -10,8 +10,10 @@ datasource db {
   provider = "postgresql"
 }
 
-// ── User ─────────────────────────────────────────────────────────────
-// Synced via Clerk webhook (user.created / user.updated / user.deleted)
+// ─────────────────────────────────────────────────────────────────────
+// IDENTITY & ACCESS
+// ─────────────────────────────────────────────────────────────────────
+
 model User {
   id        String   @id @default(cuid())
   clerkId   String   @unique @map("clerk_id")
@@ -20,17 +22,28 @@ model User {
   avatarUrl String?  @map("avatar_url")
   plan      Plan     @default(HOBBY)
 
-  // Credit tracking
+  // Credits
   creditsUsed  Int @default(0) @map("credits_used")
   creditsTotal Int @default(1000) @map("credits_total")
+
+  // Preferences (JSON blob: timezone, defaultView, notifications, etc.)
+  preferences Json? @default("{}")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  workflows     Workflow[]
-  executionLogs ExecutionLog[]
+  organizationId String?             @map("organization_id")
+  organization   Organization?       @relation(fields: [organizationId], references: [id])
+  orgRole        OrgRole             @default(OWNER)
+  workflows      Workflow[]
+  executionLogs  ExecutionLog[]
+  apiKeys        ApiKey[]
+  chatMessages   ChatMessage[]
+  agentConfigs   SavedAgentConfig[]
 
+  @@index([clerkId])
+  @@index([organizationId])
   @@map("users")
 }
 
@@ -40,27 +53,93 @@ enum Plan {
   BUSINESS
 }
 
-// ── Workflow ─────────────────────────────────────────────────────────
-// Stores the compiled graph JSON and deployment metadata
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// ORGANIZATION (team workspaces)
+// ─────────────────────────────────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  avatarUrl String?  @map("avatar_url")
+
+  // Billing at org level
+  plan         Plan @default(HOBBY)
+  creditsUsed  Int  @default(0) @map("credits_used")
+  creditsTotal Int  @default(1000) @map("credits_total")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  members   User[]
+  workflows Workflow[]
+  apiKeys   ApiKey[]
+
+  @@map("organizations")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// API KEYS
+// ─────────────────────────────────────────────────────────────────────
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  orgId     String?  @map("org_id")
+  name      String
+  keyHash   String   @unique @map("key_hash")   // bcrypt hash of the actual key
+  keyPrefix String   @map("key_prefix")          // first 12 chars for display (vyne_sk_prod)
+  lastUsedAt DateTime? @map("last_used_at")
+  expiresAt  DateTime? @map("expires_at")
+  revoked    Boolean  @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([keyHash])
+  @@index([userId])
+  @@map("api_keys")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// WORKFLOWS
+// ─────────────────────────────────────────────────────────────────────
+
 model Workflow {
   id          String         @id @default(cuid())
   userId      String         @map("user_id")
+  orgId       String?        @map("org_id")
   name        String
   description String?
   status      WorkflowStatus @default(DRAFT)
 
-  // The full graph payload (nodes, edges, compiled agents/tasks)
+  // The full graph: nodes, edges, compiled agents/tasks, source canvas data
   graphJson Json @map("graph_json")
 
   // Deployment config
-  triggerType TriggerType? @map("trigger_type")
-  endpointUrl String?      @map("endpoint_url")
-  apiKey      String?      @map("api_key") // hashed in production
-  webhookSecret String?    @map("webhook_secret") // hashed in production
+  triggerType   TriggerType? @map("trigger_type")
+  endpointUrl   String?      @map("endpoint_url")
+  apiKey        String?      @map("api_key")
+  webhookSecret String?      @map("webhook_secret")
+
+  // Schedule config (cron expression for SCHEDULE trigger)
+  cronExpression String? @map("cron_expression")
 
   // Metadata
   agentCount Int @default(0) @map("agent_count")
   taskCount  Int @default(0) @map("task_count")
+  version    Int @default(1)
 
   deployedAt DateTime? @map("deployed_at")
   createdAt  DateTime  @default(now()) @map("created_at")
@@ -68,9 +147,12 @@ model Workflow {
 
   // Relations
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization  Organization?  @relation(fields: [orgId], references: [id])
   executionLogs ExecutionLog[]
+  versions      WorkflowVersion[]
 
   @@index([userId])
+  @@index([orgId])
   @@index([status])
   @@map("workflows")
 }
@@ -88,8 +170,28 @@ enum TriggerType {
   SCHEDULE
 }
 
-// ── Execution Log ────────────────────────────────────────────────────
-// One entry per workflow run (simulation or live execution)
+// ── Workflow Versions (history) ──────────────────────────────────────
+
+model WorkflowVersion {
+  id         String @id @default(cuid())
+  workflowId String @map("workflow_id")
+  version    Int
+  graphJson  Json   @map("graph_json")
+  changeNote String? @map("change_note")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, version])
+  @@index([workflowId])
+  @@map("workflow_versions")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// EXECUTION
+// ─────────────────────────────────────────────────────────────────────
+
 model ExecutionLog {
   id         String          @id @default(cuid())
   workflowId String          @map("workflow_id")
@@ -97,18 +199,24 @@ model ExecutionLog {
   status     ExecutionStatus @default(QUEUED)
   type       ExecutionType   @default(RUN)
 
-  // The BullMQ job ID for tracking
+  // BullMQ job tracking
   jobId String? @map("job_id")
 
   // Results
-  creditsUsed Int     @default(0) @map("credits_used")
-  durationMs  Int?    @map("duration_ms")
-  stepsTotal  Int     @default(0) @map("steps_total")
-  stepsCompleted Int  @default(0) @map("steps_completed")
-  errorMessage String? @map("error_message")
+  creditsUsed    Int     @default(0) @map("credits_used")
+  durationMs     Int?    @map("duration_ms")
+  stepsTotal     Int     @default(0) @map("steps_total")
+  stepsCompleted Int     @default(0) @map("steps_completed")
+  errorMessage   String? @map("error_message")
 
-  // Output data (agent responses, task results)
+  // Input that triggered this execution
+  inputJson Json? @map("input_json")
+
+  // Output data (agent responses, task results per step)
   outputJson Json? @map("output_json")
+
+  // Per-step logs for real-time streaming
+  stepLogs Json? @map("step_logs")
 
   startedAt   DateTime? @map("started_at")
   completedAt DateTime? @map("completed_at")
@@ -137,4 +245,63 @@ enum ExecutionType {
   SIMULATION
   DEPLOYMENT
   RUN
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// VYNE AI CHAT (conversation memory)
+// ─────────────────────────────────────────────────────────────────────
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  role      ChatRole
+  content   String   @db.Text
+  metadata  Json?    // builtNodes, action type, status, etc.
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+enum ChatRole {
+  USER
+  VYNE
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// SAVED AGENT CONFIGS (reusable agent blueprints)
+// ─────────────────────────────────────────────────────────────────────
+
+model SavedAgentConfig {
+  id          String @id @default(cuid())
+  userId      String @map("user_id")
+  name        String
+  role        String
+  description String?
+  icon        String @default("Globe")
+  color       String @default("#4a7c59")
+
+  // Agent persona
+  goal             String? @db.Text
+  backstory        String? @db.Text
+  tone             String  @default("professional")
+  customInstructions String? @map("custom_instructions") @db.Text
+
+  // Default tools
+  tools Json @default("[]")
+
+  // Sharing
+  isPublic Boolean @default(false) @map("is_public")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_agent_configs")
 }
