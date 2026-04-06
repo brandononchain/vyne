@@ -336,3 +336,31 @@ textarea:focus {
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* ── Landing Page Overrides ──────────────────────────────────────── */
+
+/* Allow scrolling on the landing page (body is overflow:hidden for the canvas) */
+.landing-page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: 100vh;
+}
+
+/* Animated gradient text for landing headlines */
+.landing-gradient-text {
+  background: linear-gradient(135deg, #7fb685 0%, #d4a84b 60%, #7fb685 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-shift 6s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
