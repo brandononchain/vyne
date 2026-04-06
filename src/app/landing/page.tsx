@@ -120,11 +120,11 @@ function Navbar() {
         >
           <Link href="/" className="shrink-0 flex items-center gap-2.5">
             <Image
-              src="/vyne-logo.png"
+              src="/vyne-logo.svg"
               alt="Vyne"
               width={88}
               height={36}
-              className="h-[26px] w-auto brightness-0 invert opacity-80"
+              className="h-[26px] w-auto opacity-90"
               priority
             />
           </Link>
@@ -828,11 +828,11 @@ function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Image
-              src="/vyne-logo.png"
+              src="/vyne-logo.svg"
               alt="Vyne"
               width={80}
               height={32}
-              className="h-[22px] w-auto brightness-0 invert opacity-60 mb-4"
+              className="h-[22px] w-auto opacity-70 mb-4"
             />
             <p className="text-white/20 text-sm leading-relaxed tracking-tight max-w-[200px]">
               Visual AI orchestration for modern teams.

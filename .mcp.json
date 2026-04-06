@@ -1,8 +1,9 @@
 {
   "mcpServers": {
-    "aidesigner": {
-      "type": "http",
-      "url": "https://api.aidesigner.ai/api/v1/mcp"
+    "railway": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@railway/mcp-server"]
     }
   }
 }
