@@ -21,7 +21,7 @@ import {
   Globe,
   Mail,
 } from "lucide-react";
-import { useAuthStore } from "@/store/auth-store";
+import { useUser } from "@clerk/nextjs";
 import { useBillingStore, PLANS } from "@/store/billing-store";
 import { useDeployStore } from "@/store/deploy-store";
 
@@ -125,13 +125,16 @@ function CopyBtn({ text }: { text: string }) {
 // ── Profile Tab ──────────────────────────────────────────────────────
 
 function ProfileTab() {
-  const { user } = useAuthStore();
-  const [name, setName] = useState(user?.name || "");
-  const [email] = useState(user?.email || "");
+  const { user } = useUser();
+  const userName = user?.fullName || user?.firstName || "User";
+  const userEmail = user?.primaryEmailAddress?.emailAddress || "";
+  const userAvatar = user?.imageUrl;
+  const [name, setName] = useState(userName);
+  const [email] = useState(userEmail);
   const [timezone, setTimezone] = useState("America/Chicago");
   const [dirty, setDirty] = useState(false);
 
-  const initials = (user?.name || "U")
+  const initials = userName
     .split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
@@ -140,19 +143,23 @@ function ProfileTab() {
         <div className="flex items-start gap-6 mb-6">
           {/* Avatar */}
           <div className="relative group">
-            <div className="w-20 h-20 rounded-2xl bg-[var(--vyne-accent)] text-white flex items-center justify-center text-[24px] font-bold">
-              {initials}
-            </div>
+            {userAvatar ? (
+              <img src={userAvatar} alt={userName} className="w-20 h-20 rounded-2xl object-cover" />
+            ) : (
+              <div className="w-20 h-20 rounded-2xl bg-[var(--vyne-accent)] text-white flex items-center justify-center text-[24px] font-bold">
+                {initials}
+              </div>
+            )}
             <button className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
               <Camera size={18} className="text-white" />
             </button>
           </div>
           <div className="flex-1 pt-1">
-            <p className="text-[14px] font-semibold text-[var(--vyne-text-primary)]">{user?.name}</p>
-            <p className="text-[12px] text-[var(--vyne-text-tertiary)] mb-2">{user?.email}</p>
+            <p className="text-[14px] font-semibold text-[var(--vyne-text-primary)]">{userName}</p>
+            <p className="text-[12px] text-[var(--vyne-text-tertiary)] mb-2">{userEmail}</p>
             <div className="flex items-center gap-1.5">
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[var(--vyne-accent-bg)] text-[10px] font-semibold text-[var(--vyne-accent)]">
-                <Leaf size={9} /> {user?.provider === "google" ? "Google" : user?.provider === "github" ? "GitHub" : "Magic Link"}
+                <Leaf size={9} /> {user?.externalAccounts?.[0]?.provider || "Email"}
               </span>
               <span className="text-[10px] text-[var(--vyne-text-tertiary)]">
                 Joined {user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Recently"}
@@ -223,7 +230,7 @@ function ProfileTab() {
         </div>
       </SectionCard>
 
-      <SaveBar dirty={dirty} onSave={() => setDirty(false)} onDiscard={() => { setName(user?.name || ""); setDirty(false); }} />
+      <SaveBar dirty={dirty} onSave={() => setDirty(false)} onDiscard={() => { setName(userName || ""); setDirty(false); }} />
     </div>
   );
 }

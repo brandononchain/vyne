@@ -377,8 +377,28 @@ export function DeployModal() {
       edges
     );
 
-    // Simulate deployment delay
-    await new Promise((r) => setTimeout(r, 2400));
+    // Save to database
+    try {
+      await fetch("/api/workflows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: deployed.name,
+          description: deployed.description,
+          graphJson: {
+            compiled,
+            sourceNodes: nodes,
+            sourceEdges: edges,
+          },
+          triggerType: deployed.triggerType,
+          agentCount: deployed.agentCount,
+          taskCount: deployed.taskCount,
+          status: "LIVE",
+        }),
+      });
+    } catch (err) {
+      console.error("[Deploy] Failed to save to DB:", err);
+    }
 
     addDeployedWorkflow(deployed);
     setDeployedData({

@@ -1,6 +1,5 @@
 "use client";
 
-import { AuthGuard } from "@/components/auth/auth-guard";
 import { CanvasProvider } from "@/components/canvas/canvas-provider";
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { TemplateGallery } from "@/components/templates/template-gallery";
@@ -10,9 +9,13 @@ import { UpgradeModal } from "@/components/billing/upgrade-modal";
 import { PricingPage } from "@/components/billing/pricing-page";
 import { ToastContainer } from "@/components/toast/toast-container";
 import { useDeployStore } from "@/store/deploy-store";
+import { useDataLoader } from "@/lib/use-data-loader";
 
 function AppContent() {
   const currentView = useDeployStore((s) => s.currentView);
+
+  // Load real data from DB on mount
+  useDataLoader();
 
   return (
     <>
@@ -33,9 +36,5 @@ function AppContent() {
 }
 
 export default function App() {
-  return (
-    <AuthGuard>
-      <AppContent />
-    </AuthGuard>
-  );
+  return <AppContent />;
 }

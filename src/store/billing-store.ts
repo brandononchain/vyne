@@ -17,7 +17,7 @@ export interface PlanConfig {
   tier: PlanTier;
   name: string;
   monthlyCredits: number;
-  price: number; // $ per month
+  price: number;
   features: string[];
   highlighted?: boolean;
 }
@@ -72,89 +72,67 @@ export const PLANS: PlanConfig[] = [
   },
 ];
 
-// ── Credit costs ─────────────────────────────────────────────────────
 export const CREDIT_COSTS = {
   simulation: 5,
   deployment: 25,
   run: 10,
 };
 
-// ── Store ────────────────────────────────────────────────────────────
+// ── Store — starts at defaults, loaded from DB via API ───────────────
 
 interface BillingState {
-  // Plan
   currentPlan: PlanTier;
   setPlan: (tier: PlanTier) => void;
 
-  // Credits
   creditsUsed: number;
   creditsTotal: number;
+  setCredits: (used: number, total: number) => void;
   creditsRemaining: () => number;
   consumeCredits: (amount: number, workflowId: string, workflowName: string, type: UsageEntry["type"]) => boolean;
 
-  // Usage history
   usageHistory: UsageEntry[];
+  setUsageHistory: (entries: UsageEntry[]) => void;
 
-  // Upgrade modal
   upgradeModalOpen: boolean;
   upgradeReason: string;
   openUpgradeModal: (reason: string) => void;
   closeUpgradeModal: () => void;
 
-  // Pricing page
   pricingOpen: boolean;
   openPricing: () => void;
   closePricing: () => void;
 
-  // Can afford checks
   canAffordSimulation: () => boolean;
   canAffordDeployment: () => boolean;
 }
 
-// Seed with realistic usage history
-const seedHistory: UsageEntry[] = [
-  { id: "u1", workflowId: "wf_sample_1", workflowName: "Daily Research Digest", creditsUsed: 10, timestamp: new Date(Date.now() - 3600000).toISOString(), type: "run" },
-  { id: "u2", workflowId: "wf_sample_2", workflowName: "Support Ticket Analyzer", creditsUsed: 10, timestamp: new Date(Date.now() - 7200000).toISOString(), type: "run" },
-  { id: "u3", workflowId: "wf_sample_1", workflowName: "Daily Research Digest", creditsUsed: 10, timestamp: new Date(Date.now() - 86400000).toISOString(), type: "run" },
-  { id: "u4", workflowId: "wf_sample_3", workflowName: "Content Pipeline", creditsUsed: 25, timestamp: new Date(Date.now() - 2 * 86400000).toISOString(), type: "deployment" },
-  { id: "u5", workflowId: "wf_sample_2", workflowName: "Support Ticket Analyzer", creditsUsed: 10, timestamp: new Date(Date.now() - 2 * 86400000).toISOString(), type: "run" },
-  { id: "u6", workflowId: "wf_sample_1", workflowName: "Daily Research Digest", creditsUsed: 5, timestamp: new Date(Date.now() - 3 * 86400000).toISOString(), type: "simulation" },
-  { id: "u7", workflowId: "wf_sample_2", workflowName: "Support Ticket Analyzer", creditsUsed: 25, timestamp: new Date(Date.now() - 5 * 86400000).toISOString(), type: "deployment" },
-  { id: "u8", workflowId: "wf_sample_1", workflowName: "Daily Research Digest", creditsUsed: 25, timestamp: new Date(Date.now() - 7 * 86400000).toISOString(), type: "deployment" },
-];
-
-const seedCreditsUsed = seedHistory.reduce((s, e) => s + e.creditsUsed, 0);
-
-let entryCounter = seedHistory.length + 1;
+let entryCounter = 0;
 
 export const useBillingStore = create<BillingState>((set, get) => ({
-  currentPlan: "pro",
-  creditsUsed: seedCreditsUsed,
-  creditsTotal: 5000,
-  usageHistory: seedHistory,
+  currentPlan: "hobby",
+  creditsUsed: 0,
+  creditsTotal: 1000,
+  usageHistory: [],
 
   setPlan: (tier) => {
     const plan = PLANS.find((p) => p.tier === tier);
-    if (plan) {
-      set({ currentPlan: tier, creditsTotal: plan.monthlyCredits });
-    }
+    if (plan) set({ currentPlan: tier, creditsTotal: plan.monthlyCredits });
   },
+
+  setCredits: (used, total) => set({ creditsUsed: used, creditsTotal: total }),
+
+  setUsageHistory: (entries) => set({ usageHistory: entries }),
 
   creditsRemaining: () => get().creditsTotal - get().creditsUsed,
 
   consumeCredits: (amount, workflowId, workflowName, type) => {
     const remaining = get().creditsRemaining();
     if (remaining < amount) return false;
-
     const entry: UsageEntry = {
       id: `u${++entryCounter}`,
-      workflowId,
-      workflowName,
-      creditsUsed: amount,
-      timestamp: new Date().toISOString(),
-      type,
+      workflowId, workflowName, creditsUsed: amount,
+      timestamp: new Date().toISOString(), type,
     };
-
     set({
       creditsUsed: get().creditsUsed + amount,
       usageHistory: [entry, ...get().usageHistory],
