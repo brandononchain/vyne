@@ -241,22 +241,21 @@ function OrganizationTab() {
   const { currentPlan } = useBillingStore();
   const plan = PLANS.find((p) => p.tier === currentPlan);
   const { openPricing } = useBillingStore();
-  const [orgName, setOrgName] = useState("Vyne Workspace");
+  const { user } = useUser();
+  const [orgName, setOrgName] = useState("");
   const [dirty, setDirty] = useState(false);
 
-  const members = [
-    { name: "Alex Chen", email: "alex.chen@gmail.com", role: "Owner", status: "active" },
-    { name: "Jordan Park", email: "jordan@company.com", role: "Admin", status: "active" },
-    { name: "Sam Rivera", email: "sam.r@company.com", role: "Member", status: "active" },
-    { name: "Taylor Kim", email: "taylor@company.com", role: "Member", status: "pending" },
-  ];
+  const userName = user?.fullName || user?.firstName || "User";
+  const userEmail = user?.primaryEmailAddress?.emailAddress || "";
+  const userAvatar = user?.imageUrl;
+  const initials = userName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <div className="space-y-5">
       <SectionCard title="Organization Details" description="Manage your workspace identity.">
         <div className="flex items-start gap-6 mb-5">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--vyne-accent)] to-[var(--vyne-accent-light)] text-white flex items-center justify-center text-[20px] font-bold">
-            VW
+            {(orgName || "VW").slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1">
             <FieldLabel>Organization Name</FieldLabel>
@@ -269,10 +268,10 @@ function OrganizationTab() {
             <Globe size={14} className="text-[var(--vyne-text-tertiary)]" />
             <div>
               <p className="text-[11px] font-semibold text-[var(--vyne-text-primary)]">Workspace URL</p>
-              <p className="text-[11px] text-[var(--vyne-text-tertiary)]">vyne.ai/w/vyne-workspace</p>
+              <p className="text-[11px] text-[var(--vyne-text-tertiary)]">vyne.ai/w/{orgName ? orgName.toLowerCase().replace(/\s+/g, "-") : "my-workspace"}</p>
             </div>
           </div>
-          <CopyBtn text="vyne.ai/w/vyne-workspace" />
+          <CopyBtn text={`vyne.ai/w/${orgName ? orgName.toLowerCase().replace(/\s+/g, "-") : "my-workspace"}`} />
         </div>
       </SectionCard>
 
@@ -294,43 +293,35 @@ function OrganizationTab() {
 
         <div className="grid grid-cols-3 gap-3">
           <div className="p-3 rounded-xl bg-[var(--vyne-bg)] text-center">
-            <p className="text-[18px] font-bold text-[var(--vyne-text-primary)]">3</p>
+            <p className="text-[18px] font-bold text-[var(--vyne-text-primary)]">0</p>
             <p className="text-[10px] text-[var(--vyne-text-tertiary)]">Live Workflows</p>
           </div>
           <div className="p-3 rounded-xl bg-[var(--vyne-bg)] text-center">
-            <p className="text-[18px] font-bold text-[var(--vyne-text-primary)]">592</p>
+            <p className="text-[18px] font-bold text-[var(--vyne-text-primary)]">0</p>
             <p className="text-[10px] text-[var(--vyne-text-tertiary)]">Total Runs</p>
           </div>
           <div className="p-3 rounded-xl bg-[var(--vyne-bg)] text-center">
-            <p className="text-[18px] font-bold text-[var(--vyne-success)]">98.4%</p>
+            <p className="text-[18px] font-bold text-[var(--vyne-text-secondary)]">—</p>
             <p className="text-[10px] text-[var(--vyne-text-tertiary)]">Success Rate</p>
           </div>
         </div>
       </SectionCard>
 
-      <SectionCard title="Team Members" description={`${members.length} members in your workspace.`}>
+      <SectionCard title="Team Members" description="Members in your workspace.">
         <div className="space-y-1">
-          {members.map((m) => (
-            <div key={m.email} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--vyne-bg)] transition-colors">
-              <div className="w-8 h-8 rounded-full bg-[var(--vyne-accent)] text-white flex items-center justify-center text-[11px] font-bold">
-                {m.name.split(" ").map((n) => n[0]).join("")}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-[var(--vyne-text-primary)] truncate">{m.name}</p>
-                <p className="text-[10px] text-[var(--vyne-text-tertiary)] truncate">{m.email}</p>
-              </div>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-lg ${
-                m.role === "Owner" ? "bg-[var(--vyne-accent-bg)] text-[var(--vyne-accent)]"
-                : m.role === "Admin" ? "bg-[var(--vyne-task-bg)] text-[var(--vyne-task)]"
-                : "bg-[var(--vyne-bg)] text-[var(--vyne-text-tertiary)]"
-              }`}>
-                {m.role}
-              </span>
-              {m.status === "pending" && (
-                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-600">Pending</span>
-              )}
+          {/* Current user is always the owner */}
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[var(--vyne-bg)]/50">
+            {userAvatar ? (
+              <img src={userAvatar} alt={userName} className="w-8 h-8 rounded-full object-cover" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-[var(--vyne-accent)] text-white flex items-center justify-center text-[11px] font-bold">{initials}</div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-semibold text-[var(--vyne-text-primary)] truncate">{userName}</p>
+              <p className="text-[10px] text-[var(--vyne-text-tertiary)] truncate">{userEmail}</p>
             </div>
-          ))}
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-[var(--vyne-accent-bg)] text-[var(--vyne-accent)]">Owner</span>
+          </div>
         </div>
 
         <button className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-[var(--vyne-border)] text-[12px] font-medium text-[var(--vyne-text-tertiary)] hover:border-[var(--vyne-accent)] hover:text-[var(--vyne-accent)] hover:bg-[var(--vyne-accent-bg)]/30 transition-all">
@@ -338,7 +329,7 @@ function OrganizationTab() {
         </button>
       </SectionCard>
 
-      <SaveBar dirty={dirty} onSave={() => setDirty(false)} onDiscard={() => { setOrgName("Vyne Workspace"); setDirty(false); }} />
+      <SaveBar dirty={dirty} onSave={() => setDirty(false)} onDiscard={() => { setOrgName(""); setDirty(false); }} />
     </div>
   );
 }
@@ -346,17 +337,19 @@ function OrganizationTab() {
 // ── API Keys Tab ─────────────────────────────────────────────────────
 
 function ApiKeysTab() {
+  const [keys, setKeys] = useState<ApiKeyEntry[]>([]);
   const [showKey, setShowKey] = useState<string | null>(null);
-
-  const keys: ApiKeyEntry[] = [
-    { id: "k1", name: "Production API", key: "vyne_sk_prod_a8f3b2c1d4e5f6g7h8i9j0", createdAt: "2026-03-15", lastUsed: "2 hours ago" },
-    { id: "k2", name: "Staging Environment", key: "vyne_sk_stg_x1y2z3w4v5u6t7s8r9q0", createdAt: "2026-03-28", lastUsed: "3 days ago" },
-    { id: "k3", name: "CI/CD Pipeline", key: "vyne_sk_ci_m1n2o3p4q5r6s7t8u9v0", createdAt: "2026-04-01", lastUsed: null },
-  ];
 
   return (
     <div className="space-y-5">
       <SectionCard title="API Keys" description="Manage your API keys for programmatic access to Vyne workflows.">
+        {keys.length === 0 ? (
+          <div className="p-6 rounded-xl bg-[var(--vyne-bg)] border border-dashed border-[var(--vyne-border)] text-center mb-4">
+            <Key size={20} className="text-[var(--vyne-text-tertiary)] mx-auto mb-2" />
+            <p className="text-[12px] font-semibold text-[var(--vyne-text-primary)] mb-1">No API keys yet</p>
+            <p className="text-[11px] text-[var(--vyne-text-tertiary)] max-w-[280px] mx-auto">Generate an API key to access your Vyne workflows programmatically.</p>
+          </div>
+        ) : (
         <div className="space-y-2 mb-4">
           {keys.map((k) => (
             <div key={k.id} className="flex items-center gap-3 p-3.5 rounded-xl border border-[var(--vyne-border)] bg-[var(--vyne-bg)]/50 hover:border-[var(--vyne-border-hover)] transition-colors">
@@ -384,6 +377,7 @@ function ApiKeysTab() {
             </div>
           ))}
         </div>
+        )}
 
         <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[var(--vyne-accent)] text-white text-[12px] font-semibold hover:opacity-90 transition-opacity shadow-sm">
           <Plus size={14} /> Generate New API Key
