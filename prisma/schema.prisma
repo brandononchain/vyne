@@ -150,6 +150,7 @@ model Workflow {
   organization  Organization?  @relation(fields: [orgId], references: [id])
   executionLogs ExecutionLog[]
   versions      WorkflowVersion[]
+  chatMessages  ChatMessage[]
 
   @@index([userId])
   @@index([orgId])
@@ -252,17 +253,20 @@ enum ExecutionType {
 // ─────────────────────────────────────────────────────────────────────
 
 model ChatMessage {
-  id        String   @id @default(cuid())
-  userId    String   @map("user_id")
-  role      ChatRole
-  content   String   @db.Text
-  metadata  Json?    // builtNodes, action type, status, etc.
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  workflowId String?  @map("workflow_id")
+  role       ChatRole
+  content    String   @db.Text
+  metadata   Json?    // builtNodes, action type, status, etc.
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workflow Workflow?  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([workflowId])
   @@index([createdAt])
   @@map("chat_messages")
 }

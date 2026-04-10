@@ -26,7 +26,9 @@ import { UserDropdown } from "../auth/user-dropdown";
 import type { VyneNodeData } from "@/lib/types";
 import { compileGraphToJSON, type CompiledWorkflow } from "@/lib/graph-compiler";
 import { useStreamExecutionStore } from "@/store/stream-execution-store";
+import { useProjectStore } from "@/store/project-store";
 import { RunWithAIModal } from "../simulation/run-with-ai-modal";
+import { WorkflowSwitcher } from "./workflow-switcher";
 
 function TopBarButton({
   children,
@@ -122,21 +124,21 @@ export function TopBar() {
 
         <div className="w-px h-6 bg-[var(--vyne-border)]" />
 
-        {/* Logo */}
+        {/* Logo + Workflow Switcher */}
         <div className="flex items-center gap-2.5">
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-300 ${
             isSimulating ? "bg-[var(--vyne-success)]" : "bg-[var(--vyne-accent)]"
           }`}>
             <span className="text-white text-[15px] font-black tracking-tight">V</span>
           </div>
-          <div>
-            <h1 className="text-[15px] font-extrabold text-[var(--vyne-text-primary)] leading-none tracking-tight">
-              Vyne
-            </h1>
-            <p className="text-[10px] text-[var(--vyne-text-tertiary)]">
-              {isSimulating ? "Simulation Mode" : "Untitled Workflow"}
-            </p>
-          </div>
+          {isSimulating ? (
+            <div>
+              <h1 className="text-[15px] font-extrabold text-[var(--vyne-text-primary)] leading-none tracking-tight">Vyne</h1>
+              <p className="text-[10px] text-[var(--vyne-text-tertiary)]">Executing...</p>
+            </div>
+          ) : (
+            <WorkflowSwitcher />
+          )}
         </div>
 
         {isSimulating && (
@@ -207,8 +209,68 @@ export function TopBar() {
                 </span>
               )}
             </TopBarButton>
-            <TopBarButton label="Save workflow">
+            <TopBarButton
+              label="Save workflow (Ctrl+S)"
+              onClick={async () => {
+                const { activeProjectId, projects, markSaved, updateProjectCanvas } = useProjectStore.getState();
+                if (!activeProjectId) return;
+
+                const project = projects.find((p) => p.id === activeProjectId);
+                if (!project) return;
+
+                // Update local state
+                updateProjectCanvas(activeProjectId, nodes, edges);
+
+                // Save to database
+                try {
+                  useProjectStore.setState({ isSaving: true });
+                  const compiled = compileGraphToJSON(nodes, edges);
+                  const res = await fetch("/api/workflows/save", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      id: project.serverId || undefined,
+                      name: project.name,
+                      description: project.description,
+                      nodes,
+                      edges,
+                      compiled,
+                    }),
+                  });
+
+                  if (res.ok) {
+                    const data = await res.json();
+                    // Update serverId if this was a new save
+                    if (data.isNew && data.id) {
+                      useProjectStore.setState({
+                        projects: useProjectStore.getState().projects.map((p) =>
+                          p.id === activeProjectId ? { ...p, serverId: data.id } : p
+                        ),
+                      });
+                    }
+                    markSaved();
+                    useWorkflowStore.getState().addToast({
+                      type: "success",
+                      title: "Saved!",
+                      message: `"${project.name}" saved successfully.`,
+                      duration: 3000,
+                    });
+                  }
+                } catch (err) {
+                  useWorkflowStore.getState().addToast({
+                    type: "error",
+                    title: "Save failed",
+                    message: "Could not save workflow. Try again.",
+                    duration: 5000,
+                  });
+                } finally {
+                  useProjectStore.setState({ isSaving: false });
+                }
+              }}
+              disabled={nodes.length === 0}
+            >
               <Save size={14} />
+              <span className="hidden sm:inline">Save</span>
             </TopBarButton>
             <div className="w-px h-6 bg-[var(--vyne-border)] mx-1" />
             <TopBarButton
