@@ -116,11 +116,11 @@ export function TemplateGallery() {
       {/* Header */}
       <header className="h-[var(--topbar-height)] bg-white border-b border-[var(--vyne-border)] flex items-center justify-between px-6 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-[var(--vyne-accent)] flex items-center justify-center">
-            <span className="text-white text-[11px] font-black">V</span>
+          <div className="w-8 h-8 rounded-lg bg-[var(--vyne-accent)] flex items-center justify-center">
+            <span className="text-white text-[15px] font-black tracking-tight">V</span>
           </div>
           <div>
-            <h1 className="text-[13px] font-bold text-[var(--vyne-text-primary)] leading-none">Vyne</h1>
+            <h1 className="text-[15px] font-extrabold text-[var(--vyne-text-primary)] leading-none tracking-tight">Vyne</h1>
             <p className="text-[10px] text-[var(--vyne-text-tertiary)]">Templates</p>
           </div>
         </div>

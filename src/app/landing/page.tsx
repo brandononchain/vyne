@@ -101,9 +101,9 @@ function Navbar() {
             <Image
               src="/vyne-logo.svg"
               alt="Vyne"
-              width={88}
-              height={36}
-              className="h-[26px] w-auto"
+              width={120}
+              height={44}
+              className="h-[36px] w-auto"
               priority
             />
           </Link>
@@ -1094,9 +1094,9 @@ function Footer() {
             <Image
               src="/vyne-logo.svg"
               alt="Vyne"
-              width={80}
-              height={32}
-              className="h-[22px] w-auto mb-4"
+              width={110}
+              height={40}
+              className="h-[30px] w-auto mb-4"
             />
             <p
               className="text-sm leading-relaxed tracking-tight max-w-[200px]"

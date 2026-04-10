@@ -123,14 +123,14 @@ export function TopBar() {
         <div className="w-px h-6 bg-[var(--vyne-border)]" />
 
         {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors duration-300 ${
+        <div className="flex items-center gap-2.5">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-300 ${
             isSimulating ? "bg-[var(--vyne-success)]" : "bg-[var(--vyne-accent)]"
           }`}>
-            <span className="text-white text-[11px] font-black">V</span>
+            <span className="text-white text-[15px] font-black tracking-tight">V</span>
           </div>
           <div>
-            <h1 className="text-[13px] font-bold text-[var(--vyne-text-primary)] leading-none">
+            <h1 className="text-[15px] font-extrabold text-[var(--vyne-text-primary)] leading-none tracking-tight">
               Vyne
             </h1>
             <p className="text-[10px] text-[var(--vyne-text-tertiary)]">
