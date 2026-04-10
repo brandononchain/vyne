@@ -259,9 +259,9 @@ function HeroSection() {
           </a>
         </motion.div>
 
-        {/* Hero visual: Canvas mockup */}
+        {/* Hero visual: Animated Canvas Demo */}
         <motion.div
-          className="relative mx-auto max-w-[900px]"
+          className="relative mx-auto max-w-[1050px]"
           initial={{ opacity: 0, y: 80, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1.2, delay: 1.1, ease }}
@@ -276,10 +276,11 @@ function HeroSection() {
 
           {/* Mockup frame */}
           <div
-            className="relative rounded-2xl border overflow-hidden shadow-lg"
+            className="relative rounded-2xl border overflow-hidden"
             style={{
               backgroundColor: COLORS.bgCard,
               borderColor: COLORS.border,
+              boxShadow: `0 20px 60px -15px ${COLORS.accentDark}18, 0 4px 25px -5px rgba(0,0,0,0.06)`,
             }}
           >
             {/* Title bar */}
@@ -291,185 +292,372 @@ function HeroSection() {
               }}
             >
               <div className="flex gap-1.5">
-                <div
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: COLORS.border }}
-                />
-                <div
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: COLORS.border }}
-                />
-                <div
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: COLORS.border }}
-                />
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#f87171" }} />
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#fbbf24" }} />
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#4ade80" }} />
               </div>
               <span
-                className="text-[11px] ml-3 tracking-tight"
+                className="text-[11px] ml-3 tracking-tight font-medium"
                 style={{ color: COLORS.textTertiary }}
               >
                 my-workflow.vyne
               </span>
+              <div className="ml-auto flex items-center gap-2">
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider"
+                  style={{ backgroundColor: COLORS.accentBg, color: COLORS.accentDark }}>
+                  <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: COLORS.success }} />
+                  Running
+                </div>
+              </div>
             </div>
 
-            {/* Canvas area */}
-            <div className="relative h-[320px] sm:h-[400px] p-6">
-              {/* Dot grid */}
-              <div
-                className="absolute inset-0 opacity-30"
-                style={{
-                  backgroundImage: `radial-gradient(circle, ${COLORS.textTertiary}20 1px, transparent 1px)`,
-                  backgroundSize: "24px 24px",
-                }}
-              />
+            {/* Canvas area with sidebar */}
+            <div className="flex" style={{ height: "420px" }}>
 
-              {/* Mock node: Agent */}
-              <motion.div
-                className="absolute top-8 left-8 sm:left-16 w-[200px] rounded-xl border p-4"
-                style={{
-                  backgroundColor: COLORS.accentBg,
-                  borderColor: COLORS.accentDark,
-                }}
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: COLORS.accentLight + "30" }}
-                  >
-                    <Bot className="w-3.5 h-3.5" style={{ color: COLORS.accentDark }} />
+              {/* Mini sidebar */}
+              <div className="hidden sm:flex flex-col w-[180px] border-r shrink-0 py-3 px-3 gap-2"
+                style={{ borderColor: COLORS.border, backgroundColor: COLORS.bgWarm + "80" }}>
+                <div className="text-[9px] font-bold uppercase tracking-wider mb-1 px-1" style={{ color: COLORS.textTertiary }}>
+                  Agents
+                </div>
+                {[
+                  { name: "Web Researcher", icon: "🔍", color: COLORS.accentDark },
+                  { name: "Data Analyst", icon: "📊", color: "#0984e3" },
+                  { name: "Content Writer", icon: "✍️", color: "#b8694a" },
+                ].map((a) => (
+                  <div key={a.name} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] font-medium cursor-default"
+                    style={{ color: COLORS.textSecondary }}>
+                    <span className="text-xs">{a.icon}</span>
+                    {a.name}
                   </div>
-                  <span
-                    className="text-sm font-medium tracking-tight"
-                    style={{ color: COLORS.textPrimary }}
-                  >
-                    Research Agent
-                  </span>
+                ))}
+                <div className="text-[9px] font-bold uppercase tracking-wider mt-3 mb-1 px-1" style={{ color: COLORS.textTertiary }}>
+                  Tasks
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className="w-1.5 h-1.5 rounded-full animate-pulse"
-                    style={{ backgroundColor: COLORS.accentLight }}
-                  />
-                  <span className="text-xs" style={{ color: COLORS.textTertiary }}>
-                    Active
-                  </span>
-                </div>
-              </motion.div>
-
-              {/* Mock node: Task */}
-              <motion.div
-                className="absolute top-[120px] sm:top-[140px] left-[55%] sm:left-[45%] w-[180px] rounded-xl border p-4"
-                style={{
-                  backgroundColor: COLORS.goldBg,
-                  borderColor: COLORS.gold,
-                }}
-                animate={{ y: [0, -8, 0] }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 0.5,
-                }}
-              >
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: COLORS.gold + "30" }}
-                  >
-                    <Layers className="w-3.5 h-3.5" style={{ color: COLORS.gold }} />
+                {[
+                  { name: "Research Report", icon: "📋" },
+                  { name: "Draft Post", icon: "📝" },
+                ].map((t) => (
+                  <div key={t.name} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] font-medium cursor-default"
+                    style={{ color: COLORS.textSecondary }}>
+                    <span className="text-xs">{t.icon}</span>
+                    {t.name}
                   </div>
-                  <span
-                    className="text-sm font-medium tracking-tight"
-                    style={{ color: COLORS.textPrimary }}
-                  >
-                    Analyze Data
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: COLORS.gold }}
-                  />
-                  <span className="text-xs" style={{ color: COLORS.textTertiary }}>
-                    Running
-                  </span>
-                </div>
-              </motion.div>
+                ))}
+              </div>
 
-              {/* Mock node: Tool */}
-              <motion.div
-                className="absolute bottom-8 left-[20%] sm:left-[25%] w-[170px] rounded-xl border p-4"
-                style={{
-                  backgroundColor: COLORS.toolBg,
-                  borderColor: COLORS.tool,
-                }}
-                animate={{ y: [0, -5, 0] }}
-                transition={{
-                  duration: 4.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1,
-                }}
-              >
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: COLORS.tool + "30" }}
-                  >
-                    <Zap className="w-3.5 h-3.5" style={{ color: COLORS.tool }} />
-                  </div>
-                  <span
-                    className="text-sm font-medium tracking-tight"
-                    style={{ color: COLORS.textPrimary }}
-                  >
-                    Web Search
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ backgroundColor: COLORS.tool }}
-                  />
-                  <span className="text-xs" style={{ color: COLORS.textTertiary }}>
-                    Ready
-                  </span>
-                </div>
-              </motion.div>
-
-              {/* Animated connection lines */}
-              <svg
-                className="absolute inset-0 w-full h-full pointer-events-none"
-                preserveAspectRatio="none"
-              >
-                <defs>
-                  <linearGradient id="mock-line" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor={COLORS.accentLight} stopOpacity="0.6" />
-                    <stop offset="100%" stopColor={COLORS.gold} stopOpacity="0.3" />
-                  </linearGradient>
-                </defs>
-                <motion.path
-                  d="M 200 80 C 300 80, 350 180, 420 190"
-                  stroke="url(#mock-line)"
-                  strokeWidth="1.5"
-                  strokeDasharray="5 5"
-                  fill="none"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 2, delay: 1.5, ease: "easeOut" }}
+              {/* Canvas */}
+              <div className="relative flex-1 overflow-hidden">
+                {/* Dot grid */}
+                <div
+                  className="absolute inset-0 opacity-40"
+                  style={{
+                    backgroundImage: `radial-gradient(circle, ${COLORS.textTertiary}18 1px, transparent 1px)`,
+                    backgroundSize: "20px 20px",
+                  }}
                 />
-                <motion.path
-                  d="M 380 230 C 340 280, 300 300, 260 310"
-                  stroke="url(#mock-line)"
-                  strokeWidth="1.5"
-                  strokeDasharray="5 5"
-                  fill="none"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 2, delay: 2, ease: "easeOut" }}
-                />
-              </svg>
+
+                {/* SVG Edges — smooth bezier curves with animated flow */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
+                  <defs>
+                    <linearGradient id="edge-grad-1" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor={COLORS.accentDark} stopOpacity="0.5" />
+                      <stop offset="100%" stopColor={COLORS.gold} stopOpacity="0.5" />
+                    </linearGradient>
+                    <linearGradient id="edge-grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor={COLORS.gold} stopOpacity="0.5" />
+                      <stop offset="100%" stopColor="#b8694a" stopOpacity="0.4" />
+                    </linearGradient>
+                    <linearGradient id="edge-grad-3" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor={COLORS.tool} stopOpacity="0.4" />
+                      <stop offset="100%" stopColor={COLORS.accentDark} stopOpacity="0.3" />
+                    </linearGradient>
+                    {/* Animated dot along edge */}
+                    <circle id="flow-dot" r="3" fill={COLORS.accentLight}>
+                      <animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite" />
+                    </circle>
+                  </defs>
+
+                  {/* Edge: Research Agent → Research Report */}
+                  <motion.path
+                    d="M 230 88 C 310 88, 310 155, 390 155"
+                    stroke="url(#edge-grad-1)" strokeWidth="2" fill="none"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.5, delay: 1.8, ease: "easeOut" }}
+                  />
+                  <circle r="3" fill={COLORS.accentLight}>
+                    <animateMotion dur="3s" repeatCount="indefinite" begin="2.5s">
+                      <mpath href="#flowpath1" />
+                    </animateMotion>
+                  </circle>
+                  <path id="flowpath1" d="M 230 88 C 310 88, 310 155, 390 155" fill="none" />
+
+                  {/* Edge: Research Report → Content Writer */}
+                  <motion.path
+                    d="M 560 175 C 620 175, 600 270, 530 270"
+                    stroke="url(#edge-grad-2)" strokeWidth="2" fill="none"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.5, delay: 2.2, ease: "easeOut" }}
+                  />
+                  <circle r="3" fill={COLORS.gold}>
+                    <animateMotion dur="3.5s" repeatCount="indefinite" begin="3s">
+                      <mpath href="#flowpath2" />
+                    </animateMotion>
+                  </circle>
+                  <path id="flowpath2" d="M 560 175 C 620 175, 600 270, 530 270" fill="none" />
+
+                  {/* Edge: Content Writer → Draft Blog Post */}
+                  <motion.path
+                    d="M 530 310 C 530 350, 430 360, 350 360"
+                    stroke="url(#edge-grad-2)" strokeWidth="2" fill="none"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.5, delay: 2.6, ease: "easeOut" }}
+                  />
+
+                  {/* Edge: Web Search Tool → Research Agent */}
+                  <motion.path
+                    d="M 140 310 C 140 240, 100 140, 130 88"
+                    stroke="url(#edge-grad-3)" strokeWidth="1.5" fill="none"
+                    strokeDasharray="4 4" strokeLinecap="round"
+                    initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.5, delay: 3, ease: "easeOut" }}
+                  />
+                </svg>
+
+                {/* ── NODE: Research Agent ──────────────────── */}
+                <motion.div
+                  className="absolute rounded-xl border-2 px-4 py-3 w-[200px]"
+                  style={{
+                    top: 50, left: 40,
+                    backgroundColor: COLORS.accentBg,
+                    borderColor: COLORS.accentDark,
+                    zIndex: 2,
+                    boxShadow: `0 4px 20px ${COLORS.accentDark}15`,
+                  }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 1.4, ease }}
+                >
+                  {/* Node handle (output) */}
+                  <div className="absolute -right-[5px] top-1/2 -translate-y-1/2 w-[10px] h-[10px] rounded-full border-2"
+                    style={{ backgroundColor: COLORS.bgCard, borderColor: COLORS.accentDark }} />
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: COLORS.accentDark + "18" }}>
+                      <Bot className="w-4 h-4" style={{ color: COLORS.accentDark }} />
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-semibold tracking-tight" style={{ color: COLORS.textPrimary }}>
+                        Research Agent
+                      </div>
+                      <div className="text-[10px]" style={{ color: COLORS.textTertiary }}>Research Specialist</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: COLORS.success }} />
+                      <span className="text-[10px] font-medium" style={{ color: COLORS.success }}>Active</span>
+                    </div>
+                    <div className="flex gap-1">
+                      {["🔍", "🔗"].map((e, i) => (
+                        <span key={i} className="text-[10px] px-1 py-0.5 rounded" style={{ backgroundColor: COLORS.accentDark + "10" }}>{e}</span>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* ── NODE: Research Report (Task) ──────────── */}
+                <motion.div
+                  className="absolute rounded-xl border-2 px-4 py-3 w-[185px]"
+                  style={{
+                    top: 120, left: 385,
+                    backgroundColor: COLORS.goldBg,
+                    borderColor: COLORS.gold,
+                    zIndex: 2,
+                    boxShadow: `0 4px 20px ${COLORS.gold}15`,
+                  }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 1.6, ease }}
+                >
+                  <div className="absolute -left-[5px] top-1/2 -translate-y-1/2 w-[10px] h-[10px] rounded-full border-2"
+                    style={{ backgroundColor: COLORS.bgCard, borderColor: COLORS.gold }} />
+                  <div className="absolute -right-[5px] top-1/2 -translate-y-1/2 w-[10px] h-[10px] rounded-full border-2"
+                    style={{ backgroundColor: COLORS.bgCard, borderColor: COLORS.gold }} />
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: COLORS.gold + "18" }}>
+                      <Layers className="w-4 h-4" style={{ color: COLORS.gold }} />
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-semibold tracking-tight" style={{ color: COLORS.textPrimary }}>
+                        Research Report
+                      </div>
+                      <div className="text-[10px]" style={{ color: COLORS.textTertiary }}>Analysis Task</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <motion.div className="w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: COLORS.gold }}
+                      animate={{ opacity: [1, 0.4, 1] }}
+                      transition={{ duration: 1.2, repeat: Infinity }}
+                    />
+                    <span className="text-[10px] font-medium" style={{ color: COLORS.gold }}>Processing</span>
+                  </div>
+                </motion.div>
+
+                {/* ── NODE: Content Writer (Agent) ──────────── */}
+                <motion.div
+                  className="absolute rounded-xl border-2 px-4 py-3 w-[200px]"
+                  style={{
+                    top: 235, left: 340,
+                    backgroundColor: "#fdf5ef",
+                    borderColor: "#b8694a",
+                    zIndex: 2,
+                    boxShadow: `0 4px 20px #b8694a15`,
+                  }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 1.8, ease }}
+                >
+                  <div className="absolute -left-[5px] top-1/2 -translate-y-1/2 w-[10px] h-[10px] rounded-full border-2"
+                    style={{ backgroundColor: COLORS.bgCard, borderColor: "#b8694a" }} />
+                  <div className="absolute -bottom-[5px] left-1/3 w-[10px] h-[10px] rounded-full border-2"
+                    style={{ backgroundColor: COLORS.bgCard, borderColor: "#b8694a" }} />
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: "#b8694a18" }}>
+                      <Sparkles className="w-4 h-4" style={{ color: "#b8694a" }} />
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-semibold tracking-tight" style={{ color: COLORS.textPrimary }}>
+                        Content Writer
+                      </div>
+                      <div className="text-[10px]" style={{ color: COLORS.textTertiary }}>Creative Writer</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1">
+                    <div className="flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS.textTertiary }} />
+                      <span className="text-[10px] font-medium" style={{ color: COLORS.textTertiary }}>Queued</span>
+                    </div>
+                    <div className="flex gap-1">
+                      {["✏️", "✅"].map((e, i) => (
+                        <span key={i} className="text-[10px] px-1 py-0.5 rounded" style={{ backgroundColor: "#b8694a10" }}>{e}</span>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* ── NODE: Draft Blog Post (Task) ─────────── */}
+                <motion.div
+                  className="absolute rounded-xl border-2 px-4 py-3 w-[170px]"
+                  style={{
+                    top: 330, left: 180,
+                    backgroundColor: COLORS.goldBg,
+                    borderColor: COLORS.gold,
+                    zIndex: 2,
+                    boxShadow: `0 4px 20px ${COLORS.gold}10`,
+                  }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 2, ease }}
+                >
+                  <div className="absolute -top-[5px] left-1/2 -translate-x-1/2 w-[10px] h-[10px] rounded-full border-2"
+                    style={{ backgroundColor: COLORS.bgCard, borderColor: COLORS.gold }} />
+                  <div className="flex items-center gap-2.5 mb-1.5">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: COLORS.gold + "18" }}>
+                      <GitBranch className="w-3.5 h-3.5" style={{ color: COLORS.gold }} />
+                    </div>
+                    <div>
+                      <div className="text-[12px] font-semibold tracking-tight" style={{ color: COLORS.textPrimary }}>
+                        Draft Blog Post
+                      </div>
+                      <div className="text-[9px]" style={{ color: COLORS.textTertiary }}>Output Task</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS.textTertiary }} />
+                    <span className="text-[10px]" style={{ color: COLORS.textTertiary }}>Waiting</span>
+                  </div>
+                </motion.div>
+
+                {/* ── NODE: Web Search (Tool) ───────────────── */}
+                <motion.div
+                  className="absolute rounded-xl border px-3 py-2.5 w-[150px]"
+                  style={{
+                    top: 275, left: 50,
+                    backgroundColor: COLORS.toolBg,
+                    borderColor: COLORS.tool,
+                    borderStyle: "dashed",
+                    zIndex: 2,
+                  }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: 2.2, ease }}
+                >
+                  <div className="absolute -top-[5px] right-1/3 w-[10px] h-[10px] rounded-full border-2"
+                    style={{ backgroundColor: COLORS.bgCard, borderColor: COLORS.tool }} />
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-6 h-6 rounded-md flex items-center justify-center"
+                      style={{ backgroundColor: COLORS.tool + "20" }}>
+                      <Zap className="w-3 h-3" style={{ color: COLORS.tool }} />
+                    </div>
+                    <span className="text-[11px] font-medium tracking-tight" style={{ color: COLORS.textPrimary }}>
+                      Web Search
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS.tool }} />
+                    <span className="text-[9px]" style={{ color: COLORS.textTertiary }}>Equipped</span>
+                  </div>
+                </motion.div>
+
+                {/* ── Execution Output Preview (bottom-right) ── */}
+                <motion.div
+                  className="absolute bottom-3 right-3 w-[220px] rounded-xl border p-3"
+                  style={{
+                    backgroundColor: COLORS.bgCard,
+                    borderColor: COLORS.border,
+                    zIndex: 3,
+                    boxShadow: `0 4px 15px rgba(0,0,0,0.04)`,
+                  }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 3, ease }}
+                >
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Zap className="w-3 h-3" style={{ color: COLORS.gold }} />
+                    <span className="text-[10px] font-bold" style={{ color: COLORS.textPrimary }}>AI Output</span>
+                    <span className="text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ml-auto"
+                      style={{ backgroundColor: COLORS.accentBg, color: COLORS.accentDark }}>
+                      Live
+                    </span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1 h-1 rounded-full" style={{ backgroundColor: COLORS.success }} />
+                      <span className="text-[9px]" style={{ color: COLORS.textTertiary }}>Research Agent — complete</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <motion.div className="w-1 h-1 rounded-full"
+                        style={{ backgroundColor: COLORS.gold }}
+                        animate={{ opacity: [1, 0.3, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      />
+                      <span className="text-[9px] font-medium" style={{ color: COLORS.gold }}>Research Report — running</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1 h-1 rounded-full" style={{ backgroundColor: COLORS.border }} />
+                      <span className="text-[9px]" style={{ color: COLORS.textTertiary }}>Content Writer — queued</span>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
             </div>
           </div>
         </motion.div>
