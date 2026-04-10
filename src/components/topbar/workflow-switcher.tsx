@@ -243,11 +243,10 @@ export function WorkflowSwitcher() {
                         if (e.key === "Escape") setEditingId(null);
                       }}
                       onClick={(e) => e.stopPropagation()}
-                      className="flex-1 text-[12px] font-medium px-1.5 py-0.5 rounded border outline-none focus:ring-1"
+                      className="flex-1 text-[12px] font-medium px-1.5 py-0.5 rounded border outline-none focus:ring-1 focus:ring-[var(--vyne-accent)]"
                       style={{
                         color: "var(--vyne-text-primary)",
                         borderColor: "var(--vyne-accent)",
-                        ringColor: "var(--vyne-accent)",
                       }}
                     />
                   ) : (
