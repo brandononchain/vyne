@@ -25,7 +25,7 @@ import { CreditTracker } from "../billing/credit-tracker";
 import { UserDropdown } from "../auth/user-dropdown";
 import type { VyneNodeData } from "@/lib/types";
 import { compileGraphToJSON, type CompiledWorkflow } from "@/lib/graph-compiler";
-import { useStreamExecution } from "@/lib/use-stream-execution";
+import { useStreamExecutionStore } from "@/store/stream-execution-store";
 import { RunWithAIModal } from "../simulation/run-with-ai-modal";
 
 function TopBarButton({
@@ -84,7 +84,7 @@ export function TopBar() {
   } = useWorkflowStore();
   const { openDeployModal, setCurrentView, deployedWorkflows } = useDeployStore();
   const { canAffordSimulation, canAffordDeployment, openUpgradeModal } = useBillingStore();
-  const { execute: executeWithAI, isRunning: isStreamRunning, cancel: cancelStream, stepResults, finalOutput, totalDurationMs, error: streamError } = useStreamExecution();
+  const { execute: executeWithAI, isRunning: isStreamRunning, cancel: cancelStream } = useStreamExecutionStore();
   const compiledRef = useRef<CompiledWorkflow | null>(null);
 
   const agentCount = nodes.filter((n) => (n.data as VyneNodeData).type === "agent").length;

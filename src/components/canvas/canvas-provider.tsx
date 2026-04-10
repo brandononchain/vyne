@@ -8,6 +8,7 @@ import { TopBar } from "../topbar/topbar";
 import { ToastContainer } from "../toast/toast-container";
 import { ConfigPanel } from "../config-panel/config-panel";
 import { DeployModal } from "../deploy/deploy-modal";
+import { LiveExecutionPanel } from "../simulation/live-execution-panel";
 import { useWorkflowStore } from "@/store/workflow-store";
 
 function KeyboardShortcuts() {
@@ -45,6 +46,7 @@ export function CanvasProvider() {
         <div className="flex flex-1 min-h-0">
           <Sidebar />
           <WorkflowCanvas />
+          <LiveExecutionPanel />
         </div>
       </div>
       <ConfigPanel />

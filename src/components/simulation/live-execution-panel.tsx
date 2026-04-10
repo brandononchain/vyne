@@ -1,20 +1,15 @@
 /**
  * ── LiveExecutionPanel ──────────────────────────────────────────────
  *
- * Real-time execution output panel that displays streaming LLM responses
- * during workflow execution. Replaces the mocked output drawer.
- *
- * Features:
- * - Step-by-step progress with pulsing active indicator
- * - Live typing effect as tokens stream in
- * - Expandable step outputs with copy-to-clipboard
- * - Total execution time and token count
- * - Error display with retry suggestion
+ * Right-side panel that shows streaming AI execution results.
+ * Reads from the global useStreamExecutionStore.
+ * Appears when a "Run with AI" execution is active or has results.
  */
 
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
   ChevronRight,
@@ -27,34 +22,36 @@ import {
   Zap,
   Play,
   Square,
+  X,
 } from "lucide-react";
-import type { StepResult } from "@/lib/use-stream-execution";
-import type { CompiledWorkflow } from "@/lib/graph-compiler";
+import { useStreamExecutionStore, type StepResult } from "@/store/stream-execution-store";
+import { useWorkflowStore } from "@/store/workflow-store";
+import { compileGraphToJSON } from "@/lib/graph-compiler";
 
-interface LiveExecutionPanelProps {
-  isRunning: boolean;
-  stepResults: StepResult[];
-  finalOutput: string | null;
-  totalDurationMs: number | null;
-  error: string | null;
-  compiledWorkflow: CompiledWorkflow | null;
-  onExecute: () => void;
-  onCancel: () => void;
-}
+export function LiveExecutionPanel() {
+  const {
+    isRunning,
+    stepResults,
+    finalOutput,
+    totalDurationMs,
+    error,
+    compiledWorkflow,
+    execute,
+    cancel,
+    reset,
+  } = useStreamExecutionStore();
 
-export function LiveExecutionPanel({
-  isRunning,
-  stepResults,
-  finalOutput,
-  totalDurationMs,
-  error,
-  compiledWorkflow,
-  onExecute,
-  onCancel,
-}: LiveExecutionPanelProps) {
+  const nodes = useWorkflowStore((s) => s.nodes);
+  const edges = useWorkflowStore((s) => s.edges);
+
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Auto-scroll to active step
+  // Auto-open when execution starts, auto-scroll
+  useEffect(() => {
+    if (isRunning) setIsOpen(true);
+  }, [isRunning]);
+
   useEffect(() => {
     if (scrollRef.current && isRunning) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -64,129 +61,144 @@ export function LiveExecutionPanel({
   const completedSteps = stepResults.filter((s) => s.status === "complete").length;
   const totalSteps = stepResults.length;
   const progressPct = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+  const hasResults = stepResults.length > 0;
+
+  // Don't render if nothing has happened yet
+  if (!hasResults && !isRunning) return null;
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0d12] border-l border-white/[0.06]">
-      {/* ── Header ─────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-        <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-amber-400" />
-          <span className="text-sm font-semibold text-white/90">
-            Live Execution
-          </span>
-          {isRunning && (
-            <span className="flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider">
-                Streaming
+    <AnimatePresence>
+      {(hasResults || isRunning) && (
+        <motion.div
+          initial={{ width: 0, opacity: 0 }}
+          animate={{ width: isOpen ? 380 : 48, opacity: 1 }}
+          exit={{ width: 0, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="relative h-full border-l border-[var(--vyne-border)] bg-white flex flex-col overflow-hidden shrink-0"
+        >
+          {/* Collapsed state — just a vertical tab */}
+          {!isOpen && (
+            <button
+              onClick={() => setIsOpen(true)}
+              className="flex flex-col items-center justify-center h-full w-full gap-2 hover:bg-[var(--vyne-bg-warm)] transition-colors"
+            >
+              <Zap size={16} className={isRunning ? "text-amber-500 animate-pulse" : "text-[var(--vyne-accent)]"} />
+              <span
+                className="text-[10px] font-bold text-[var(--vyne-text-tertiary)] uppercase tracking-widest"
+                style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
+              >
+                AI Output
               </span>
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {totalDurationMs && (
-            <span className="flex items-center gap-1 text-[11px] font-mono text-white/40">
-              <Clock className="w-3 h-3" />
-              {(totalDurationMs / 1000).toFixed(1)}s
-            </span>
-          )}
-
-          {isRunning ? (
-            <button
-              onClick={onCancel}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium hover:bg-red-500/20 transition-colors"
-            >
-              <Square className="w-3 h-3" />
-              Stop
-            </button>
-          ) : (
-            <button
-              onClick={onExecute}
-              disabled={!compiledWorkflow}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <Play className="w-3 h-3" />
-              Run with AI
+              {isRunning && (
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              )}
             </button>
           )}
-        </div>
-      </div>
 
-      {/* ── Progress Bar ───────────────────────────────────── */}
-      {(isRunning || completedSteps > 0) && (
-        <div className="px-4 py-2 border-b border-white/[0.04]">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-mono text-white/40 uppercase tracking-wider">
-              Progress
-            </span>
-            <span className="text-[10px] font-mono text-white/50">
-              {completedSteps}/{totalSteps} steps
-            </span>
-          </div>
-          <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-700 ease-out"
-              style={{
-                width: `${progressPct}%`,
-                background:
-                  "linear-gradient(90deg, #10b981, #34d399)",
-              }}
-            />
-          </div>
-        </div>
+          {/* Expanded state */}
+          {isOpen && (
+            <>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--vyne-border)] shrink-0">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  <span className="text-[12px] font-bold text-[var(--vyne-text-primary)]">
+                    AI Execution
+                  </span>
+                  {isRunning && (
+                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-100">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                      <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider">Live</span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  {totalDurationMs && (
+                    <span className="flex items-center gap-1 text-[10px] font-mono text-[var(--vyne-text-tertiary)] mr-1">
+                      <Clock className="w-3 h-3" />
+                      {(totalDurationMs / 1000).toFixed(1)}s
+                    </span>
+                  )}
+                  {isRunning ? (
+                    <button
+                      onClick={cancel}
+                      className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-50 border border-red-100 text-red-500 text-[10px] font-semibold hover:bg-red-100 transition-colors"
+                    >
+                      <Square className="w-2.5 h-2.5" />
+                      Stop
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        reset();
+                        setIsOpen(false);
+                      }}
+                      className="w-6 h-6 rounded-md flex items-center justify-center text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-primary)] hover:bg-[var(--vyne-bg-warm)] transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              {(isRunning || completedSteps > 0) && (
+                <div className="px-4 py-2 border-b border-[var(--vyne-border)] shrink-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[9px] font-bold text-[var(--vyne-text-tertiary)] uppercase tracking-wider">
+                      Progress
+                    </span>
+                    <span className="text-[9px] font-mono text-[var(--vyne-text-tertiary)]">
+                      {completedSteps}/{totalSteps}
+                    </span>
+                  </div>
+                  <div className="h-1 bg-[var(--vyne-border)] rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full bg-[var(--vyne-success)]"
+                      animate={{ width: `${progressPct}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step results */}
+              <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+                {stepResults.map((result) => (
+                  <StepResultCard key={result.stepIndex} result={result} />
+                ))}
+
+                {error && (
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <XCircle className="w-3.5 h-3.5 text-red-500" />
+                      <span className="text-[11px] font-semibold text-red-600">Error</span>
+                    </div>
+                    <p className="text-[10px] text-red-500 pl-5">{error}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer — completion summary */}
+              {finalOutput && !isRunning && (
+                <div className="border-t border-[var(--vyne-border)] px-4 py-3 shrink-0 bg-emerald-50/30">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[var(--vyne-success)]" />
+                    <span className="text-[11px] font-bold text-[var(--vyne-success)]">
+                      Complete
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-[var(--vyne-text-secondary)] line-clamp-3 leading-relaxed">
+                    {finalOutput.slice(0, 300)}{finalOutput.length > 300 && "..."}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </motion.div>
       )}
-
-      {/* ── Step Results ───────────────────────────────────── */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
-        {stepResults.length === 0 && !isRunning && (
-          <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <div className="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-4">
-              <Zap className="w-5 h-5 text-white/20" />
-            </div>
-            <p className="text-sm text-white/30 mb-1">
-              No execution yet
-            </p>
-            <p className="text-xs text-white/20 max-w-[240px]">
-              Build a workflow on the canvas, then click &quot;Run with AI&quot;
-              to execute it with real language models.
-            </p>
-          </div>
-        )}
-
-        {stepResults.map((result) => (
-          <StepResultCard key={result.stepIndex} result={result} />
-        ))}
-
-        {error && (
-          <div className="p-3 rounded-lg bg-red-500/5 border border-red-500/10">
-            <div className="flex items-center gap-2 mb-1">
-              <XCircle className="w-3.5 h-3.5 text-red-400" />
-              <span className="text-xs font-medium text-red-400">
-                Execution Error
-              </span>
-            </div>
-            <p className="text-xs text-red-300/70 pl-5.5">{error}</p>
-          </div>
-        )}
-      </div>
-
-      {/* ── Final Output Summary ───────────────────────────── */}
-      {finalOutput && (
-        <div className="border-t border-white/[0.06] px-4 py-3">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-xs font-semibold text-emerald-400">
-              Workflow Complete
-            </span>
-          </div>
-          <p className="text-[11px] text-white/50 line-clamp-3">
-            {finalOutput.slice(0, 300)}
-            {finalOutput.length > 300 && "..."}
-          </p>
-        </div>
-      )}
-    </div>
+    </AnimatePresence>
   );
 }
 
@@ -197,14 +209,14 @@ function StepResultCard({ result }: { result: StepResult }) {
   const [copied, setCopied] = useState(false);
 
   const statusIcon = {
-    running: <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" />,
-    complete: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />,
-    error: <XCircle className="w-3.5 h-3.5 text-red-400" />,
+    running: <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />,
+    complete: <CheckCircle2 className="w-3.5 h-3.5 text-[var(--vyne-success)]" />,
+    error: <XCircle className="w-3.5 h-3.5 text-red-500" />,
   }[result.status];
 
   const displayText = result.liveText || result.output;
-  const preview = displayText.slice(0, 150);
-  const hasMore = displayText.length > 150;
+  const preview = displayText.slice(0, 120);
+  const hasMore = displayText.length > 120;
 
   const copyOutput = async () => {
     await navigator.clipboard.writeText(displayText);
@@ -214,84 +226,68 @@ function StepResultCard({ result }: { result: StepResult }) {
 
   return (
     <div
-      className={`rounded-lg border transition-all duration-300 ${
+      className={`rounded-xl border transition-all duration-200 ${
         result.status === "running"
-          ? "bg-amber-500/[0.03] border-amber-500/10"
+          ? "bg-amber-50/50 border-amber-100"
           : result.status === "error"
-          ? "bg-red-500/[0.03] border-red-500/10"
-          : "bg-white/[0.02] border-white/[0.04]"
+          ? "bg-red-50/50 border-red-100"
+          : "bg-white border-[var(--vyne-border)]"
       }`}
     >
-      {/* Card Header */}
       <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left"
+        onClick={() => hasMore && setExpanded(!expanded)}
+        className="w-full flex items-center gap-2 px-3 py-2.5 text-left"
       >
         {statusIcon}
-
-        <span className="flex-1 text-xs font-medium text-white/80 truncate">
+        <span className="flex-1 text-[11px] font-semibold text-[var(--vyne-text-primary)] truncate">
           {result.name}
         </span>
-
         {result.durationMs > 0 && (
-          <span className="text-[10px] font-mono text-white/30">
+          <span className="text-[9px] font-mono text-[var(--vyne-text-tertiary)]">
             {(result.durationMs / 1000).toFixed(1)}s
           </span>
         )}
-
-        {hasMore || result.output ? (
-          expanded ? (
-            <ChevronDown className="w-3 h-3 text-white/20" />
-          ) : (
-            <ChevronRight className="w-3 h-3 text-white/20" />
-          )
-        ) : null}
+        {hasMore && (
+          expanded
+            ? <ChevronDown className="w-3 h-3 text-[var(--vyne-text-tertiary)]" />
+            : <ChevronRight className="w-3 h-3 text-[var(--vyne-text-tertiary)]" />
+        )}
       </button>
 
-      {/* Preview (always visible when there's text) */}
+      {/* Preview */}
       {displayText && !expanded && (
         <div className="px-3 pb-2.5">
-          <p className="text-[11px] text-white/40 leading-relaxed line-clamp-2">
-            {preview}
-            {hasMore && "..."}
+          <p className="text-[10px] text-[var(--vyne-text-secondary)] leading-relaxed line-clamp-2">
+            {preview}{hasMore && "..."}
+            {result.status === "running" && (
+              <span className="inline-block w-1 h-3 bg-amber-400 animate-pulse ml-0.5 rounded-sm" />
+            )}
           </p>
         </div>
       )}
 
-      {/* Expanded Output */}
+      {/* Expanded */}
       {expanded && displayText && (
-        <div className="px-3 pb-3 border-t border-white/[0.04] mt-0">
+        <div className="px-3 pb-3 border-t border-[var(--vyne-border)]">
           <div className="flex items-center justify-end py-1.5">
             <button
               onClick={copyOutput}
-              className="flex items-center gap-1 text-[10px] text-white/30 hover:text-white/60 transition-colors"
+              className="flex items-center gap-1 text-[9px] text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-primary)] transition-colors"
             >
-              {copied ? (
-                <>
-                  <Check className="w-3 h-3" /> Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3 h-3" /> Copy
-                </>
-              )}
+              {copied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> Copy</>}
             </button>
           </div>
-          <div className="max-h-[300px] overflow-y-auto rounded-md bg-black/30 p-3">
-            <pre className="text-[11px] text-white/60 whitespace-pre-wrap font-mono leading-relaxed">
+          <div className="max-h-[200px] overflow-y-auto rounded-lg bg-[var(--vyne-bg)] border border-[var(--vyne-border)] p-3">
+            <pre className="text-[10px] text-[var(--vyne-text-secondary)] whitespace-pre-wrap font-mono leading-relaxed">
               {displayText}
-              {result.status === "running" && (
-                <span className="inline-block w-1.5 h-3.5 bg-amber-400/60 animate-pulse ml-0.5" />
-              )}
             </pre>
           </div>
         </div>
       )}
 
-      {/* Error Message */}
       {result.error && (
         <div className="px-3 pb-2.5">
-          <p className="text-[11px] text-red-300/60">{result.error}</p>
+          <p className="text-[10px] text-red-500">{result.error}</p>
         </div>
       )}
     </div>
