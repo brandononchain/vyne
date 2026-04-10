@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   PanelLeftClose,
@@ -15,6 +16,7 @@ import {
   Rocket,
   LayoutDashboard,
   Leaf,
+  Zap,
 } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
 import { useDeployStore } from "@/store/deploy-store";
@@ -22,6 +24,9 @@ import { useBillingStore, CREDIT_COSTS } from "@/store/billing-store";
 import { CreditTracker } from "../billing/credit-tracker";
 import { UserDropdown } from "../auth/user-dropdown";
 import type { VyneNodeData } from "@/lib/types";
+import { compileGraphToJSON, type CompiledWorkflow } from "@/lib/graph-compiler";
+import { useStreamExecution } from "@/lib/use-stream-execution";
+import { RunWithAIModal } from "../simulation/run-with-ai-modal";
 
 function TopBarButton({
   children,
@@ -62,6 +67,7 @@ function TopBarButton({
 }
 
 export function TopBar() {
+  const [showRunModal, setShowRunModal] = useState(false);
   const {
     sidebarOpen,
     toggleSidebar,
@@ -78,6 +84,8 @@ export function TopBar() {
   } = useWorkflowStore();
   const { openDeployModal, setCurrentView, deployedWorkflows } = useDeployStore();
   const { canAffordSimulation, canAffordDeployment, openUpgradeModal } = useBillingStore();
+  const { execute: executeWithAI, isRunning: isStreamRunning, cancel: cancelStream, stepResults, finalOutput, totalDurationMs, error: streamError } = useStreamExecution();
+  const compiledRef = useRef<CompiledWorkflow | null>(null);
 
   const agentCount = nodes.filter((n) => (n.data as VyneNodeData).type === "agent").length;
   const taskCount = nodes.filter((n) => (n.data as VyneNodeData).type === "task").length;
@@ -226,36 +234,66 @@ export function TopBar() {
         {isSimulating ? (
           <TopBarButton
             variant="danger"
-            label="Stop simulation"
-            onClick={stopSimulation}
-          >
-            <Square size={11} />
-            <span>Stop Simulation</span>
-          </TopBarButton>
-        ) : (
-          <TopBarButton
-            variant="success"
-            label="Run workflow"
-            disabled={nodes.length === 0}
+            label="Stop execution"
             onClick={() => {
-              if (!canAffordSimulation()) {
-                openUpgradeModal(
-                  `Running a simulation costs ${CREDIT_COSTS.simulation} credits. You don't have enough credits remaining.`
-                );
-                return;
-              }
-              startSimulation();
+              stopSimulation();
+              cancelStream();
             }}
           >
-            <Play size={13} />
-            <span>Run Workflow</span>
+            <Square size={11} />
+            <span>Stop</span>
           </TopBarButton>
+        ) : (
+          <>
+            <TopBarButton
+              variant="success"
+              label="Simulate workflow (mocked)"
+              disabled={nodes.length === 0}
+              onClick={() => {
+                if (!canAffordSimulation()) {
+                  openUpgradeModal(
+                    `Running a simulation costs ${CREDIT_COSTS.simulation} credits. You don't have enough credits remaining.`
+                  );
+                  return;
+                }
+                startSimulation();
+              }}
+            >
+              <Play size={13} />
+              <span>Simulate</span>
+            </TopBarButton>
+            <TopBarButton
+              variant="primary"
+              label="Run with real AI models"
+              disabled={nodes.length === 0 || isStreamRunning}
+              onClick={() => {
+                const compiled = compileGraphToJSON(nodes, edges);
+                compiledRef.current = compiled;
+                setShowRunModal(true);
+              }}
+            >
+              <Zap size={13} />
+              <span>Run with AI</span>
+            </TopBarButton>
+          </>
         )}
 
         {/* User menu — always visible */}
         <div className="w-px h-6 bg-[var(--vyne-border)] mx-1" />
         <UserDropdown />
       </div>
+
+      {/* Run with AI Modal */}
+      <RunWithAIModal
+        isOpen={showRunModal}
+        onClose={() => setShowRunModal(false)}
+        onRun={(userInput) => {
+          if (compiledRef.current) {
+            executeWithAI(compiledRef.current, userInput || undefined);
+          }
+        }}
+        compiledWorkflow={compiledRef.current}
+      />
     </header>
   );
 }

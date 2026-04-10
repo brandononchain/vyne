@@ -25,12 +25,62 @@ import { z } from "zod";
 
 const webSearchTool = tool(
   async ({ query }: { query: string }) => {
-    // TODO: Replace with Tavily, SerpAPI, or Brave Search
+    // Use Tavily if available, fall back to DuckDuckGo instant answer API
+    const tavilyKey = process.env.TAVILY_API_KEY;
+
+    if (tavilyKey) {
+      try {
+        const res = await fetch("https://api.tavily.com/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            api_key: tavilyKey,
+            query,
+            max_results: 5,
+            include_answer: true,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return JSON.stringify({
+            answer: data.answer || null,
+            results: (data.results || []).slice(0, 5).map((r: { title: string; url: string; content: string }) => ({
+              title: r.title,
+              url: r.url,
+              snippet: r.content?.slice(0, 200),
+            })),
+          });
+        }
+      } catch (e) {
+        console.warn("[Tool] Tavily failed, falling back:", e);
+      }
+    }
+
+    // Fallback: DuckDuckGo instant answer (no API key needed)
+    try {
+      const ddgRes = await fetch(
+        `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`
+      );
+      if (ddgRes.ok) {
+        const ddg = await ddgRes.json();
+        const results = [];
+        if (ddg.Abstract) {
+          results.push({ title: ddg.Heading || query, url: ddg.AbstractURL || "", snippet: ddg.Abstract });
+        }
+        for (const topic of (ddg.RelatedTopics || []).slice(0, 4)) {
+          if (topic.Text) {
+            results.push({ title: topic.Text.slice(0, 80), url: topic.FirstURL || "", snippet: topic.Text });
+          }
+        }
+        return JSON.stringify({ answer: ddg.Abstract || null, results });
+      }
+    } catch (e) {
+      console.warn("[Tool] DuckDuckGo fallback failed:", e);
+    }
+
     return JSON.stringify({
       results: [
-        { title: `Top result for: ${query}`, url: "https://example.com/1", snippet: `Relevant information about ${query}...` },
-        { title: `${query} - Recent analysis`, url: "https://example.com/2", snippet: `Latest findings on ${query}...` },
-        { title: `${query} guide`, url: "https://example.com/3", snippet: `Comprehensive guide to ${query}...` },
+        { title: `Search results for: ${query}`, url: `https://www.google.com/search?q=${encodeURIComponent(query)}`, snippet: `Please search for "${query}" directly.` },
       ],
     });
   },
@@ -45,12 +95,61 @@ const webSearchTool = tool(
 
 const urlReaderTool = tool(
   async ({ url }: { url: string }) => {
-    // TODO: Replace with actual web scraper (Cheerio, Puppeteer, or Firecrawl)
-    return JSON.stringify({
-      title: `Content from ${url}`,
-      text: `Extracted article content from ${url}. This would contain the full text of the page, cleaned of navigation and ads.`,
-      wordCount: 850,
-    });
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": "Vyne-Agent/1.0 (AI Workflow Builder)",
+          "Accept": "text/html,application/xhtml+xml,text/plain",
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        return JSON.stringify({ error: `HTTP ${res.status}`, title: url, text: "", wordCount: 0 });
+      }
+
+      const html = await res.text();
+
+      // Simple but effective HTML → text extraction
+      const text = html
+        // Remove scripts and styles
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        // Remove HTML tags
+        .replace(/<[^>]+>/g, " ")
+        // Decode entities
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        // Clean whitespace
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 8000); // Limit to ~8k chars to fit in context
+
+      // Extract title
+      const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      const title = titleMatch ? titleMatch[1].trim() : url;
+
+      return JSON.stringify({
+        title,
+        text,
+        wordCount: text.split(/\s+/).length,
+        url,
+      });
+    } catch (e) {
+      return JSON.stringify({
+        error: e instanceof Error ? e.message : "Failed to fetch URL",
+        title: url,
+        text: "",
+        wordCount: 0,
+      });
+    }
   },
   {
     name: "url_reader",
@@ -128,13 +227,56 @@ const emailClientTool = tool(
 
 const apiConnectorTool = tool(
   async ({ url, method, body }: { url: string; method: string; body?: string }) => {
-    // TODO: Replace with actual HTTP client (fetch or axios)
-    return JSON.stringify({
-      status: 200,
-      headers: { "content-type": "application/json" },
-      body: { message: `Mock ${method} response from ${url}` },
-      durationMs: 145,
-    });
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+
+      const fetchOptions: RequestInit = {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Vyne-Agent/1.0",
+        },
+        signal: controller.signal,
+      };
+
+      if (body && (method === "POST" || method === "PUT")) {
+        fetchOptions.body = body;
+      }
+
+      const start = Date.now();
+      const res = await fetch(url, fetchOptions);
+      clearTimeout(timeout);
+      const durationMs = Date.now() - start;
+
+      const contentType = res.headers.get("content-type") || "";
+      let responseBody;
+
+      if (contentType.includes("application/json")) {
+        responseBody = await res.json();
+      } else {
+        const text = await res.text();
+        responseBody = text.slice(0, 4000);
+      }
+
+      return JSON.stringify({
+        status: res.status,
+        statusText: res.statusText,
+        headers: Object.fromEntries(
+          Array.from(res.headers.entries()).filter(([k]) =>
+            ["content-type", "content-length", "x-request-id"].includes(k.toLowerCase())
+          )
+        ),
+        body: responseBody,
+        durationMs,
+      });
+    } catch (e) {
+      return JSON.stringify({
+        error: e instanceof Error ? e.message : "API request failed",
+        status: 0,
+        body: null,
+      });
+    }
   },
   {
     name: "api_connector",

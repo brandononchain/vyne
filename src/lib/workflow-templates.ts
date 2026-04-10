@@ -9,7 +9,7 @@ export interface WorkflowTemplate {
   color: string;
   complexity: "beginner" | "intermediate" | "advanced";
   timeSaved: string;
-  category: "content" | "research" | "automation" | "data";
+  category: "content" | "research" | "automation" | "data" | "enterprise";
   tags: string[];
   nodes: VyneNode[];
   edges: VyneEdge[];
@@ -315,8 +315,16 @@ export const workflowTemplates: WorkflowTemplate[] = [
 
 export const templateCategories = [
   { id: "all", label: "All Templates" },
+  { id: "enterprise", label: "⚡ Enterprise" },
   { id: "content", label: "Content & Writing" },
   { id: "research", label: "Research & Data" },
   { id: "automation", label: "Automation" },
   { id: "data", label: "Data Analysis" },
+];
+
+// Re-export with enterprise templates merged (enterprise first for visibility)
+import { enterpriseTemplates } from "./enterprise-templates";
+export const allWorkflowTemplates: WorkflowTemplate[] = [
+  ...enterpriseTemplates,
+  ...workflowTemplates,
 ];

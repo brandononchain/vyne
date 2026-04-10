@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Clock, Users, Zap, Leaf, Search } from "lucide-react";
 import { DynamicIcon } from "@/lib/icons";
 import {
-  workflowTemplates,
+  allWorkflowTemplates as workflowTemplates,
   templateCategories,
   type WorkflowTemplate,
 } from "@/lib/workflow-templates";
