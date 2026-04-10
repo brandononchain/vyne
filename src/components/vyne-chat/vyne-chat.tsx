@@ -97,25 +97,28 @@ function toVyneNodes(gen: GeneratedWorkflow): { nodes: VyneNode[]; edges: VyneEd
 // ── Chat System Prompt ───────────────────────────────────────────────
 
 function buildSystemPrompt(canvasContext: string): string {
-  return `You are Vyne AI — the intelligent copilot for Vyne, a visual AI agent workflow builder.
+  return `You are Vyne AI — the intelligent copilot built into Vyne, an enterprise visual AI agent workflow builder.
 
-You help users design, build, debug, and optimize multi-agent AI workflows.
+IDENTITY:
+- You are Vyne AI, a specialized AI assistant for designing and orchestrating multi-agent workflows
+- You live inside the Vyne canvas interface and can see everything the user has built
+- You are a collaborative partner — warm, knowledgeable, and proactive
+- You reference the user's actual nodes and connections by name when relevant
+- You speak concisely and precisely — no filler, no excessive verbosity
 
-PERSONALITY:
-- Warm, knowledgeable, and proactive
-- You speak as a collaborative partner, not a tool
-- Use concise, clear language
-- Reference the user's actual workflow when relevant
+CORE CAPABILITIES:
+1. DESIGN — Help users architect multi-agent workflows from requirements
+2. BUILD — Generate workflow structures that get added directly to the canvas
+3. CONFIGURE — Advise on agent personas, tools, task instructions, and connections
+4. DEBUG — Diagnose why a workflow isn't producing expected results
+5. OPTIMIZE — Suggest improvements to execution order, agent roles, tool selection
+6. EXPLAIN — Teach concepts about AI agents, LLMs, prompt engineering, automation
 
-CAPABILITIES:
-1. CONVERSATION: Answer questions about AI agents, workflows, automation, best practices
-2. WORKFLOW GENERATION: When the user wants to build/expand a workflow, generate it
-3. CANVAS AWARENESS: You can see what's on the user's canvas right now
-4. DEBUGGING: Help troubleshoot why a workflow isn't working
-5. OPTIMIZATION: Suggest improvements to existing workflows
+CANVAS AWARENESS:
+You can see the user's current canvas state below. When they click a node, you see its full configuration.
+When the user's message starts with [Referring to node: "..."], they clicked that node and are asking about it specifically.
 
-CURRENT CANVAS STATE:
-${canvasContext || "Empty canvas — no nodes or edges yet."}
+${canvasContext ? `CURRENT CANVAS STATE:\n${canvasContext}` : "The canvas is currently empty."}
 
 WORKFLOW GENERATION:
 When the user wants to create or modify a workflow, respond with your explanation FIRST, then include a JSON block at the end wrapped in \`\`\`vyne-workflow markers:
@@ -154,25 +157,66 @@ When the user wants to create or modify a workflow, respond with your explanatio
 
 Available icons: Globe, PenTool, FileSearch, FileEdit, FileText, ShieldCheck, Code2, Terminal, Send, ListChecks, Activity, BarChart3, Search, Mail, Wand2, Repeat
 Available tools: web-search, url-reader, text-editor, grammar-checker, code-executor, csv-reader, chart-generator, email-client, api-connector, linter, task-tracker, calendar, contact-book
+Available tones: professional, casual, analytical, creative, friendly, concise
+Agent colors: greens (#4a7c59, #5a9e6f), blue (#0984e3), terracotta (#b8694a)
+Task colors: gold (#d4a84b), teal (#5a9e6f)
 
-Only include the vyne-workflow block when the user is asking you to BUILD or MODIFY something. For normal conversation, just respond naturally.`;
+RULES:
+- Only include the vyne-workflow block when the user is asking you to BUILD or MODIFY something
+- For questions, debugging, or conversation — just respond naturally
+- When referencing a node the user selected, use its name and offer specific actionable advice
+- Keep responses focused and actionable — enterprise users value precision over padding
+- When suggesting improvements, explain WHY each change matters`;
 }
 
-function getCanvasContext(nodes: VyneNode[], edges: VyneEdge[]): string {
+function getCanvasContext(nodes: VyneNode[], edges: VyneEdge[], selectedNodeId: string | null): string {
   if (nodes.length === 0) return "";
 
   const nodeDescriptions = nodes.map((n) => {
     const d = n.data as VyneNodeData;
-    return `- ${d.name} (${d.type}) [${(d as AgentNodeData).role || ""}]`;
+    const isSelected = n.id === selectedNodeId;
+    const prefix = isSelected ? "→ " : "  ";
+
+    if (d.type === "agent") {
+      const ad = d as AgentNodeData;
+      return `${prefix}${ad.name} (agent, ${ad.role}) — tools: [${ad.tools.join(", ")}]${ad.persona.goal ? `, goal: "${ad.persona.goal}"` : ""}`;
+    } else if (d.type === "task") {
+      const td = d as TaskNodeData;
+      return `${prefix}${td.name} (task) — in: "${td.expectedInput}", out: "${td.expectedOutput}"`;
+    }
+    return `${prefix}${d.name} (${d.type})`;
   }).join("\n");
 
   const edgeDescriptions = edges.map((e) => {
     const src = nodes.find((n) => n.id === e.source);
     const tgt = nodes.find((n) => n.id === e.target);
-    return `- ${(src?.data as VyneNodeData)?.name || "?"} → ${(tgt?.data as VyneNodeData)?.name || "?"}`;
+    return `  ${(src?.data as VyneNodeData)?.name || "?"} → ${(tgt?.data as VyneNodeData)?.name || "?"}`;
   }).join("\n");
 
-  return `${nodes.length} nodes, ${edges.length} connections:\n${nodeDescriptions}\n\nConnections:\n${edgeDescriptions}`;
+  let context = `${nodes.length} nodes, ${edges.length} connections:\n${nodeDescriptions}\n\nConnections:\n${edgeDescriptions}`;
+
+  // Add detailed info for selected node
+  if (selectedNodeId) {
+    const sn = nodes.find((n) => n.id === selectedNodeId);
+    if (sn) {
+      const sd = sn.data as VyneNodeData;
+      context += `\n\nCURRENTLY SELECTED NODE (user is asking about this):\n`;
+      context += `Name: ${sd.name}\nType: ${sd.type}\n`;
+      if (sd.type === "agent") {
+        const ad = sd as AgentNodeData;
+        context += `Role: ${ad.role}\nDescription: ${ad.description}\nTools: ${ad.tools.join(", ")}\n`;
+        if (ad.persona.goal) context += `Goal: ${ad.persona.goal}\n`;
+        if (ad.persona.backstory) context += `Backstory: ${ad.persona.backstory}\n`;
+        context += `Tone: ${ad.persona.tone}\n`;
+      } else if (sd.type === "task") {
+        const td = sd as TaskNodeData;
+        context += `Description: ${td.description}\nExpected Input: ${td.expectedInput}\nExpected Output: ${td.expectedOutput}\n`;
+        if (td.config.detailedInstructions) context += `Instructions: ${td.config.detailedInstructions}\n`;
+      }
+    }
+  }
+
+  return context;
 }
 
 // ── Message Bubble ───────────────────────────────────────────────────
@@ -362,7 +406,7 @@ export function CopilotOmnibar() {
       }));
       history.push({ role: "user", content: text });
 
-      const canvasContext = getCanvasContext(nodes, edges);
+      const canvasContext = getCanvasContext(nodes, edges, selectedNodeId || null);
 
       const res = await fetch("/api/vyne-chat", {
         method: "POST",
@@ -399,7 +443,7 @@ export function CopilotOmnibar() {
     } finally {
       setIsProcessing(false);
     }
-  }, [input, isProcessing, messages, nodes, edges, addMessage, updateMessage, setIsProcessing, activeProject, selectedNodeData]);
+  }, [input, isProcessing, messages, nodes, edges, addMessage, updateMessage, setIsProcessing, activeProject, selectedNodeData, selectedNodeId]);
 
   // ── Apply workflow from chat ──────────────────────────────────
 

@@ -178,6 +178,7 @@ export function WorkflowCanvas() {
     addToolFromTemplate,
     setIsDraggingOver,
     isSimulating,
+    setSelectedNodeId,
   } = useWorkflowStore();
 
   // ── Drag enter/leave for drop zone overlay ──────────
@@ -285,6 +286,8 @@ export function WorkflowCanvas() {
         onConnect={isSimulating ? undefined : onConnect}
         onDragOver={isSimulating ? undefined : onDragOver}
         onDrop={isSimulating ? undefined : onDrop}
+        onNodeClick={(_event, node) => setSelectedNodeId(node.id)}
+        onPaneClick={() => setSelectedNodeId(null)}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         isValidConnection={isValidConnection}
