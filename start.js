@@ -17,6 +17,22 @@ const path = require("path");
 const PORT = process.env.PORT || 3000;
 const HOST = "0.0.0.0";
 
+// ── Run Prisma migrations before starting ────────────────────────────
+// This ensures the DB schema is always up to date on every deploy.
+// `prisma db push` is idempotent — safe to run repeatedly.
+try {
+  console.log("[Vyne] Running prisma db push...");
+  execSync("npx prisma db push --skip-generate", {
+    stdio: "inherit",
+    env: { ...process.env },
+    timeout: 30000,
+  });
+  console.log("[Vyne] ✅ Database schema is up to date.");
+} catch (err) {
+  console.error("[Vyne] ⚠️  prisma db push failed (non-fatal):", err.message);
+  // Non-fatal: the app can still start with the existing schema
+}
+
 console.log(`[Vyne] Starting Next.js server on ${HOST}:${PORT}...`);
 
 // Start Next.js
