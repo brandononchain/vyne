@@ -25,6 +25,7 @@ import {
   type TriggerType,
 } from "@/store/deploy-store";
 import { useWorkflowStore } from "@/store/workflow-store";
+import { useProjectStore } from "@/store/project-store";
 import { compileGraphToJSON } from "@/lib/graph-compiler";
 
 // ── Copy button with feedback ────────────────────────────────────────
@@ -349,7 +350,119 @@ function SuccessStep({
   );
 }
 
-// ── Main Modal ───────────────────────────────────────────────────────
+// ── Step 4: Manage deployed workflow ────────────────────────────────
+function ManageStep() {
+  const { deployedWorkflows, closeDeployModal, setDeployModalStep } = useDeployStore();
+  const activeProject = useProjectStore.getState().projects.find(
+    (p) => p.id === useProjectStore.getState().activeProjectId
+  );
+
+  // Find the deployed version of this project
+  const deployment = activeProject?.serverId
+    ? deployedWorkflows.find((dw) => dw.id === activeProject.serverId || dw.name === activeProject.name)
+    : deployedWorkflows[0];
+
+  if (!deployment) {
+    return (
+      <div className="py-6 text-center">
+        <p className="text-[12px] text-[var(--vyne-text-tertiary)]">No deployment found.</p>
+        <button
+          onClick={() => setDeployModalStep("configure")}
+          className="mt-3 px-4 py-2 rounded-xl bg-[var(--vyne-accent)] text-white text-[12px] font-semibold"
+        >
+          Deploy Now
+        </button>
+      </div>
+    );
+  }
+
+  const endpointUrl = deployment.endpointUrl || `${typeof window !== "undefined" ? window.location.origin : ""}/api/workflows/trigger`;
+
+  const curlExample = `curl -X POST ${endpointUrl} \\
+  -H "Authorization: Bearer ${deployment.apiKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"input": "Your prompt here"}'`;
+
+  return (
+    <div className="space-y-5">
+      {/* Status banner */}
+      <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
+        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+          <CheckCircle2 size={16} className="text-[var(--vyne-success)]" />
+        </div>
+        <div className="flex-1">
+          <h4 className="text-[13px] font-bold text-[var(--vyne-text-primary)]">
+            {deployment.name || activeProject?.name} is Live
+          </h4>
+          <p className="text-[10px] text-[var(--vyne-text-tertiary)]">
+            {deployment.agentCount} agents · {deployment.taskCount} tasks · Deployed {deployment.deployedAt ? new Date(deployment.deployedAt).toLocaleDateString() : "recently"}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-100">
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--vyne-success)] animate-pulse" />
+          <span className="text-[9px] font-bold text-[var(--vyne-success)] uppercase tracking-wider">Live</span>
+        </div>
+      </div>
+
+      {/* Credentials */}
+      <div className="space-y-3">
+        <CopyButton
+          label="API Endpoint"
+          text={endpointUrl}
+        />
+        <CopyButton
+          label="API Key"
+          text={deployment.apiKey}
+        />
+        {deployment.webhookSecret && (
+          <CopyButton
+            label="Webhook Secret"
+            text={deployment.webhookSecret}
+          />
+        )}
+      </div>
+
+      {/* Usage example */}
+      <div className="space-y-1.5">
+        <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--vyne-text-tertiary)]">
+          Quick Test
+        </label>
+        <div className="relative p-3 rounded-xl bg-[#1a2316] overflow-x-auto">
+          <pre className="text-[10px] text-emerald-300 font-mono leading-relaxed whitespace-pre">
+            {curlExample}
+          </pre>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(curlExample);
+            }}
+            className="absolute top-2 right-2 w-6 h-6 rounded-md bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+          >
+            <Copy size={10} className="text-white/60" />
+          </button>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={() => setDeployModalStep("configure")}
+          className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--vyne-border)]
+                     text-[12px] font-medium text-[var(--vyne-text-secondary)]
+                     hover:bg-[var(--vyne-bg-warm)] transition-colors"
+        >
+          Redeploy with Changes
+        </button>
+        <button
+          onClick={closeDeployModal}
+          className="flex-1 px-4 py-2.5 rounded-xl bg-[var(--vyne-accent)] text-white
+                     text-[12px] font-semibold hover:opacity-90 transition-opacity"
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  );
+}
 export function DeployModal() {
   const {
     deployModal,
@@ -457,11 +570,13 @@ export function DeployModal() {
                   </div>
                   <div>
                     <h2 className="text-[15px] font-bold text-[var(--vyne-text-primary)]">
-                      {deployModal.step === "success" ? "Deployed!" : "Deploy Workflow"}
+                      {deployModal.step === "success" ? "Deployed!" : deployModal.step === "manage" ? "Deployment" : "Deploy Workflow"}
                     </h2>
                     <p className="text-[10px] text-[var(--vyne-text-tertiary)]">
                       {deployModal.step === "success"
                         ? "Your workflow is now live"
+                        : deployModal.step === "manage"
+                        ? "Your workflow is running in production"
                         : "Publish your workflow to make it available"}
                     </p>
                   </div>
@@ -511,6 +626,16 @@ export function DeployModal() {
                       {...deployedData}
                       triggerType={deployModal.triggerType}
                     />
+                  </motion.div>
+                )}
+                {deployModal.step === "manage" && (
+                  <motion.div
+                    key="manage"
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -8 }}
+                  >
+                    <ManageStep />
                   </motion.div>
                 )}
               </AnimatePresence>

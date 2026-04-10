@@ -271,8 +271,13 @@ export function CopilotOmnibar() {
   } = useVyneMemory();
 
   const { nodes, edges, loadTemplate } = useWorkflowStore();
+  const selectedNodeId = useWorkflowStore((s) => s.selectedNodeId);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const activeProject = useProjectStore((s) => s.projects.find((p) => p.id === s.activeProjectId));
+
+  // Get selected node data for context
+  const selectedNode = selectedNodeId ? nodes.find((n) => n.id === selectedNodeId) : null;
+  const selectedNodeData = selectedNode ? selectedNode.data as VyneNodeData : null;
 
   const [input, setInput] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -306,8 +311,17 @@ export function CopilotOmnibar() {
   // ── Send message ──────────────────────────────────────────────
 
   const handleSend = useCallback(async () => {
-    const text = input.trim();
+    let text = input.trim();
     if (!text || isProcessing) return;
+
+    // If a node is selected, prepend context
+    let nodeContext = "";
+    if (selectedNodeData) {
+      const nd = selectedNodeData;
+      nodeContext = `[Referring to node: "${nd.name}" (${nd.type}${(nd as AgentNodeData).role ? `, ${(nd as AgentNodeData).role}` : ""})]\n`;
+    }
+
+    const fullMessage = nodeContext + text;
 
     setInput("");
     setIsProcessing(true);
@@ -317,7 +331,7 @@ export function CopilotOmnibar() {
     addMessage({
       id: userMsgId,
       role: "user",
-      content: text,
+      content: fullMessage,
       timestamp: Date.now(),
       status: "complete",
     });
@@ -327,7 +341,7 @@ export function CopilotOmnibar() {
     fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role: "user", content: text, workflowId: serverId }),
+      body: JSON.stringify({ role: "user", content: fullMessage, workflowId: serverId }),
     }).catch(() => {});
 
     // Add thinking placeholder
@@ -385,7 +399,7 @@ export function CopilotOmnibar() {
     } finally {
       setIsProcessing(false);
     }
-  }, [input, isProcessing, messages, nodes, edges, addMessage, updateMessage, setIsProcessing, activeProject]);
+  }, [input, isProcessing, messages, nodes, edges, addMessage, updateMessage, setIsProcessing, activeProject, selectedNodeData]);
 
   // ── Apply workflow from chat ──────────────────────────────────
 
@@ -492,6 +506,32 @@ export function CopilotOmnibar() {
 
             {/* Input */}
             <div className="border-t border-[var(--vyne-border)] px-3 py-2.5 shrink-0">
+              {/* Selected node reference */}
+              {selectedNodeData && (
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-medium"
+                    style={{
+                      backgroundColor: ((selectedNodeData as AgentNodeData).color || "#4a7c59") + "10",
+                      borderColor: ((selectedNodeData as AgentNodeData).color || "#4a7c59") + "30",
+                      color: (selectedNodeData as AgentNodeData).color || "#4a7c59",
+                    }}
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: (selectedNodeData as AgentNodeData).color || "#4a7c59" }} />
+                    {selectedNodeData.name}
+                    <span className="opacity-60">({selectedNodeData.type})</span>
+                  </div>
+                  <button
+                    onClick={() => useWorkflowStore.getState().setSelectedNodeId(null)}
+                    className="w-4 h-4 rounded flex items-center justify-center text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-primary)] transition-colors"
+                  >
+                    <X size={10} />
+                  </button>
+                  <span className="text-[9px] text-[var(--vyne-text-tertiary)]">
+                    Referenced in next message
+                  </span>
+                </div>
+              )}
               <div className="flex items-end gap-2">
                 <textarea
                   ref={inputRef}

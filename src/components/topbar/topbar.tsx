@@ -278,6 +278,23 @@ export function TopBar() {
               label="Deploy workflow"
               disabled={nodes.length === 0}
               onClick={() => {
+                // Check if this project is already deployed
+                const { activeProjectId, projects } = useProjectStore.getState();
+                const project = projects.find((p) => p.id === activeProjectId);
+                const { deployedWorkflows } = useDeployStore.getState();
+                const existingDeployment = project?.serverId
+                  ? deployedWorkflows.find((dw) =>
+                      dw.id === project.serverId || dw.name === project.name
+                    )
+                  : null;
+
+                if (existingDeployment && existingDeployment.status === "live") {
+                  // Already deployed — open manage view
+                  useDeployStore.getState().setDeployModalStep("manage");
+                  openDeployModal();
+                  return;
+                }
+
                 if (!canAffordDeployment()) {
                   openUpgradeModal(
                     `Deploying a workflow costs ${CREDIT_COSTS.deployment} credits. You don't have enough credits remaining.`

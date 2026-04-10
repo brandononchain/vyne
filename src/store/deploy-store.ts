@@ -34,7 +34,7 @@ export interface DeployedWorkflow {
 
 export interface DeployModalState {
   isOpen: boolean;
-  step: "configure" | "deploying" | "success";
+  step: "configure" | "deploying" | "success" | "manage";
   workflowName: string;
   triggerType: TriggerType;
 }
