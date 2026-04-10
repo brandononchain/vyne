@@ -377,9 +377,9 @@ export function DeployModal() {
       edges
     );
 
-    // Save to database
+    // Save to database WITH the API key so the trigger endpoint can find it
     try {
-      await fetch("/api/workflows", {
+      const res = await fetch("/api/workflows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -394,8 +394,17 @@ export function DeployModal() {
           agentCount: deployed.agentCount,
           taskCount: deployed.taskCount,
           status: "LIVE",
+          apiKey: deployed.apiKey,
+          webhookSecret: deployed.webhookSecret,
         }),
       });
+
+      if (res.ok) {
+        const data = await res.json();
+        // Build the real trigger URL using the current origin
+        const origin = window.location.origin;
+        deployed.endpointUrl = `${origin}/api/workflows/trigger`;
+      }
     } catch (err) {
       console.error("[Deploy] Failed to save to DB:", err);
     }
