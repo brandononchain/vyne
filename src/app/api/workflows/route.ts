@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, graphJson, triggerType, agentCount, taskCount, status, apiKey: deployApiKey, webhookSecret } = body;
+    const { name, description, graphJson, triggerType, agentCount, taskCount, status, apiKey: deployApiKey, webhookSecret, endpointUrl } = body;
 
     if (!name || !graphJson) {
       return NextResponse.json({ error: "Missing required fields: name, graphJson" }, { status: 400 });
@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
         deployedAt: status === "LIVE" ? new Date() : null,
         apiKey: deployApiKey || null,
         webhookSecret: webhookSecret || null,
+        endpointUrl: endpointUrl || null,
       },
     });
 

@@ -490,7 +490,12 @@ export function DeployModal() {
       edges
     );
 
+    // Build the real trigger URL using the current origin
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    deployed.endpointUrl = `${origin}/api/workflows/trigger`;
+
     // Save to database WITH the API key so the trigger endpoint can find it
+    let savedId: string | null = null;
     try {
       const res = await fetch("/api/workflows", {
         method: "POST",
@@ -509,17 +514,32 @@ export function DeployModal() {
           status: "LIVE",
           apiKey: deployed.apiKey,
           webhookSecret: deployed.webhookSecret,
+          endpointUrl: deployed.endpointUrl,
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        // Build the real trigger URL using the current origin
-        const origin = window.location.origin;
-        deployed.endpointUrl = `${origin}/api/workflows/trigger`;
+        savedId = data.id;
+        deployed.id = data.id; // Use the DB id
       }
     } catch (err) {
       console.error("[Deploy] Failed to save to DB:", err);
+    }
+
+    // Update project store so the manage view can find this deployment
+    if (savedId) {
+      const projectStore = (await import("@/store/project-store")).useProjectStore.getState();
+      const { activeProjectId, projects } = projectStore;
+      if (activeProjectId) {
+        projectStore.setProjects(
+          projects.map((p) =>
+            p.id === activeProjectId
+              ? { ...p, serverId: savedId!, status: "live" as const, name: deployed.name }
+              : p
+          )
+        );
+      }
     }
 
     addDeployedWorkflow(deployed);
