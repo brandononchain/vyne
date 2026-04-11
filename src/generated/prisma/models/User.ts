@@ -47,6 +47,8 @@ export type UserMinAggregateOutputType = {
   creditsTotal: number | null
   createdAt: Date | null
   updatedAt: Date | null
+  organizationId: string | null
+  orgRole: $Enums.OrgRole | null
 }
 
 export type UserMaxAggregateOutputType = {
@@ -60,6 +62,8 @@ export type UserMaxAggregateOutputType = {
   creditsTotal: number | null
   createdAt: Date | null
   updatedAt: Date | null
+  organizationId: string | null
+  orgRole: $Enums.OrgRole | null
 }
 
 export type UserCountAggregateOutputType = {
@@ -71,8 +75,11 @@ export type UserCountAggregateOutputType = {
   plan: number
   creditsUsed: number
   creditsTotal: number
+  preferences: number
   createdAt: number
   updatedAt: number
+  organizationId: number
+  orgRole: number
   _all: number
 }
 
@@ -98,6 +105,8 @@ export type UserMinAggregateInputType = {
   creditsTotal?: true
   createdAt?: true
   updatedAt?: true
+  organizationId?: true
+  orgRole?: true
 }
 
 export type UserMaxAggregateInputType = {
@@ -111,6 +120,8 @@ export type UserMaxAggregateInputType = {
   creditsTotal?: true
   createdAt?: true
   updatedAt?: true
+  organizationId?: true
+  orgRole?: true
 }
 
 export type UserCountAggregateInputType = {
@@ -122,8 +133,11 @@ export type UserCountAggregateInputType = {
   plan?: true
   creditsUsed?: true
   creditsTotal?: true
+  preferences?: true
   createdAt?: true
   updatedAt?: true
+  organizationId?: true
+  orgRole?: true
   _all?: true
 }
 
@@ -222,8 +236,11 @@ export type UserGroupByOutputType = {
   plan: $Enums.Plan
   creditsUsed: number
   creditsTotal: number
+  preferences: runtime.JsonValue | null
   createdAt: Date
   updatedAt: Date
+  organizationId: string | null
+  orgRole: $Enums.OrgRole
   _count: UserCountAggregateOutputType | null
   _avg: UserAvgAggregateOutputType | null
   _sum: UserSumAggregateOutputType | null
@@ -258,10 +275,17 @@ export type UserWhereInput = {
   plan?: Prisma.EnumPlanFilter<"User"> | $Enums.Plan
   creditsUsed?: Prisma.IntFilter<"User"> | number
   creditsTotal?: Prisma.IntFilter<"User"> | number
+  preferences?: Prisma.JsonNullableFilter<"User">
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  organizationId?: Prisma.StringNullableFilter<"User"> | string | null
+  orgRole?: Prisma.EnumOrgRoleFilter<"User"> | $Enums.OrgRole
+  organization?: Prisma.XOR<Prisma.OrganizationNullableScalarRelationFilter, Prisma.OrganizationWhereInput> | null
   workflows?: Prisma.WorkflowListRelationFilter
   executionLogs?: Prisma.ExecutionLogListRelationFilter
+  apiKeys?: Prisma.ApiKeyListRelationFilter
+  chatMessages?: Prisma.ChatMessageListRelationFilter
+  agentConfigs?: Prisma.SavedAgentConfigListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -273,10 +297,17 @@ export type UserOrderByWithRelationInput = {
   plan?: Prisma.SortOrder
   creditsUsed?: Prisma.SortOrder
   creditsTotal?: Prisma.SortOrder
+  preferences?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  organizationId?: Prisma.SortOrderInput | Prisma.SortOrder
+  orgRole?: Prisma.SortOrder
+  organization?: Prisma.OrganizationOrderByWithRelationInput
   workflows?: Prisma.WorkflowOrderByRelationAggregateInput
   executionLogs?: Prisma.ExecutionLogOrderByRelationAggregateInput
+  apiKeys?: Prisma.ApiKeyOrderByRelationAggregateInput
+  chatMessages?: Prisma.ChatMessageOrderByRelationAggregateInput
+  agentConfigs?: Prisma.SavedAgentConfigOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -291,10 +322,17 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   plan?: Prisma.EnumPlanFilter<"User"> | $Enums.Plan
   creditsUsed?: Prisma.IntFilter<"User"> | number
   creditsTotal?: Prisma.IntFilter<"User"> | number
+  preferences?: Prisma.JsonNullableFilter<"User">
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  organizationId?: Prisma.StringNullableFilter<"User"> | string | null
+  orgRole?: Prisma.EnumOrgRoleFilter<"User"> | $Enums.OrgRole
+  organization?: Prisma.XOR<Prisma.OrganizationNullableScalarRelationFilter, Prisma.OrganizationWhereInput> | null
   workflows?: Prisma.WorkflowListRelationFilter
   executionLogs?: Prisma.ExecutionLogListRelationFilter
+  apiKeys?: Prisma.ApiKeyListRelationFilter
+  chatMessages?: Prisma.ChatMessageListRelationFilter
+  agentConfigs?: Prisma.SavedAgentConfigListRelationFilter
 }, "id" | "clerkId" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -306,8 +344,11 @@ export type UserOrderByWithAggregationInput = {
   plan?: Prisma.SortOrder
   creditsUsed?: Prisma.SortOrder
   creditsTotal?: Prisma.SortOrder
+  preferences?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  organizationId?: Prisma.SortOrderInput | Prisma.SortOrder
+  orgRole?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _avg?: Prisma.UserAvgOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
@@ -327,8 +368,11 @@ export type UserScalarWhereWithAggregatesInput = {
   plan?: Prisma.EnumPlanWithAggregatesFilter<"User"> | $Enums.Plan
   creditsUsed?: Prisma.IntWithAggregatesFilter<"User"> | number
   creditsTotal?: Prisma.IntWithAggregatesFilter<"User"> | number
+  preferences?: Prisma.JsonNullableWithAggregatesFilter<"User">
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
+  organizationId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  orgRole?: Prisma.EnumOrgRoleWithAggregatesFilter<"User"> | $Enums.OrgRole
 }
 
 export type UserCreateInput = {
@@ -340,10 +384,16 @@ export type UserCreateInput = {
   plan?: $Enums.Plan
   creditsUsed?: number
   creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
+  orgRole?: $Enums.OrgRole
+  organization?: Prisma.OrganizationCreateNestedOneWithoutMembersInput
   workflows?: Prisma.WorkflowCreateNestedManyWithoutUserInput
   executionLogs?: Prisma.ExecutionLogCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -355,10 +405,16 @@ export type UserUncheckedCreateInput = {
   plan?: $Enums.Plan
   creditsUsed?: number
   creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
+  organizationId?: string | null
+  orgRole?: $Enums.OrgRole
   workflows?: Prisma.WorkflowUncheckedCreateNestedManyWithoutUserInput
   executionLogs?: Prisma.ExecutionLogUncheckedCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -370,10 +426,16 @@ export type UserUpdateInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
   creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  organization?: Prisma.OrganizationUpdateOneWithoutMembersNestedInput
   workflows?: Prisma.WorkflowUpdateManyWithoutUserNestedInput
   executionLogs?: Prisma.ExecutionLogUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -385,10 +447,16 @@ export type UserUncheckedUpdateInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
   creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organizationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
   workflows?: Prisma.WorkflowUncheckedUpdateManyWithoutUserNestedInput
   executionLogs?: Prisma.ExecutionLogUncheckedUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -400,8 +468,11 @@ export type UserCreateManyInput = {
   plan?: $Enums.Plan
   creditsUsed?: number
   creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
+  organizationId?: string | null
+  orgRole?: $Enums.OrgRole
 }
 
 export type UserUpdateManyMutationInput = {
@@ -413,8 +484,10 @@ export type UserUpdateManyMutationInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
   creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
 }
 
 export type UserUncheckedUpdateManyInput = {
@@ -426,8 +499,11 @@ export type UserUncheckedUpdateManyInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
   creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organizationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
 }
 
 export type UserCountOrderByAggregateInput = {
@@ -439,8 +515,11 @@ export type UserCountOrderByAggregateInput = {
   plan?: Prisma.SortOrder
   creditsUsed?: Prisma.SortOrder
   creditsTotal?: Prisma.SortOrder
+  preferences?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  organizationId?: Prisma.SortOrder
+  orgRole?: Prisma.SortOrder
 }
 
 export type UserAvgOrderByAggregateInput = {
@@ -459,6 +538,8 @@ export type UserMaxOrderByAggregateInput = {
   creditsTotal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  organizationId?: Prisma.SortOrder
+  orgRole?: Prisma.SortOrder
 }
 
 export type UserMinOrderByAggregateInput = {
@@ -472,11 +553,23 @@ export type UserMinOrderByAggregateInput = {
   creditsTotal?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  organizationId?: Prisma.SortOrder
+  orgRole?: Prisma.SortOrder
 }
 
 export type UserSumOrderByAggregateInput = {
   creditsUsed?: Prisma.SortOrder
   creditsTotal?: Prisma.SortOrder
+}
+
+export type UserListRelationFilter = {
+  every?: Prisma.UserWhereInput
+  some?: Prisma.UserWhereInput
+  none?: Prisma.UserWhereInput
+}
+
+export type UserOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -508,6 +601,66 @@ export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
 
+export type EnumOrgRoleFieldUpdateOperationsInput = {
+  set?: $Enums.OrgRole
+}
+
+export type UserCreateNestedManyWithoutOrganizationInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOrganizationInput, Prisma.UserUncheckedCreateWithoutOrganizationInput> | Prisma.UserCreateWithoutOrganizationInput[] | Prisma.UserUncheckedCreateWithoutOrganizationInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOrganizationInput | Prisma.UserCreateOrConnectWithoutOrganizationInput[]
+  createMany?: Prisma.UserCreateManyOrganizationInputEnvelope
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+}
+
+export type UserUncheckedCreateNestedManyWithoutOrganizationInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOrganizationInput, Prisma.UserUncheckedCreateWithoutOrganizationInput> | Prisma.UserCreateWithoutOrganizationInput[] | Prisma.UserUncheckedCreateWithoutOrganizationInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOrganizationInput | Prisma.UserCreateOrConnectWithoutOrganizationInput[]
+  createMany?: Prisma.UserCreateManyOrganizationInputEnvelope
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+}
+
+export type UserUpdateManyWithoutOrganizationNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOrganizationInput, Prisma.UserUncheckedCreateWithoutOrganizationInput> | Prisma.UserCreateWithoutOrganizationInput[] | Prisma.UserUncheckedCreateWithoutOrganizationInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOrganizationInput | Prisma.UserCreateOrConnectWithoutOrganizationInput[]
+  upsert?: Prisma.UserUpsertWithWhereUniqueWithoutOrganizationInput | Prisma.UserUpsertWithWhereUniqueWithoutOrganizationInput[]
+  createMany?: Prisma.UserCreateManyOrganizationInputEnvelope
+  set?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  disconnect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  delete?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  update?: Prisma.UserUpdateWithWhereUniqueWithoutOrganizationInput | Prisma.UserUpdateWithWhereUniqueWithoutOrganizationInput[]
+  updateMany?: Prisma.UserUpdateManyWithWhereWithoutOrganizationInput | Prisma.UserUpdateManyWithWhereWithoutOrganizationInput[]
+  deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+}
+
+export type UserUncheckedUpdateManyWithoutOrganizationNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutOrganizationInput, Prisma.UserUncheckedCreateWithoutOrganizationInput> | Prisma.UserCreateWithoutOrganizationInput[] | Prisma.UserUncheckedCreateWithoutOrganizationInput[]
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutOrganizationInput | Prisma.UserCreateOrConnectWithoutOrganizationInput[]
+  upsert?: Prisma.UserUpsertWithWhereUniqueWithoutOrganizationInput | Prisma.UserUpsertWithWhereUniqueWithoutOrganizationInput[]
+  createMany?: Prisma.UserCreateManyOrganizationInputEnvelope
+  set?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  disconnect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  delete?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  connect?: Prisma.UserWhereUniqueInput | Prisma.UserWhereUniqueInput[]
+  update?: Prisma.UserUpdateWithWhereUniqueWithoutOrganizationInput | Prisma.UserUpdateWithWhereUniqueWithoutOrganizationInput[]
+  updateMany?: Prisma.UserUpdateManyWithWhereWithoutOrganizationInput | Prisma.UserUpdateManyWithWhereWithoutOrganizationInput[]
+  deleteMany?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+}
+
+export type UserCreateNestedOneWithoutApiKeysInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutApiKeysInput, Prisma.UserUncheckedCreateWithoutApiKeysInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutApiKeysInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutApiKeysNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutApiKeysInput, Prisma.UserUncheckedCreateWithoutApiKeysInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutApiKeysInput
+  upsert?: Prisma.UserUpsertWithoutApiKeysInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutApiKeysInput, Prisma.UserUpdateWithoutApiKeysInput>, Prisma.UserUncheckedUpdateWithoutApiKeysInput>
+}
+
 export type UserCreateNestedOneWithoutWorkflowsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutWorkflowsInput, Prisma.UserUncheckedCreateWithoutWorkflowsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutWorkflowsInput
@@ -536,6 +689,215 @@ export type UserUpdateOneRequiredWithoutExecutionLogsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutExecutionLogsInput, Prisma.UserUpdateWithoutExecutionLogsInput>, Prisma.UserUncheckedUpdateWithoutExecutionLogsInput>
 }
 
+export type UserCreateNestedOneWithoutChatMessagesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutChatMessagesInput, Prisma.UserUncheckedCreateWithoutChatMessagesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutChatMessagesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutChatMessagesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutChatMessagesInput, Prisma.UserUncheckedCreateWithoutChatMessagesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutChatMessagesInput
+  upsert?: Prisma.UserUpsertWithoutChatMessagesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutChatMessagesInput, Prisma.UserUpdateWithoutChatMessagesInput>, Prisma.UserUncheckedUpdateWithoutChatMessagesInput>
+}
+
+export type UserCreateNestedOneWithoutAgentConfigsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAgentConfigsInput, Prisma.UserUncheckedCreateWithoutAgentConfigsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAgentConfigsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutAgentConfigsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAgentConfigsInput, Prisma.UserUncheckedCreateWithoutAgentConfigsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAgentConfigsInput
+  upsert?: Prisma.UserUpsertWithoutAgentConfigsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAgentConfigsInput, Prisma.UserUpdateWithoutAgentConfigsInput>, Prisma.UserUncheckedUpdateWithoutAgentConfigsInput>
+}
+
+export type UserCreateWithoutOrganizationInput = {
+  id?: string
+  clerkId: string
+  email: string
+  name?: string | null
+  avatarUrl?: string | null
+  plan?: $Enums.Plan
+  creditsUsed?: number
+  creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  orgRole?: $Enums.OrgRole
+  workflows?: Prisma.WorkflowCreateNestedManyWithoutUserInput
+  executionLogs?: Prisma.ExecutionLogCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutOrganizationInput = {
+  id?: string
+  clerkId: string
+  email: string
+  name?: string | null
+  avatarUrl?: string | null
+  plan?: $Enums.Plan
+  creditsUsed?: number
+  creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  orgRole?: $Enums.OrgRole
+  workflows?: Prisma.WorkflowUncheckedCreateNestedManyWithoutUserInput
+  executionLogs?: Prisma.ExecutionLogUncheckedCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutOrganizationInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutOrganizationInput, Prisma.UserUncheckedCreateWithoutOrganizationInput>
+}
+
+export type UserCreateManyOrganizationInputEnvelope = {
+  data: Prisma.UserCreateManyOrganizationInput | Prisma.UserCreateManyOrganizationInput[]
+  skipDuplicates?: boolean
+}
+
+export type UserUpsertWithWhereUniqueWithoutOrganizationInput = {
+  where: Prisma.UserWhereUniqueInput
+  update: Prisma.XOR<Prisma.UserUpdateWithoutOrganizationInput, Prisma.UserUncheckedUpdateWithoutOrganizationInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutOrganizationInput, Prisma.UserUncheckedCreateWithoutOrganizationInput>
+}
+
+export type UserUpdateWithWhereUniqueWithoutOrganizationInput = {
+  where: Prisma.UserWhereUniqueInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutOrganizationInput, Prisma.UserUncheckedUpdateWithoutOrganizationInput>
+}
+
+export type UserUpdateManyWithWhereWithoutOrganizationInput = {
+  where: Prisma.UserScalarWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateManyMutationInput, Prisma.UserUncheckedUpdateManyWithoutOrganizationInput>
+}
+
+export type UserScalarWhereInput = {
+  AND?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+  OR?: Prisma.UserScalarWhereInput[]
+  NOT?: Prisma.UserScalarWhereInput | Prisma.UserScalarWhereInput[]
+  id?: Prisma.StringFilter<"User"> | string
+  clerkId?: Prisma.StringFilter<"User"> | string
+  email?: Prisma.StringFilter<"User"> | string
+  name?: Prisma.StringNullableFilter<"User"> | string | null
+  avatarUrl?: Prisma.StringNullableFilter<"User"> | string | null
+  plan?: Prisma.EnumPlanFilter<"User"> | $Enums.Plan
+  creditsUsed?: Prisma.IntFilter<"User"> | number
+  creditsTotal?: Prisma.IntFilter<"User"> | number
+  preferences?: Prisma.JsonNullableFilter<"User">
+  createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  organizationId?: Prisma.StringNullableFilter<"User"> | string | null
+  orgRole?: Prisma.EnumOrgRoleFilter<"User"> | $Enums.OrgRole
+}
+
+export type UserCreateWithoutApiKeysInput = {
+  id?: string
+  clerkId: string
+  email: string
+  name?: string | null
+  avatarUrl?: string | null
+  plan?: $Enums.Plan
+  creditsUsed?: number
+  creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  orgRole?: $Enums.OrgRole
+  organization?: Prisma.OrganizationCreateNestedOneWithoutMembersInput
+  workflows?: Prisma.WorkflowCreateNestedManyWithoutUserInput
+  executionLogs?: Prisma.ExecutionLogCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutApiKeysInput = {
+  id?: string
+  clerkId: string
+  email: string
+  name?: string | null
+  avatarUrl?: string | null
+  plan?: $Enums.Plan
+  creditsUsed?: number
+  creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  organizationId?: string | null
+  orgRole?: $Enums.OrgRole
+  workflows?: Prisma.WorkflowUncheckedCreateNestedManyWithoutUserInput
+  executionLogs?: Prisma.ExecutionLogUncheckedCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutApiKeysInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutApiKeysInput, Prisma.UserUncheckedCreateWithoutApiKeysInput>
+}
+
+export type UserUpsertWithoutApiKeysInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutApiKeysInput, Prisma.UserUncheckedUpdateWithoutApiKeysInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutApiKeysInput, Prisma.UserUncheckedCreateWithoutApiKeysInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutApiKeysInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutApiKeysInput, Prisma.UserUncheckedUpdateWithoutApiKeysInput>
+}
+
+export type UserUpdateWithoutApiKeysInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
+  creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  organization?: Prisma.OrganizationUpdateOneWithoutMembersNestedInput
+  workflows?: Prisma.WorkflowUpdateManyWithoutUserNestedInput
+  executionLogs?: Prisma.ExecutionLogUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutApiKeysInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
+  creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organizationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  workflows?: Prisma.WorkflowUncheckedUpdateManyWithoutUserNestedInput
+  executionLogs?: Prisma.ExecutionLogUncheckedUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedUpdateManyWithoutUserNestedInput
+}
+
 export type UserCreateWithoutWorkflowsInput = {
   id?: string
   clerkId: string
@@ -545,9 +907,15 @@ export type UserCreateWithoutWorkflowsInput = {
   plan?: $Enums.Plan
   creditsUsed?: number
   creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
+  orgRole?: $Enums.OrgRole
+  organization?: Prisma.OrganizationCreateNestedOneWithoutMembersInput
   executionLogs?: Prisma.ExecutionLogCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWorkflowsInput = {
@@ -559,9 +927,15 @@ export type UserUncheckedCreateWithoutWorkflowsInput = {
   plan?: $Enums.Plan
   creditsUsed?: number
   creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
+  organizationId?: string | null
+  orgRole?: $Enums.OrgRole
   executionLogs?: Prisma.ExecutionLogUncheckedCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWorkflowsInput = {
@@ -589,9 +963,15 @@ export type UserUpdateWithoutWorkflowsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
   creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  organization?: Prisma.OrganizationUpdateOneWithoutMembersNestedInput
   executionLogs?: Prisma.ExecutionLogUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWorkflowsInput = {
@@ -603,9 +983,15 @@ export type UserUncheckedUpdateWithoutWorkflowsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
   creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organizationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
   executionLogs?: Prisma.ExecutionLogUncheckedUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutExecutionLogsInput = {
@@ -617,9 +1003,15 @@ export type UserCreateWithoutExecutionLogsInput = {
   plan?: $Enums.Plan
   creditsUsed?: number
   creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
+  orgRole?: $Enums.OrgRole
+  organization?: Prisma.OrganizationCreateNestedOneWithoutMembersInput
   workflows?: Prisma.WorkflowCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutExecutionLogsInput = {
@@ -631,9 +1023,15 @@ export type UserUncheckedCreateWithoutExecutionLogsInput = {
   plan?: $Enums.Plan
   creditsUsed?: number
   creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Date | string
   updatedAt?: Date | string
+  organizationId?: string | null
+  orgRole?: $Enums.OrgRole
   workflows?: Prisma.WorkflowUncheckedCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutExecutionLogsInput = {
@@ -661,9 +1059,15 @@ export type UserUpdateWithoutExecutionLogsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
   creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  organization?: Prisma.OrganizationUpdateOneWithoutMembersNestedInput
   workflows?: Prisma.WorkflowUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutExecutionLogsInput = {
@@ -675,9 +1079,277 @@ export type UserUncheckedUpdateWithoutExecutionLogsInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
   creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organizationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
   workflows?: Prisma.WorkflowUncheckedUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutChatMessagesInput = {
+  id?: string
+  clerkId: string
+  email: string
+  name?: string | null
+  avatarUrl?: string | null
+  plan?: $Enums.Plan
+  creditsUsed?: number
+  creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  orgRole?: $Enums.OrgRole
+  organization?: Prisma.OrganizationCreateNestedOneWithoutMembersInput
+  workflows?: Prisma.WorkflowCreateNestedManyWithoutUserInput
+  executionLogs?: Prisma.ExecutionLogCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutChatMessagesInput = {
+  id?: string
+  clerkId: string
+  email: string
+  name?: string | null
+  avatarUrl?: string | null
+  plan?: $Enums.Plan
+  creditsUsed?: number
+  creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  organizationId?: string | null
+  orgRole?: $Enums.OrgRole
+  workflows?: Prisma.WorkflowUncheckedCreateNestedManyWithoutUserInput
+  executionLogs?: Prisma.ExecutionLogUncheckedCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutUserInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutChatMessagesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutChatMessagesInput, Prisma.UserUncheckedCreateWithoutChatMessagesInput>
+}
+
+export type UserUpsertWithoutChatMessagesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutChatMessagesInput, Prisma.UserUncheckedUpdateWithoutChatMessagesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutChatMessagesInput, Prisma.UserUncheckedCreateWithoutChatMessagesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutChatMessagesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutChatMessagesInput, Prisma.UserUncheckedUpdateWithoutChatMessagesInput>
+}
+
+export type UserUpdateWithoutChatMessagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
+  creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  organization?: Prisma.OrganizationUpdateOneWithoutMembersNestedInput
+  workflows?: Prisma.WorkflowUpdateManyWithoutUserNestedInput
+  executionLogs?: Prisma.ExecutionLogUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutChatMessagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
+  creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organizationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  workflows?: Prisma.WorkflowUncheckedUpdateManyWithoutUserNestedInput
+  executionLogs?: Prisma.ExecutionLogUncheckedUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutAgentConfigsInput = {
+  id?: string
+  clerkId: string
+  email: string
+  name?: string | null
+  avatarUrl?: string | null
+  plan?: $Enums.Plan
+  creditsUsed?: number
+  creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  orgRole?: $Enums.OrgRole
+  organization?: Prisma.OrganizationCreateNestedOneWithoutMembersInput
+  workflows?: Prisma.WorkflowCreateNestedManyWithoutUserInput
+  executionLogs?: Prisma.ExecutionLogCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutAgentConfigsInput = {
+  id?: string
+  clerkId: string
+  email: string
+  name?: string | null
+  avatarUrl?: string | null
+  plan?: $Enums.Plan
+  creditsUsed?: number
+  creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  organizationId?: string | null
+  orgRole?: $Enums.OrgRole
+  workflows?: Prisma.WorkflowUncheckedCreateNestedManyWithoutUserInput
+  executionLogs?: Prisma.ExecutionLogUncheckedCreateNestedManyWithoutUserInput
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutAgentConfigsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAgentConfigsInput, Prisma.UserUncheckedCreateWithoutAgentConfigsInput>
+}
+
+export type UserUpsertWithoutAgentConfigsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAgentConfigsInput, Prisma.UserUncheckedUpdateWithoutAgentConfigsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAgentConfigsInput, Prisma.UserUncheckedCreateWithoutAgentConfigsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAgentConfigsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAgentConfigsInput, Prisma.UserUncheckedUpdateWithoutAgentConfigsInput>
+}
+
+export type UserUpdateWithoutAgentConfigsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
+  creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  organization?: Prisma.OrganizationUpdateOneWithoutMembersNestedInput
+  workflows?: Prisma.WorkflowUpdateManyWithoutUserNestedInput
+  executionLogs?: Prisma.ExecutionLogUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAgentConfigsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
+  creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  organizationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  workflows?: Prisma.WorkflowUncheckedUpdateManyWithoutUserNestedInput
+  executionLogs?: Prisma.ExecutionLogUncheckedUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateManyOrganizationInput = {
+  id?: string
+  clerkId: string
+  email: string
+  name?: string | null
+  avatarUrl?: string | null
+  plan?: $Enums.Plan
+  creditsUsed?: number
+  creditsTotal?: number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  orgRole?: $Enums.OrgRole
+}
+
+export type UserUpdateWithoutOrganizationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
+  creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  workflows?: Prisma.WorkflowUpdateManyWithoutUserNestedInput
+  executionLogs?: Prisma.ExecutionLogUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutOrganizationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
+  creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
+  workflows?: Prisma.WorkflowUncheckedUpdateManyWithoutUserNestedInput
+  executionLogs?: Prisma.ExecutionLogUncheckedUpdateManyWithoutUserNestedInput
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  agentConfigs?: Prisma.SavedAgentConfigUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateManyWithoutOrganizationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clerkId?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatarUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  creditsUsed?: Prisma.IntFieldUpdateOperationsInput | number
+  creditsTotal?: Prisma.IntFieldUpdateOperationsInput | number
+  preferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orgRole?: Prisma.EnumOrgRoleFieldUpdateOperationsInput | $Enums.OrgRole
 }
 
 
@@ -688,11 +1360,17 @@ export type UserUncheckedUpdateWithoutExecutionLogsInput = {
 export type UserCountOutputType = {
   workflows: number
   executionLogs: number
+  apiKeys: number
+  chatMessages: number
+  agentConfigs: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   workflows?: boolean | UserCountOutputTypeCountWorkflowsArgs
   executionLogs?: boolean | UserCountOutputTypeCountExecutionLogsArgs
+  apiKeys?: boolean | UserCountOutputTypeCountApiKeysArgs
+  chatMessages?: boolean | UserCountOutputTypeCountChatMessagesArgs
+  agentConfigs?: boolean | UserCountOutputTypeCountAgentConfigsArgs
 }
 
 /**
@@ -719,6 +1397,27 @@ export type UserCountOutputTypeCountExecutionLogsArgs<ExtArgs extends runtime.Ty
   where?: Prisma.ExecutionLogWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountApiKeysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ApiKeyWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountChatMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ChatMessageWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAgentConfigsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SavedAgentConfigWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -729,10 +1428,17 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   plan?: boolean
   creditsUsed?: boolean
   creditsTotal?: boolean
+  preferences?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  organizationId?: boolean
+  orgRole?: boolean
+  organization?: boolean | Prisma.User$organizationArgs<ExtArgs>
   workflows?: boolean | Prisma.User$workflowsArgs<ExtArgs>
   executionLogs?: boolean | Prisma.User$executionLogsArgs<ExtArgs>
+  apiKeys?: boolean | Prisma.User$apiKeysArgs<ExtArgs>
+  chatMessages?: boolean | Prisma.User$chatMessagesArgs<ExtArgs>
+  agentConfigs?: boolean | Prisma.User$agentConfigsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -745,8 +1451,12 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   plan?: boolean
   creditsUsed?: boolean
   creditsTotal?: boolean
+  preferences?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  organizationId?: boolean
+  orgRole?: boolean
+  organization?: boolean | Prisma.User$organizationArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -758,8 +1468,12 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   plan?: boolean
   creditsUsed?: boolean
   creditsTotal?: boolean
+  preferences?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  organizationId?: boolean
+  orgRole?: boolean
+  organization?: boolean | Prisma.User$organizationArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
 export type UserSelectScalar = {
@@ -771,24 +1485,39 @@ export type UserSelectScalar = {
   plan?: boolean
   creditsUsed?: boolean
   creditsTotal?: boolean
+  preferences?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  organizationId?: boolean
+  orgRole?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clerkId" | "email" | "name" | "avatarUrl" | "plan" | "creditsUsed" | "creditsTotal" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clerkId" | "email" | "name" | "avatarUrl" | "plan" | "creditsUsed" | "creditsTotal" | "preferences" | "createdAt" | "updatedAt" | "organizationId" | "orgRole", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  organization?: boolean | Prisma.User$organizationArgs<ExtArgs>
   workflows?: boolean | Prisma.User$workflowsArgs<ExtArgs>
   executionLogs?: boolean | Prisma.User$executionLogsArgs<ExtArgs>
+  apiKeys?: boolean | Prisma.User$apiKeysArgs<ExtArgs>
+  chatMessages?: boolean | Prisma.User$chatMessagesArgs<ExtArgs>
+  agentConfigs?: boolean | Prisma.User$agentConfigsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
-export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
-export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  organization?: boolean | Prisma.User$organizationArgs<ExtArgs>
+}
+export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  organization?: boolean | Prisma.User$organizationArgs<ExtArgs>
+}
 
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
   objects: {
+    organization: Prisma.$OrganizationPayload<ExtArgs> | null
     workflows: Prisma.$WorkflowPayload<ExtArgs>[]
     executionLogs: Prisma.$ExecutionLogPayload<ExtArgs>[]
+    apiKeys: Prisma.$ApiKeyPayload<ExtArgs>[]
+    chatMessages: Prisma.$ChatMessagePayload<ExtArgs>[]
+    agentConfigs: Prisma.$SavedAgentConfigPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -799,8 +1528,11 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     plan: $Enums.Plan
     creditsUsed: number
     creditsTotal: number
+    preferences: runtime.JsonValue | null
     createdAt: Date
     updatedAt: Date
+    organizationId: string | null
+    orgRole: $Enums.OrgRole
   }, ExtArgs["result"]["user"]>
   composites: {}
 }
@@ -1195,8 +1927,12 @@ readonly fields: UserFieldRefs;
  */
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  organization<T extends Prisma.User$organizationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$organizationArgs<ExtArgs>>): Prisma.Prisma__OrganizationClient<runtime.Types.Result.GetResult<Prisma.$OrganizationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   workflows<T extends Prisma.User$workflowsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$workflowsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$WorkflowPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   executionLogs<T extends Prisma.User$executionLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$executionLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ExecutionLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  apiKeys<T extends Prisma.User$apiKeysArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$apiKeysArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  chatMessages<T extends Prisma.User$chatMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$chatMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChatMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  agentConfigs<T extends Prisma.User$agentConfigsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$agentConfigsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SavedAgentConfigPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1234,8 +1970,11 @@ export interface UserFieldRefs {
   readonly plan: Prisma.FieldRef<"User", 'Plan'>
   readonly creditsUsed: Prisma.FieldRef<"User", 'Int'>
   readonly creditsTotal: Prisma.FieldRef<"User", 'Int'>
+  readonly preferences: Prisma.FieldRef<"User", 'Json'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
+  readonly organizationId: Prisma.FieldRef<"User", 'String'>
+  readonly orgRole: Prisma.FieldRef<"User", 'OrgRole'>
 }
     
 
@@ -1490,6 +2229,10 @@ export type UserCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    */
   data: Prisma.UserCreateManyInput | Prisma.UserCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1560,6 +2303,10 @@ export type UserUpdateManyAndReturnArgs<ExtArgs extends runtime.Types.Extensions
    * Limit how many Users to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1629,6 +2376,25 @@ export type UserDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
 }
 
 /**
+ * User.organization
+ */
+export type User$organizationArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Organization
+   */
+  select?: Prisma.OrganizationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Organization
+   */
+  omit?: Prisma.OrganizationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OrganizationInclude<ExtArgs> | null
+  where?: Prisma.OrganizationWhereInput
+}
+
+/**
  * User.workflows
  */
 export type User$workflowsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1674,6 +2440,78 @@ export type User$executionLogsArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.ExecutionLogScalarFieldEnum | Prisma.ExecutionLogScalarFieldEnum[]
+}
+
+/**
+ * User.apiKeys
+ */
+export type User$apiKeysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ApiKey
+   */
+  select?: Prisma.ApiKeySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ApiKey
+   */
+  omit?: Prisma.ApiKeyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ApiKeyInclude<ExtArgs> | null
+  where?: Prisma.ApiKeyWhereInput
+  orderBy?: Prisma.ApiKeyOrderByWithRelationInput | Prisma.ApiKeyOrderByWithRelationInput[]
+  cursor?: Prisma.ApiKeyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ApiKeyScalarFieldEnum | Prisma.ApiKeyScalarFieldEnum[]
+}
+
+/**
+ * User.chatMessages
+ */
+export type User$chatMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ChatMessage
+   */
+  select?: Prisma.ChatMessageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ChatMessage
+   */
+  omit?: Prisma.ChatMessageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ChatMessageInclude<ExtArgs> | null
+  where?: Prisma.ChatMessageWhereInput
+  orderBy?: Prisma.ChatMessageOrderByWithRelationInput | Prisma.ChatMessageOrderByWithRelationInput[]
+  cursor?: Prisma.ChatMessageWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ChatMessageScalarFieldEnum | Prisma.ChatMessageScalarFieldEnum[]
+}
+
+/**
+ * User.agentConfigs
+ */
+export type User$agentConfigsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SavedAgentConfig
+   */
+  select?: Prisma.SavedAgentConfigSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SavedAgentConfig
+   */
+  omit?: Prisma.SavedAgentConfigOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SavedAgentConfigInclude<ExtArgs> | null
+  where?: Prisma.SavedAgentConfigWhereInput
+  orderBy?: Prisma.SavedAgentConfigOrderByWithRelationInput | Prisma.SavedAgentConfigOrderByWithRelationInput[]
+  cursor?: Prisma.SavedAgentConfigWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SavedAgentConfigScalarFieldEnum | Prisma.SavedAgentConfigScalarFieldEnum[]
 }
 
 /**

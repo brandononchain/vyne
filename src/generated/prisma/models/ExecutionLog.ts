@@ -86,7 +86,9 @@ export type ExecutionLogCountAggregateOutputType = {
   stepsTotal: number
   stepsCompleted: number
   errorMessage: number
+  inputJson: number
   outputJson: number
+  stepLogs: number
   startedAt: number
   completedAt: number
   createdAt: number
@@ -154,7 +156,9 @@ export type ExecutionLogCountAggregateInputType = {
   stepsTotal?: true
   stepsCompleted?: true
   errorMessage?: true
+  inputJson?: true
   outputJson?: true
+  stepLogs?: true
   startedAt?: true
   completedAt?: true
   createdAt?: true
@@ -259,7 +263,9 @@ export type ExecutionLogGroupByOutputType = {
   stepsTotal: number
   stepsCompleted: number
   errorMessage: string | null
+  inputJson: runtime.JsonValue | null
   outputJson: runtime.JsonValue | null
+  stepLogs: runtime.JsonValue | null
   startedAt: Date | null
   completedAt: Date | null
   createdAt: Date
@@ -300,7 +306,9 @@ export type ExecutionLogWhereInput = {
   stepsTotal?: Prisma.IntFilter<"ExecutionLog"> | number
   stepsCompleted?: Prisma.IntFilter<"ExecutionLog"> | number
   errorMessage?: Prisma.StringNullableFilter<"ExecutionLog"> | string | null
+  inputJson?: Prisma.JsonNullableFilter<"ExecutionLog">
   outputJson?: Prisma.JsonNullableFilter<"ExecutionLog">
+  stepLogs?: Prisma.JsonNullableFilter<"ExecutionLog">
   startedAt?: Prisma.DateTimeNullableFilter<"ExecutionLog"> | Date | string | null
   completedAt?: Prisma.DateTimeNullableFilter<"ExecutionLog"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ExecutionLog"> | Date | string
@@ -320,7 +328,9 @@ export type ExecutionLogOrderByWithRelationInput = {
   stepsTotal?: Prisma.SortOrder
   stepsCompleted?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
+  inputJson?: Prisma.SortOrderInput | Prisma.SortOrder
   outputJson?: Prisma.SortOrderInput | Prisma.SortOrder
+  stepLogs?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -343,7 +353,9 @@ export type ExecutionLogWhereUniqueInput = Prisma.AtLeast<{
   stepsTotal?: Prisma.IntFilter<"ExecutionLog"> | number
   stepsCompleted?: Prisma.IntFilter<"ExecutionLog"> | number
   errorMessage?: Prisma.StringNullableFilter<"ExecutionLog"> | string | null
+  inputJson?: Prisma.JsonNullableFilter<"ExecutionLog">
   outputJson?: Prisma.JsonNullableFilter<"ExecutionLog">
+  stepLogs?: Prisma.JsonNullableFilter<"ExecutionLog">
   startedAt?: Prisma.DateTimeNullableFilter<"ExecutionLog"> | Date | string | null
   completedAt?: Prisma.DateTimeNullableFilter<"ExecutionLog"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ExecutionLog"> | Date | string
@@ -363,7 +375,9 @@ export type ExecutionLogOrderByWithAggregationInput = {
   stepsTotal?: Prisma.SortOrder
   stepsCompleted?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
+  inputJson?: Prisma.SortOrderInput | Prisma.SortOrder
   outputJson?: Prisma.SortOrderInput | Prisma.SortOrder
+  stepLogs?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -389,7 +403,9 @@ export type ExecutionLogScalarWhereWithAggregatesInput = {
   stepsTotal?: Prisma.IntWithAggregatesFilter<"ExecutionLog"> | number
   stepsCompleted?: Prisma.IntWithAggregatesFilter<"ExecutionLog"> | number
   errorMessage?: Prisma.StringNullableWithAggregatesFilter<"ExecutionLog"> | string | null
+  inputJson?: Prisma.JsonNullableWithAggregatesFilter<"ExecutionLog">
   outputJson?: Prisma.JsonNullableWithAggregatesFilter<"ExecutionLog">
+  stepLogs?: Prisma.JsonNullableWithAggregatesFilter<"ExecutionLog">
   startedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ExecutionLog"> | Date | string | null
   completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ExecutionLog"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"ExecutionLog"> | Date | string
@@ -405,7 +421,9 @@ export type ExecutionLogCreateInput = {
   stepsTotal?: number
   stepsCompleted?: number
   errorMessage?: string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -425,7 +443,9 @@ export type ExecutionLogUncheckedCreateInput = {
   stepsTotal?: number
   stepsCompleted?: number
   errorMessage?: string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -441,7 +461,9 @@ export type ExecutionLogUpdateInput = {
   stepsTotal?: Prisma.IntFieldUpdateOperationsInput | number
   stepsCompleted?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -461,7 +483,9 @@ export type ExecutionLogUncheckedUpdateInput = {
   stepsTotal?: Prisma.IntFieldUpdateOperationsInput | number
   stepsCompleted?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -479,7 +503,9 @@ export type ExecutionLogCreateManyInput = {
   stepsTotal?: number
   stepsCompleted?: number
   errorMessage?: string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -495,7 +521,9 @@ export type ExecutionLogUpdateManyMutationInput = {
   stepsTotal?: Prisma.IntFieldUpdateOperationsInput | number
   stepsCompleted?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -513,7 +541,9 @@ export type ExecutionLogUncheckedUpdateManyInput = {
   stepsTotal?: Prisma.IntFieldUpdateOperationsInput | number
   stepsCompleted?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -541,7 +571,9 @@ export type ExecutionLogCountOrderByAggregateInput = {
   stepsTotal?: Prisma.SortOrder
   stepsCompleted?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
+  inputJson?: Prisma.SortOrder
   outputJson?: Prisma.SortOrder
+  stepLogs?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -705,7 +737,9 @@ export type ExecutionLogCreateWithoutUserInput = {
   stepsTotal?: number
   stepsCompleted?: number
   errorMessage?: string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -723,7 +757,9 @@ export type ExecutionLogUncheckedCreateWithoutUserInput = {
   stepsTotal?: number
   stepsCompleted?: number
   errorMessage?: string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -770,7 +806,9 @@ export type ExecutionLogScalarWhereInput = {
   stepsTotal?: Prisma.IntFilter<"ExecutionLog"> | number
   stepsCompleted?: Prisma.IntFilter<"ExecutionLog"> | number
   errorMessage?: Prisma.StringNullableFilter<"ExecutionLog"> | string | null
+  inputJson?: Prisma.JsonNullableFilter<"ExecutionLog">
   outputJson?: Prisma.JsonNullableFilter<"ExecutionLog">
+  stepLogs?: Prisma.JsonNullableFilter<"ExecutionLog">
   startedAt?: Prisma.DateTimeNullableFilter<"ExecutionLog"> | Date | string | null
   completedAt?: Prisma.DateTimeNullableFilter<"ExecutionLog"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"ExecutionLog"> | Date | string
@@ -786,7 +824,9 @@ export type ExecutionLogCreateWithoutWorkflowInput = {
   stepsTotal?: number
   stepsCompleted?: number
   errorMessage?: string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -804,7 +844,9 @@ export type ExecutionLogUncheckedCreateWithoutWorkflowInput = {
   stepsTotal?: number
   stepsCompleted?: number
   errorMessage?: string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -847,7 +889,9 @@ export type ExecutionLogCreateManyUserInput = {
   stepsTotal?: number
   stepsCompleted?: number
   errorMessage?: string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -863,7 +907,9 @@ export type ExecutionLogUpdateWithoutUserInput = {
   stepsTotal?: Prisma.IntFieldUpdateOperationsInput | number
   stepsCompleted?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -881,7 +927,9 @@ export type ExecutionLogUncheckedUpdateWithoutUserInput = {
   stepsTotal?: Prisma.IntFieldUpdateOperationsInput | number
   stepsCompleted?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -898,7 +946,9 @@ export type ExecutionLogUncheckedUpdateManyWithoutUserInput = {
   stepsTotal?: Prisma.IntFieldUpdateOperationsInput | number
   stepsCompleted?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -915,7 +965,9 @@ export type ExecutionLogCreateManyWorkflowInput = {
   stepsTotal?: number
   stepsCompleted?: number
   errorMessage?: string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   createdAt?: Date | string
@@ -931,7 +983,9 @@ export type ExecutionLogUpdateWithoutWorkflowInput = {
   stepsTotal?: Prisma.IntFieldUpdateOperationsInput | number
   stepsCompleted?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -949,7 +1003,9 @@ export type ExecutionLogUncheckedUpdateWithoutWorkflowInput = {
   stepsTotal?: Prisma.IntFieldUpdateOperationsInput | number
   stepsCompleted?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -966,7 +1022,9 @@ export type ExecutionLogUncheckedUpdateManyWithoutWorkflowInput = {
   stepsTotal?: Prisma.IntFieldUpdateOperationsInput | number
   stepsCompleted?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  inputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   outputJson?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  stepLogs?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -986,7 +1044,9 @@ export type ExecutionLogSelect<ExtArgs extends runtime.Types.Extensions.Internal
   stepsTotal?: boolean
   stepsCompleted?: boolean
   errorMessage?: boolean
+  inputJson?: boolean
   outputJson?: boolean
+  stepLogs?: boolean
   startedAt?: boolean
   completedAt?: boolean
   createdAt?: boolean
@@ -1006,7 +1066,9 @@ export type ExecutionLogSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   stepsTotal?: boolean
   stepsCompleted?: boolean
   errorMessage?: boolean
+  inputJson?: boolean
   outputJson?: boolean
+  stepLogs?: boolean
   startedAt?: boolean
   completedAt?: boolean
   createdAt?: boolean
@@ -1026,7 +1088,9 @@ export type ExecutionLogSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   stepsTotal?: boolean
   stepsCompleted?: boolean
   errorMessage?: boolean
+  inputJson?: boolean
   outputJson?: boolean
+  stepLogs?: boolean
   startedAt?: boolean
   completedAt?: boolean
   createdAt?: boolean
@@ -1046,13 +1110,15 @@ export type ExecutionLogSelectScalar = {
   stepsTotal?: boolean
   stepsCompleted?: boolean
   errorMessage?: boolean
+  inputJson?: boolean
   outputJson?: boolean
+  stepLogs?: boolean
   startedAt?: boolean
   completedAt?: boolean
   createdAt?: boolean
 }
 
-export type ExecutionLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workflowId" | "userId" | "status" | "type" | "jobId" | "creditsUsed" | "durationMs" | "stepsTotal" | "stepsCompleted" | "errorMessage" | "outputJson" | "startedAt" | "completedAt" | "createdAt", ExtArgs["result"]["executionLog"]>
+export type ExecutionLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "workflowId" | "userId" | "status" | "type" | "jobId" | "creditsUsed" | "durationMs" | "stepsTotal" | "stepsCompleted" | "errorMessage" | "inputJson" | "outputJson" | "stepLogs" | "startedAt" | "completedAt" | "createdAt", ExtArgs["result"]["executionLog"]>
 export type ExecutionLogInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   workflow?: boolean | Prisma.WorkflowDefaultArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1084,7 +1150,9 @@ export type $ExecutionLogPayload<ExtArgs extends runtime.Types.Extensions.Intern
     stepsTotal: number
     stepsCompleted: number
     errorMessage: string | null
+    inputJson: runtime.JsonValue | null
     outputJson: runtime.JsonValue | null
+    stepLogs: runtime.JsonValue | null
     startedAt: Date | null
     completedAt: Date | null
     createdAt: Date
@@ -1524,7 +1592,9 @@ export interface ExecutionLogFieldRefs {
   readonly stepsTotal: Prisma.FieldRef<"ExecutionLog", 'Int'>
   readonly stepsCompleted: Prisma.FieldRef<"ExecutionLog", 'Int'>
   readonly errorMessage: Prisma.FieldRef<"ExecutionLog", 'String'>
+  readonly inputJson: Prisma.FieldRef<"ExecutionLog", 'Json'>
   readonly outputJson: Prisma.FieldRef<"ExecutionLog", 'Json'>
+  readonly stepLogs: Prisma.FieldRef<"ExecutionLog", 'Json'>
   readonly startedAt: Prisma.FieldRef<"ExecutionLog", 'DateTime'>
   readonly completedAt: Prisma.FieldRef<"ExecutionLog", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"ExecutionLog", 'DateTime'>

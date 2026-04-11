@@ -9,6 +9,11 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/User'
+export type * from './models/Organization'
+export type * from './models/ApiKey'
 export type * from './models/Workflow'
+export type * from './models/WorkflowVersion'
 export type * from './models/ExecutionLog'
+export type * from './models/ChatMessage'
+export type * from './models/SavedAgentConfig'
 export type * from './commonInputTypes'

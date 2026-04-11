@@ -23,12 +23,37 @@ export * from './enums';
  */
 export type User = Prisma.UserModel
 /**
+ * Model Organization
+ * 
+ */
+export type Organization = Prisma.OrganizationModel
+/**
+ * Model ApiKey
+ * 
+ */
+export type ApiKey = Prisma.ApiKeyModel
+/**
  * Model Workflow
  * 
  */
 export type Workflow = Prisma.WorkflowModel
 /**
+ * Model WorkflowVersion
+ * 
+ */
+export type WorkflowVersion = Prisma.WorkflowVersionModel
+/**
  * Model ExecutionLog
  * 
  */
 export type ExecutionLog = Prisma.ExecutionLogModel
+/**
+ * Model ChatMessage
+ * 
+ */
+export type ChatMessage = Prisma.ChatMessageModel
+/**
+ * Model SavedAgentConfig
+ * 
+ */
+export type SavedAgentConfig = Prisma.SavedAgentConfigModel

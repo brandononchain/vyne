@@ -52,8 +52,13 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  Organization: 'Organization',
+  ApiKey: 'ApiKey',
   Workflow: 'Workflow',
-  ExecutionLog: 'ExecutionLog'
+  WorkflowVersion: 'WorkflowVersion',
+  ExecutionLog: 'ExecutionLog',
+  ChatMessage: 'ChatMessage',
+  SavedAgentConfig: 'SavedAgentConfig'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -81,16 +86,51 @@ export const UserScalarFieldEnum = {
   plan: 'plan',
   creditsUsed: 'creditsUsed',
   creditsTotal: 'creditsTotal',
+  preferences: 'preferences',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  organizationId: 'organizationId',
+  orgRole: 'orgRole'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+export const OrganizationScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  slug: 'slug',
+  avatarUrl: 'avatarUrl',
+  plan: 'plan',
+  creditsUsed: 'creditsUsed',
+  creditsTotal: 'creditsTotal',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrganizationScalarFieldEnum = (typeof OrganizationScalarFieldEnum)[keyof typeof OrganizationScalarFieldEnum]
+
+
+export const ApiKeyScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  orgId: 'orgId',
+  name: 'name',
+  keyHash: 'keyHash',
+  keyPrefix: 'keyPrefix',
+  lastUsedAt: 'lastUsedAt',
+  expiresAt: 'expiresAt',
+  revoked: 'revoked',
+  createdAt: 'createdAt'
+} as const
+
+export type ApiKeyScalarFieldEnum = (typeof ApiKeyScalarFieldEnum)[keyof typeof ApiKeyScalarFieldEnum]
+
+
 export const WorkflowScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  orgId: 'orgId',
   name: 'name',
   description: 'description',
   status: 'status',
@@ -99,14 +139,28 @@ export const WorkflowScalarFieldEnum = {
   endpointUrl: 'endpointUrl',
   apiKey: 'apiKey',
   webhookSecret: 'webhookSecret',
+  cronExpression: 'cronExpression',
   agentCount: 'agentCount',
   taskCount: 'taskCount',
+  version: 'version',
   deployedAt: 'deployedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type WorkflowScalarFieldEnum = (typeof WorkflowScalarFieldEnum)[keyof typeof WorkflowScalarFieldEnum]
+
+
+export const WorkflowVersionScalarFieldEnum = {
+  id: 'id',
+  workflowId: 'workflowId',
+  version: 'version',
+  graphJson: 'graphJson',
+  changeNote: 'changeNote',
+  createdAt: 'createdAt'
+} as const
+
+export type WorkflowVersionScalarFieldEnum = (typeof WorkflowVersionScalarFieldEnum)[keyof typeof WorkflowVersionScalarFieldEnum]
 
 
 export const ExecutionLogScalarFieldEnum = {
@@ -121,13 +175,49 @@ export const ExecutionLogScalarFieldEnum = {
   stepsTotal: 'stepsTotal',
   stepsCompleted: 'stepsCompleted',
   errorMessage: 'errorMessage',
+  inputJson: 'inputJson',
   outputJson: 'outputJson',
+  stepLogs: 'stepLogs',
   startedAt: 'startedAt',
   completedAt: 'completedAt',
   createdAt: 'createdAt'
 } as const
 
 export type ExecutionLogScalarFieldEnum = (typeof ExecutionLogScalarFieldEnum)[keyof typeof ExecutionLogScalarFieldEnum]
+
+
+export const ChatMessageScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  workflowId: 'workflowId',
+  role: 'role',
+  content: 'content',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type ChatMessageScalarFieldEnum = (typeof ChatMessageScalarFieldEnum)[keyof typeof ChatMessageScalarFieldEnum]
+
+
+export const SavedAgentConfigScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  role: 'role',
+  description: 'description',
+  icon: 'icon',
+  color: 'color',
+  goal: 'goal',
+  backstory: 'backstory',
+  tone: 'tone',
+  customInstructions: 'customInstructions',
+  tools: 'tools',
+  isPublic: 'isPublic',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SavedAgentConfigScalarFieldEnum = (typeof SavedAgentConfigScalarFieldEnum)[keyof typeof SavedAgentConfigScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -138,19 +228,19 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
-export const JsonNullValueInput = {
-  JsonNull: JsonNull
-} as const
-
-export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
-
-
 export const NullableJsonNullValueInput = {
   DbNull: DbNull,
   JsonNull: JsonNull
 } as const
 
 export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -161,14 +251,6 @@ export const QueryMode = {
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
-export const NullsOrder = {
-  first: 'first',
-  last: 'last'
-} as const
-
-export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
 export const JsonNullValueFilter = {
   DbNull: DbNull,
   JsonNull: JsonNull,
@@ -176,4 +258,12 @@ export const JsonNullValueFilter = {
 } as const
 
 export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

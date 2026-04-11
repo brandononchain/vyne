@@ -22,7 +22,7 @@ const HOST = "0.0.0.0";
 // `prisma db push` is idempotent — safe to run repeatedly.
 try {
   console.log("[Vyne] Running prisma db push...");
-  execSync("npx prisma db push --skip-generate", {
+  execSync("npx prisma db push", {
     stdio: "inherit",
     env: { ...process.env },
     timeout: 30000,

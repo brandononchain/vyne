@@ -18,6 +18,16 @@ export const Plan = {
 export type Plan = (typeof Plan)[keyof typeof Plan]
 
 
+export const OrgRole = {
+  OWNER: 'OWNER',
+  ADMIN: 'ADMIN',
+  MEMBER: 'MEMBER',
+  VIEWER: 'VIEWER'
+} as const
+
+export type OrgRole = (typeof OrgRole)[keyof typeof OrgRole]
+
+
 export const WorkflowStatus = {
   DRAFT: 'DRAFT',
   LIVE: 'LIVE',
@@ -55,3 +65,11 @@ export const ExecutionType = {
 } as const
 
 export type ExecutionType = (typeof ExecutionType)[keyof typeof ExecutionType]
+
+
+export const ChatRole = {
+  USER: 'USER',
+  VYNE: 'VYNE'
+} as const
+
+export type ChatRole = (typeof ChatRole)[keyof typeof ChatRole]
