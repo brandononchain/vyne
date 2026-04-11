@@ -276,8 +276,8 @@ export const actionTemplates: ActionTemplate[] = [
   { id: "http-request", name: "HTTP Request", description: "Make a request to any API endpoint.", icon: "Globe", color: "#0984e3", category: "integration" },
   { id: "slack-message", name: "Slack Message", description: "Send a message to a Slack channel.", icon: "MessageSquare", color: "#e84393", category: "notification" },
   { id: "discord-message", name: "Discord Message", description: "Send a message to a Discord channel.", icon: "MessageCircle", color: "#6c5ce7", category: "notification" },
-  { id: "twitter-post", name: "X / Twitter Post", description: "Post a tweet or thread to X.", icon: "Twitter", color: "#1DA1F2", category: "notification" },
-  { id: "linkedin-post", name: "LinkedIn Post", description: "Publish a post to LinkedIn.", icon: "Linkedin", color: "#0077B5", category: "notification" },
+  { id: "twitter-post", name: "X / Twitter Post", description: "Post a tweet or thread to X.", icon: "Hash", color: "#1DA1F2", category: "notification" },
+  { id: "linkedin-post", name: "LinkedIn Post", description: "Publish a post to LinkedIn.", icon: "Share2", color: "#0077B5", category: "notification" },
   // Data
   { id: "database-query", name: "Database Query", description: "Run SQL queries against PostgreSQL, MySQL, or SQLite.", icon: "Database", color: "#4a7c59", category: "data" },
   { id: "spreadsheet-append", name: "Spreadsheet Append", description: "Add rows to Google Sheets or Excel.", icon: "Table", color: "#00b894", category: "data" },
