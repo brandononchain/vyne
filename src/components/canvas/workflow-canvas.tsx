@@ -16,6 +16,9 @@ import { useDeployStore } from "@/store/deploy-store";
 import { AgentNode } from "./agent-node";
 import { TaskNode } from "./task-node";
 import { ToolNode } from "./tool-node";
+import { TriggerNode } from "./trigger-node";
+import { ActionNode } from "./action-node";
+import { OutputNode } from "./output-node";
 import { VyneEdge } from "./vyne-edge";
 import { LiveMinimap } from "./live-minimap";
 import { CopilotOmnibar } from "../vyne-chat/vyne-chat";
@@ -62,6 +65,9 @@ const nodeTypes = {
   agentNode: AgentNode,
   taskNode: TaskNode,
   toolNode: ToolNode,
+  triggerNode: TriggerNode,
+  actionNode: ActionNode,
+  outputNode: OutputNode,
 };
 
 // Register custom edge type

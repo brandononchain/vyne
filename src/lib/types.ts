@@ -33,11 +33,41 @@ export interface ToolTemplate {
   category: "data" | "communication" | "search" | "code";
 }
 
+export interface TriggerTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: "schedule" | "webhook" | "event" | "manual";
+}
+
+export interface ActionTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: "integration" | "data" | "notification" | "flow";
+}
+
+export interface OutputTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: "delivery" | "storage" | "preview";
+}
+
 // ── Drag payload discriminated union ─────────────────────────────────
 export type DragPayload =
   | { kind: "agent"; template: AgentTemplate }
   | { kind: "task"; template: TaskTemplate }
-  | { kind: "tool"; template: ToolTemplate };
+  | { kind: "tool"; template: ToolTemplate }
+  | { kind: "trigger"; template: TriggerTemplate }
+  | { kind: "action"; template: ActionTemplate }
+  | { kind: "output"; template: OutputTemplate };
 
 // ── Agent Persona Configuration ──────────────────────────────────────
 export type AgentTone =
@@ -251,7 +281,64 @@ export interface ToolNodeData {
   [key: string]: unknown;
 }
 
-export type VyneNodeData = AgentNodeData | TaskNodeData | ToolNodeData;
+export interface TriggerNodeData {
+  type: "trigger";
+  templateId: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  triggerType: "cron" | "webhook" | "api" | "rss" | "email" | "schedule" | "manual";
+  config: {
+    cronExpression?: string;
+    webhookPath?: string;
+    rssUrl?: string;
+    pollingInterval?: string;
+    method?: string;
+    headers?: string;
+  };
+  [key: string]: unknown;
+}
+
+export interface ActionNodeData {
+  type: "action";
+  templateId: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  actionType: string;
+  config: {
+    url?: string;
+    method?: string;
+    headers?: string;
+    body?: string;
+    channel?: string;
+    template?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+export interface OutputNodeData {
+  type: "output";
+  templateId: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  outputType: "preview" | "file" | "webhook" | "email" | "database" | "api";
+  config: {
+    format?: string;
+    destination?: string;
+    filename?: string;
+    [key: string]: unknown;
+  };
+  lastOutput?: string;
+  [key: string]: unknown;
+}
+
+export type VyneNodeData = AgentNodeData | TaskNodeData | ToolNodeData | TriggerNodeData | ActionNodeData | OutputNodeData;
 export type VyneNode = Node<VyneNodeData>;
 export type VyneEdge = Edge;
 
