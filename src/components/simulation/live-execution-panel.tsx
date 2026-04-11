@@ -23,6 +23,7 @@ import {
   Play,
   Square,
   X,
+  Download,
 } from "lucide-react";
 import { useStreamExecutionStore, type StepResult } from "@/store/stream-execution-store";
 import { useWorkflowStore } from "@/store/workflow-store";
@@ -120,25 +121,17 @@ export function LiveExecutionPanel() {
                       {(totalDurationMs / 1000).toFixed(1)}s
                     </span>
                   )}
-                  {isRunning ? (
-                    <button
-                      onClick={cancel}
-                      className="flex items-center gap-1 px-2 py-1 rounded-md bg-red-50 border border-red-100 text-red-500 text-[10px] font-semibold hover:bg-red-100 transition-colors"
-                    >
-                      <Square className="w-2.5 h-2.5" />
-                      Stop
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
+                  <button
+                    onClick={() => {
+                      if (!isRunning) {
                         reset();
                         setIsOpen(false);
-                      }}
-                      className="w-6 h-6 rounded-md flex items-center justify-center text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-primary)] hover:bg-[var(--vyne-bg-warm)] transition-colors"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
+                      }
+                    }}
+                    className="w-6 h-6 rounded-md flex items-center justify-center text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-primary)] hover:bg-[var(--vyne-bg-warm)] transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
               </div>
 
@@ -180,18 +173,62 @@ export function LiveExecutionPanel() {
                 )}
               </div>
 
-              {/* Footer — completion summary */}
-              {finalOutput && !isRunning && (
-                <div className="border-t border-[var(--vyne-border)] px-4 py-3 shrink-0 bg-emerald-50/30">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[var(--vyne-success)]" />
-                    <span className="text-[11px] font-bold text-[var(--vyne-success)]">
-                      Complete
-                    </span>
+              {/* Footer — completion summary with actions */}
+              {!isRunning && completedSteps > 0 && (
+                <div className="border-t border-[var(--vyne-border)] px-4 py-3 shrink-0 bg-emerald-50/30 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[var(--vyne-success)]" />
+                      <span className="text-[11px] font-bold text-[var(--vyne-success)]">
+                        {completedSteps === totalSteps ? "Complete" : `${completedSteps}/${totalSteps} Done`}
+                      </span>
+                      {totalDurationMs && (
+                        <span className="text-[9px] text-[var(--vyne-text-tertiary)]">
+                          {(totalDurationMs / 1000).toFixed(1)}s total
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-[10px] text-[var(--vyne-text-secondary)] line-clamp-3 leading-relaxed">
-                    {finalOutput.slice(0, 300)}{finalOutput.length > 300 && "..."}
-                  </p>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        const allOutputs = stepResults
+                          .filter((s) => s.status === "complete")
+                          .map((s) => `## ${s.name}\n\n${s.output}`)
+                          .join("\n\n---\n\n");
+                        navigator.clipboard.writeText(allOutputs);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg
+                                 bg-white border border-[var(--vyne-border)] text-[10px] font-semibold
+                                 text-[var(--vyne-text-secondary)] hover:border-[var(--vyne-accent)] transition-colors"
+                    >
+                      <Copy className="w-3 h-3" />
+                      Copy All
+                    </button>
+                    <button
+                      onClick={() => {
+                        const allOutputs = stepResults
+                          .filter((s) => s.status === "complete")
+                          .map((s) => `## ${s.name}\n\n${s.output}`)
+                          .join("\n\n---\n\n");
+                        const blob = new Blob([allOutputs], { type: "text/markdown" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `workflow-output-${new Date().toISOString().slice(0, 10)}.md`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg
+                                 bg-[var(--vyne-accent)] text-white text-[10px] font-semibold
+                                 hover:opacity-90 transition-opacity"
+                    >
+                      <Download className="w-3 h-3" />
+                      Download
+                    </button>
+                  </div>
                 </div>
               )}
             </>

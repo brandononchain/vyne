@@ -20,8 +20,6 @@ import { VyneEdge } from "./vyne-edge";
 import { LiveMinimap } from "./live-minimap";
 import { CopilotOmnibar } from "../vyne-chat/vyne-chat";
 import { OnboardingWizard } from "../onboarding/onboarding-wizard";
-import { SimulationOverlay } from "../simulation/simulation-overlay";
-import { OutputDrawer } from "../simulation/output-drawer";
 import type { DragPayload, VyneNodeData } from "@/lib/types";
 
 // ── Canvas zoom/pan controls (positioned under minimap) ──────────────
@@ -309,7 +307,6 @@ export function WorkflowCanvas() {
       {nodes.length === 0 && !isSimulating && <EmptyCanvasPrompt />}
       {!isSimulating && <DropZoneOverlay />}
       {!isSimulating && <ContextualTooltip />}
-      <SimulationOverlay />
 
       <ReactFlow
         nodes={nodes}
@@ -357,7 +354,6 @@ export function WorkflowCanvas() {
 
       {!isSimulating && <CopilotOmnibar />}
       {!isSimulating && <OnboardingWizard />}
-      <OutputDrawer />
     </div>
   );
 }
