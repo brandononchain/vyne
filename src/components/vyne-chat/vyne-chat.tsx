@@ -106,13 +106,17 @@ IDENTITY:
 - You reference the user's actual nodes and connections by name when relevant
 - You speak concisely and precisely — no filler, no excessive verbosity
 
-CORE CAPABILITIES:
-1. DESIGN — Help users architect multi-agent workflows from requirements
-2. BUILD — Generate workflow structures that get added directly to the canvas
-3. CONFIGURE — Advise on agent personas, tools, task instructions, and connections
-4. DEBUG — Diagnose why a workflow isn't producing expected results
-5. OPTIMIZE — Suggest improvements to execution order, agent roles, tool selection
-6. EXPLAIN — Teach concepts about AI agents, LLMs, prompt engineering, automation
+CORE CAPABILITIES (via tools):
+1. \`create_workflow\` — Build new agents, tasks, and connections on the canvas
+2. \`configure_node\` — Update ANY property of an existing node: name, role, persona, tools, instructions, output format, constraints
+3. \`delete_node\` — Remove a node and its connections from the canvas
+4. \`add_connection\` — Wire two nodes together
+5. \`remove_connection\` — Disconnect two nodes
+
+ADDITIONAL CAPABILITIES (conversational):
+6. EXPLAIN — Teach concepts about AI agents, LLMs, prompt engineering
+7. DEBUG — Diagnose why a workflow isn't producing expected results
+8. OPTIMIZE — Suggest improvements to execution order, personas, tools
 
 CANVAS AWARENESS:
 You can see the user's current canvas state below. When they click a node, you see its full configuration.
@@ -594,18 +598,134 @@ export function CopilotOmnibar() {
       if (!res.ok) throw new Error("Chat failed");
 
       const data = await res.json();
-      const responseText = data.content || "I'm sorry, I couldn't process that.";
+      const responseText = data.content || "";
+      const actions = data.actions || [];
+
+      // ── Execute canvas actions ──────────────────────
+      const actionSummaries: string[] = [];
+
+      for (const action of actions) {
+        try {
+          const store = useWorkflowStore.getState();
+
+          switch (action.tool) {
+            case "create_workflow": {
+              const wf = action.input as GeneratedWorkflow;
+              const { nodes: newNodes, edges: newEdges } = toVyneNodes(wf);
+              store.loadTemplate(
+                [...store.nodes, ...newNodes],
+                [...store.edges, ...newEdges]
+              );
+              actionSummaries.push(`✅ Added "${wf.title}" — ${wf.nodes.length} nodes`);
+              break;
+            }
+
+            case "configure_node": {
+              const { node_name, updates } = action.input as { node_name: string; updates: Record<string, unknown> };
+              const targetNode = store.nodes.find(
+                (n) => (n.data as VyneNodeData).name.toLowerCase() === node_name.toLowerCase()
+              );
+              if (targetNode) {
+                const currentData = targetNode.data as Record<string, unknown>;
+                const newData = { ...currentData };
+
+                // Handle dot-notation updates (persona.goal, config.detailedInstructions)
+                for (const [key, value] of Object.entries(updates)) {
+                  if (key.includes(".")) {
+                    const [parent, child] = key.split(".");
+                    const parentObj = (newData[parent] || {}) as Record<string, unknown>;
+                    newData[parent] = { ...parentObj, [child]: value };
+                  } else {
+                    newData[key] = value;
+                  }
+                }
+
+                store.updateNodeData(targetNode.id, newData as Partial<VyneNodeData>);
+                actionSummaries.push(`✅ Updated "${node_name}"`);
+              } else {
+                actionSummaries.push(`⚠️ Node "${node_name}" not found`);
+              }
+              break;
+            }
+
+            case "delete_node": {
+              const { node_name } = action.input as { node_name: string };
+              const target = store.nodes.find(
+                (n) => (n.data as VyneNodeData).name.toLowerCase() === node_name.toLowerCase()
+              );
+              if (target) {
+                store.removeNode(target.id);
+                actionSummaries.push(`✅ Removed "${node_name}"`);
+              } else {
+                actionSummaries.push(`⚠️ Node "${node_name}" not found`);
+              }
+              break;
+            }
+
+            case "add_connection": {
+              const { from_node, to_node } = action.input as { from_node: string; to_node: string };
+              const src = store.nodes.find((n) => (n.data as VyneNodeData).name.toLowerCase() === from_node.toLowerCase());
+              const tgt = store.nodes.find((n) => (n.data as VyneNodeData).name.toLowerCase() === to_node.toLowerCase());
+              if (src && tgt) {
+                const newEdge = {
+                  id: `vyne-edge-${Date.now()}`,
+                  source: src.id,
+                  target: tgt.id,
+                  type: "vyneEdge" as const,
+                  animated: true,
+                };
+                useWorkflowStore.setState({ edges: [...store.edges, newEdge] });
+                actionSummaries.push(`✅ Connected "${from_node}" → "${to_node}"`);
+              }
+              break;
+            }
+
+            case "remove_connection": {
+              const { from_node, to_node } = action.input as { from_node: string; to_node: string };
+              const src = store.nodes.find((n) => (n.data as VyneNodeData).name.toLowerCase() === from_node.toLowerCase());
+              const tgt = store.nodes.find((n) => (n.data as VyneNodeData).name.toLowerCase() === to_node.toLowerCase());
+              if (src && tgt) {
+                useWorkflowStore.setState({
+                  edges: store.edges.filter((e) => !(e.source === src.id && e.target === tgt.id)),
+                });
+                actionSummaries.push(`✅ Disconnected "${from_node}" → "${to_node}"`);
+              }
+              break;
+            }
+          }
+        } catch (err) {
+          actionSummaries.push(`❌ Action failed: ${action.tool}`);
+        }
+      }
+
+      // Build final message with action results
+      let finalContent = responseText;
+      if (actionSummaries.length > 0) {
+        finalContent += (finalContent ? "\n\n" : "") + actionSummaries.join("\n");
+
+        // Show toast for actions
+        useWorkflowStore.getState().addToast({
+          type: "success",
+          title: "Canvas updated",
+          message: `Vyne AI performed ${actionSummaries.length} action${actionSummaries.length > 1 ? "s" : ""}.`,
+          duration: 4000,
+        });
+      }
 
       updateMessage(vyneMsgId, {
-        content: responseText,
+        content: finalContent || "Done — I've made the changes to your canvas.",
         status: "complete",
+        builtNodes: actions.filter((a: { tool: string }) => a.tool === "create_workflow").length > 0
+          ? actions.reduce((sum: number, a: { tool: string; input: { nodes?: unknown[] } }) =>
+              a.tool === "create_workflow" ? sum + (a.input.nodes?.length || 0) : sum, 0)
+          : undefined,
       });
 
       // Save vyne response to DB
       fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "vyne", content: responseText, workflowId: serverId }),
+        body: JSON.stringify({ role: "vyne", content: finalContent, workflowId: serverId }),
       }).catch(() => {});
 
     } catch (err) {
