@@ -166,7 +166,20 @@ RULES:
 - For questions, debugging, or conversation — just respond naturally
 - When referencing a node the user selected, use its name and offer specific actionable advice
 - Keep responses focused and actionable — enterprise users value precision over padding
-- When suggesting improvements, explain WHY each change matters`;
+- When suggesting improvements, explain WHY each change matters
+
+CONVERSATION STYLE — THIS IS CRITICAL:
+- Talk like a smart colleague, NOT a chatbot or documentation page
+- NEVER use ** markdown headers ** as section titles in conversational replies
+- Instead of "**What Happens:**" followed by bullet points, just explain it naturally in 2-3 sentences
+- Use short paragraphs (2-3 sentences max), not walls of text
+- Use bullet points sparingly — only for actual lists of 3+ distinct items
+- Be direct and warm: "Here's the thing..." or "So what you want is..." or "Good call — here's how I'd set that up:"
+- Show personality — you're an expert who genuinely enjoys helping build great workflows
+- If the answer is simple, keep it to 1-2 sentences. Don't over-explain
+- Use backticks for technical terms like \`web-search\` or \`agent\`, not bold
+- Contractions are fine: "you'll", "it's", "that's", "here's"
+- NEVER start a response with "Great question!" or "Absolutely!" — just answer`;
 }
 
 function getCanvasContext(nodes: VyneNode[], edges: VyneEdge[], selectedNodeId: string | null): string {
@@ -219,6 +232,163 @@ function getCanvasContext(nodes: VyneNode[], edges: VyneEdge[], selectedNodeId: 
   return context;
 }
 
+// ── Simple Markdown Renderer ─────────────────────────────────────────
+
+function RenderMarkdown({ text }: { text: string }) {
+  // Convert markdown to styled HTML-like React elements
+  const lines = text.split("\n");
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Empty line → spacer
+    if (!line.trim()) {
+      elements.push(<div key={i} className="h-2" />);
+      i++;
+      continue;
+    }
+
+    // Headers
+    if (line.startsWith("### ")) {
+      elements.push(
+        <p key={i} className="text-[12px] font-bold text-[var(--vyne-text-primary)] mt-2 mb-1">
+          {processInline(line.slice(4))}
+        </p>
+      );
+      i++;
+      continue;
+    }
+    if (line.startsWith("## ")) {
+      elements.push(
+        <p key={i} className="text-[13px] font-bold text-[var(--vyne-text-primary)] mt-2.5 mb-1">
+          {processInline(line.slice(3))}
+        </p>
+      );
+      i++;
+      continue;
+    }
+
+    // Bullet points (- or *)
+    if (/^[\s]*[-*]\s/.test(line)) {
+      const indent = line.match(/^(\s*)/)?.[1]?.length || 0;
+      const content = line.replace(/^[\s]*[-*]\s/, "");
+      elements.push(
+        <div key={i} className="flex gap-2 mt-0.5" style={{ paddingLeft: `${Math.min(indent * 4, 24)}px` }}>
+          <span className="text-[var(--vyne-accent)] mt-[3px] text-[8px]">●</span>
+          <span className="text-[12.5px] leading-[1.6] text-[var(--vyne-text-secondary)]">
+            {processInline(content)}
+          </span>
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    // Numbered lists
+    if (/^\d+\.\s/.test(line)) {
+      const num = line.match(/^(\d+)\./)?.[1];
+      const content = line.replace(/^\d+\.\s/, "");
+      elements.push(
+        <div key={i} className="flex gap-2 mt-0.5">
+          <span className="text-[11px] font-bold text-[var(--vyne-accent)] mt-[1px] w-4 shrink-0 text-right">{num}.</span>
+          <span className="text-[12.5px] leading-[1.6] text-[var(--vyne-text-secondary)]">
+            {processInline(content)}
+          </span>
+        </div>
+      );
+      i++;
+      continue;
+    }
+
+    // Code blocks
+    if (line.startsWith("```")) {
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].startsWith("```")) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++; // skip closing ```
+      elements.push(
+        <pre key={`code-${i}`} className="mt-1.5 mb-1.5 p-2.5 rounded-lg bg-[#1a2316] text-[11px] text-emerald-300 font-mono leading-relaxed overflow-x-auto">
+          {codeLines.join("\n")}
+        </pre>
+      );
+      continue;
+    }
+
+    // Regular paragraph
+    elements.push(
+      <p key={i} className="text-[12.5px] leading-[1.7] text-[var(--vyne-text-secondary)]">
+        {processInline(line)}
+      </p>
+    );
+    i++;
+  }
+
+  return <div className="space-y-0.5">{elements}</div>;
+}
+
+// Process inline markdown: **bold**, *italic*, `code`, [links]
+function processInline(text: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let remaining = text;
+  let key = 0;
+
+  while (remaining.length > 0) {
+    // Bold
+    const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
+    // Inline code
+    const codeMatch = remaining.match(/`([^`]+)`/);
+    // Italic
+    const italicMatch = remaining.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/);
+
+    // Find earliest match
+    const matches = [
+      boldMatch ? { type: "bold", match: boldMatch, index: boldMatch.index! } : null,
+      codeMatch ? { type: "code", match: codeMatch, index: codeMatch.index! } : null,
+      italicMatch ? { type: "italic", match: italicMatch, index: italicMatch.index! } : null,
+    ].filter(Boolean).sort((a, b) => a!.index - b!.index);
+
+    if (matches.length === 0) {
+      parts.push(remaining);
+      break;
+    }
+
+    const first = matches[0]!;
+    // Text before match
+    if (first.index > 0) {
+      parts.push(remaining.slice(0, first.index));
+    }
+
+    if (first.type === "bold") {
+      parts.push(
+        <strong key={key++} className="font-semibold text-[var(--vyne-text-primary)]">
+          {first.match![1]}
+        </strong>
+      );
+    } else if (first.type === "code") {
+      parts.push(
+        <code key={key++} className="px-1 py-0.5 rounded bg-[var(--vyne-bg)] text-[11px] font-mono text-[var(--vyne-accent)]">
+          {first.match![1]}
+        </code>
+      );
+    } else if (first.type === "italic") {
+      parts.push(
+        <em key={key++} className="italic text-[var(--vyne-text-secondary)]">
+          {first.match![1]}
+        </em>
+      );
+    }
+
+    remaining = remaining.slice(first.index + first.match![0].length);
+  }
+
+  return parts.length === 1 && typeof parts[0] === "string" ? parts[0] : <>{parts}</>;
+}
+
 // ── Message Bubble ───────────────────────────────────────────────────
 
 function MessageBubble({ msg, onApplyWorkflow }: { msg: ChatMessage; onApplyWorkflow: (wf: GeneratedWorkflow) => void }) {
@@ -257,12 +427,15 @@ function MessageBubble({ msg, onApplyWorkflow }: { msg: ChatMessage; onApplyWork
           }`}
         >
           {msg.status === "thinking" ? (
-            <div className="flex items-center gap-2">
-              <Loader2 size={12} className="animate-spin" />
-              <span className="text-[12px] opacity-70">Thinking...</span>
+            <div className="flex items-center gap-2.5 py-1">
+              <div className="flex gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--vyne-accent)] animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--vyne-accent)] animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--vyne-accent)] animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
             </div>
           ) : (
-            <div className="whitespace-pre-wrap">{textContent}</div>
+            <RenderMarkdown text={textContent} />
           )}
         </div>
 

@@ -10,7 +10,7 @@ import {
   type IsValidConnection,
 } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Leaf } from "lucide-react";
+import { Plus, Leaf, Minus, Maximize, LocateFixed } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
 import { useDeployStore } from "@/store/deploy-store";
 import { AgentNode } from "./agent-node";
@@ -23,6 +23,39 @@ import { OnboardingWizard } from "../onboarding/onboarding-wizard";
 import { SimulationOverlay } from "../simulation/simulation-overlay";
 import { OutputDrawer } from "../simulation/output-drawer";
 import type { DragPayload, VyneNodeData } from "@/lib/types";
+
+// ── Canvas zoom/pan controls (positioned under minimap) ──────────────
+function CanvasControls() {
+  const { zoomIn, zoomOut, fitView } = useReactFlow();
+
+  return (
+    <div className="absolute top-[140px] right-3 z-30 flex flex-col gap-0.5 bg-white/90 backdrop-blur-sm rounded-xl border border-[var(--vyne-border)] shadow-sm overflow-hidden">
+      <button
+        onClick={() => zoomIn({ duration: 200 })}
+        className="w-8 h-8 flex items-center justify-center text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-primary)] hover:bg-[var(--vyne-bg-warm)] transition-colors"
+        title="Zoom in"
+      >
+        <Plus size={14} />
+      </button>
+      <div className="h-px bg-[var(--vyne-border)]" />
+      <button
+        onClick={() => zoomOut({ duration: 200 })}
+        className="w-8 h-8 flex items-center justify-center text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-primary)] hover:bg-[var(--vyne-bg-warm)] transition-colors"
+        title="Zoom out"
+      >
+        <Minus size={14} />
+      </button>
+      <div className="h-px bg-[var(--vyne-border)]" />
+      <button
+        onClick={() => fitView({ duration: 300, padding: 0.15 })}
+        className="w-8 h-8 flex items-center justify-center text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-text-primary)] hover:bg-[var(--vyne-bg-warm)] transition-colors"
+        title="Fit to view"
+      >
+        <Maximize size={13} />
+      </button>
+    </div>
+  );
+}
 
 const DRAG_KEY = "application/vyne-node";
 
@@ -315,11 +348,12 @@ export function WorkflowCanvas() {
           size={1}
           color="var(--vyne-border)"
         />
-        <Controls showInteractive={false} position="bottom-right" />
+        <Controls showInteractive={false} position="bottom-right" className="!hidden" />
       </ReactFlow>
 
-      {/* Custom live minimap */}
+      {/* Custom live minimap + controls stacked together */}
       <LiveMinimap />
+      <CanvasControls />
 
       {!isSimulating && <CopilotOmnibar />}
       {!isSimulating && <OnboardingWizard />}
