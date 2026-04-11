@@ -213,6 +213,9 @@ export function WorkflowCanvas() {
     addAgentFromTemplate,
     addTaskFromTemplate,
     addToolFromTemplate,
+    addTriggerFromTemplate,
+    addActionFromTemplate,
+    addOutputFromTemplate,
     setIsDraggingOver,
     isSimulating,
     setSelectedNodeId,
@@ -280,6 +283,15 @@ export function WorkflowCanvas() {
         case "tool":
           addToolFromTemplate(payload.template, position);
           break;
+        case "trigger":
+          addTriggerFromTemplate(payload.template, position);
+          break;
+        case "action":
+          addActionFromTemplate(payload.template, position);
+          break;
+        case "output":
+          addOutputFromTemplate(payload.template, position);
+          break;
       }
     },
     [
@@ -287,6 +299,9 @@ export function WorkflowCanvas() {
       addAgentFromTemplate,
       addTaskFromTemplate,
       addToolFromTemplate,
+      addTriggerFromTemplate,
+      addActionFromTemplate,
+      addOutputFromTemplate,
       setIsDraggingOver,
     ]
   );

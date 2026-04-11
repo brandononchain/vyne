@@ -14,11 +14,17 @@ import type {
   AgentNodeData,
   TaskNodeData,
   ToolNodeData,
+  TriggerNodeData,
+  ActionNodeData,
+  OutputNodeData,
   OnboardingStep,
   Toast,
   AgentTemplate,
   TaskTemplate,
   ToolTemplate,
+  TriggerTemplate,
+  ActionTemplate,
+  OutputTemplate,
 } from "@/lib/types";
 import { DEFAULT_AGENT_PERSONA, DEFAULT_TASK_CONFIG } from "@/lib/types";
 import {
@@ -62,6 +68,9 @@ interface WorkflowState {
   addAgentFromTemplate: (template: AgentTemplate, position: { x: number; y: number }) => void;
   addTaskFromTemplate: (template: TaskTemplate, position: { x: number; y: number }) => void;
   addToolFromTemplate: (template: ToolTemplate, position: { x: number; y: number }) => void;
+  addTriggerFromTemplate: (template: TriggerTemplate, position: { x: number; y: number }) => void;
+  addActionFromTemplate: (template: ActionTemplate, position: { x: number; y: number }) => void;
+  addOutputFromTemplate: (template: OutputTemplate, position: { x: number; y: number }) => void;
   removeNode: (nodeId: string) => void;
   getNodeById: (nodeId: string) => VyneNode | undefined;
   updateNodeData: (nodeId: string, updates: Partial<VyneNodeData>) => void;
@@ -102,9 +111,9 @@ interface WorkflowState {
 
   // ── Sidebar ──────────────────────────────────────────
   sidebarOpen: boolean;
-  sidebarTab: "agents" | "tasks" | "tools";
+  sidebarTab: "agents" | "tasks" | "tools" | "triggers" | "actions" | "outputs";
   toggleSidebar: () => void;
-  setSidebarTab: (tab: "agents" | "tasks" | "tools") => void;
+  setSidebarTab: (tab: "agents" | "tasks" | "tools" | "triggers" | "actions" | "outputs") => void;
 
   // ── Canvas drop zone ─────────────────────────────────
   isDraggingOver: boolean;
@@ -234,6 +243,40 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       icon: template.icon, color: template.color, compatibleWith: template.compatibleWith,
     };
     set({ nodes: [...get().nodes, { id, type: "toolNode", position, data }] });
+  },
+
+  addTriggerFromTemplate: (template, position) => {
+    get().pushSnapshot();
+    const id = nextNodeId();
+    const data: TriggerNodeData = {
+      type: "trigger", templateId: template.id, name: template.name, description: template.description,
+      icon: template.icon, color: template.color,
+      triggerType: template.id.replace("-trigger", "") as TriggerNodeData["triggerType"],
+      config: {},
+    };
+    set({ nodes: [...get().nodes, { id, type: "triggerNode", position, data }] });
+  },
+
+  addActionFromTemplate: (template, position) => {
+    get().pushSnapshot();
+    const id = nextNodeId();
+    const data: ActionNodeData = {
+      type: "action", templateId: template.id, name: template.name, description: template.description,
+      icon: template.icon, color: template.color, actionType: template.id, config: {},
+    };
+    set({ nodes: [...get().nodes, { id, type: "actionNode", position, data }] });
+  },
+
+  addOutputFromTemplate: (template, position) => {
+    get().pushSnapshot();
+    const id = nextNodeId();
+    const data: OutputNodeData = {
+      type: "output", templateId: template.id, name: template.name, description: template.description,
+      icon: template.icon, color: template.color,
+      outputType: template.id.replace("output-", "") as OutputNodeData["outputType"],
+      config: {},
+    };
+    set({ nodes: [...get().nodes, { id, type: "outputNode", position, data }] });
   },
 
   removeNode: (nodeId) => {

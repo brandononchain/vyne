@@ -10,6 +10,9 @@ import {
   Users,
   Zap,
   Wrench,
+  Radio,
+  Bolt,
+  FileOutput,
 } from "lucide-react";
 import { DynamicIcon } from "@/lib/icons";
 import {
@@ -22,11 +25,23 @@ import {
   toolTemplates,
   toolCategoryLabels,
   toolCategoryOrder,
+  triggerTemplates,
+  triggerCategoryLabels,
+  triggerCategoryOrder,
+  actionTemplates,
+  actionCategoryLabels,
+  actionCategoryOrder,
+  outputTemplates,
+  outputCategoryLabels,
+  outputCategoryOrder,
 } from "@/lib/agent-templates";
 import type {
   AgentTemplate,
   TaskTemplate,
   ToolTemplate,
+  TriggerTemplate,
+  ActionTemplate,
+  OutputTemplate,
   DragPayload,
 } from "@/lib/types";
 import { useWorkflowStore } from "@/store/workflow-store";
@@ -313,14 +328,86 @@ function TabButton({
   );
 }
 
+// ── Tab content: Triggers ────────────────────────────────────────────
+function TriggersTab({ query }: { query: string }) {
+  const filtered = triggerTemplates.filter(
+    (t) => t.name.toLowerCase().includes(query.toLowerCase()) || t.description.toLowerCase().includes(query.toLowerCase())
+  );
+  const grouped = triggerCategoryOrder
+    .map((cat) => ({ category: triggerCategoryLabels[cat], templates: filtered.filter((t) => t.category === cat) }))
+    .filter((g) => g.templates.length > 0);
+
+  return (
+    <>
+      {grouped.map((g) => (
+        <CategorySection key={g.category} category={g.category}>
+          {g.templates.map((t) => (
+            <DraggableNodeCard key={t.id} name={t.name} description={t.description} icon={t.icon} color={t.color}
+              badge="Trigger" badgeColor="#6c5ce7"
+              onDragStart={(e) => { e.dataTransfer.setData(DRAG_KEY, encodeDrag({ kind: "trigger", template: t })); e.dataTransfer.effectAllowed = "move"; }} />
+          ))}
+        </CategorySection>
+      ))}
+    </>
+  );
+}
+
+// ── Tab content: Actions ─────────────────────────────────────────────
+function ActionsTab({ query }: { query: string }) {
+  const filtered = actionTemplates.filter(
+    (t) => t.name.toLowerCase().includes(query.toLowerCase()) || t.description.toLowerCase().includes(query.toLowerCase())
+  );
+  const grouped = actionCategoryOrder
+    .map((cat) => ({ category: actionCategoryLabels[cat], templates: filtered.filter((t) => t.category === cat) }))
+    .filter((g) => g.templates.length > 0);
+
+  return (
+    <>
+      {grouped.map((g) => (
+        <CategorySection key={g.category} category={g.category}>
+          {g.templates.map((t) => (
+            <DraggableNodeCard key={t.id} name={t.name} description={t.description} icon={t.icon} color={t.color}
+              badge="Action" badgeColor="#0984e3"
+              onDragStart={(e) => { e.dataTransfer.setData(DRAG_KEY, encodeDrag({ kind: "action", template: t })); e.dataTransfer.effectAllowed = "move"; }} />
+          ))}
+        </CategorySection>
+      ))}
+    </>
+  );
+}
+
+// ── Tab content: Outputs ─────────────────────────────────────────────
+function OutputsTab({ query }: { query: string }) {
+  const filtered = outputTemplates.filter(
+    (t) => t.name.toLowerCase().includes(query.toLowerCase()) || t.description.toLowerCase().includes(query.toLowerCase())
+  );
+  const grouped = outputCategoryOrder
+    .map((cat) => ({ category: outputCategoryLabels[cat], templates: filtered.filter((t) => t.category === cat) }))
+    .filter((g) => g.templates.length > 0);
+
+  return (
+    <>
+      {grouped.map((g) => (
+        <CategorySection key={g.category} category={g.category}>
+          {g.templates.map((t) => (
+            <DraggableNodeCard key={t.id} name={t.name} description={t.description} icon={t.icon} color={t.color}
+              badge="Output" badgeColor="#4a7c59"
+              onDragStart={(e) => { e.dataTransfer.setData(DRAG_KEY, encodeDrag({ kind: "output", template: t })); e.dataTransfer.effectAllowed = "move"; }} />
+          ))}
+        </CategorySection>
+      ))}
+    </>
+  );
+}
+
 // ── Sidebar tips per tab ─────────────────────────────────────────────
-const tabTips = {
-  agents:
-    "Pro tip: Connect agents together to create multi-step relay workflows.",
-  tasks:
-    "Pro tip: Chain tasks between agents to define exactly what each team member does.",
-  tools:
-    "Pro tip: Connect a tool to an agent to expand their capabilities.",
+const tabTips: Record<string, string> = {
+  agents: "Pro tip: Connect agents together to create multi-step relay workflows.",
+  tasks: "Pro tip: Chain tasks between agents to define exactly what each team member does.",
+  tools: "Pro tip: Connect a tool to an agent to expand their capabilities.",
+  triggers: "Triggers are workflow entry points — they start execution automatically.",
+  actions: "Actions integrate with external services and control workflow flow.",
+  outputs: "Outputs deliver your results — preview, email, save, or send anywhere.",
 };
 
 // ── Main Sidebar component ───────────────────────────────────────────
@@ -348,29 +435,24 @@ export function Sidebar() {
               </h2>
             </div>
 
-            {/* Tab bar */}
-            <div className="flex gap-1 p-1 rounded-xl bg-[var(--vyne-bg)] mb-3">
-              <TabButton
-                active={sidebarTab === "agents"}
-                icon={<Users size={12} />}
-                label="Agents"
-                count={agentTemplates.length}
-                onClick={() => setSidebarTab("agents")}
-              />
-              <TabButton
-                active={sidebarTab === "tasks"}
-                icon={<Zap size={12} />}
-                label="Tasks"
-                count={taskTemplates.length}
-                onClick={() => setSidebarTab("tasks")}
-              />
-              <TabButton
-                active={sidebarTab === "tools"}
-                icon={<Wrench size={12} />}
-                label="Tools"
-                count={toolTemplates.length}
-                onClick={() => setSidebarTab("tools")}
-              />
+            {/* Tab bar — two rows */}
+            <div className="space-y-1 mb-3">
+              <div className="flex gap-1 p-0.5 rounded-xl bg-[var(--vyne-bg)]">
+                <TabButton active={sidebarTab === "agents"} icon={<Users size={11} />} label="Agents"
+                  count={agentTemplates.length} onClick={() => setSidebarTab("agents")} />
+                <TabButton active={sidebarTab === "tasks"} icon={<Zap size={11} />} label="Tasks"
+                  count={taskTemplates.length} onClick={() => setSidebarTab("tasks")} />
+                <TabButton active={sidebarTab === "tools"} icon={<Wrench size={11} />} label="Tools"
+                  count={toolTemplates.length} onClick={() => setSidebarTab("tools")} />
+              </div>
+              <div className="flex gap-1 p-0.5 rounded-xl bg-[var(--vyne-bg)]">
+                <TabButton active={sidebarTab === "triggers"} icon={<Radio size={11} />} label="Triggers"
+                  count={triggerTemplates.length} onClick={() => setSidebarTab("triggers")} />
+                <TabButton active={sidebarTab === "actions"} icon={<Bolt size={11} />} label="Actions"
+                  count={actionTemplates.length} onClick={() => setSidebarTab("actions")} />
+                <TabButton active={sidebarTab === "outputs"} icon={<FileOutput size={11} />} label="Outputs"
+                  count={outputTemplates.length} onClick={() => setSidebarTab("outputs")} />
+              </div>
             </div>
 
             {/* Search */}
@@ -405,6 +487,9 @@ export function Sidebar() {
                 {sidebarTab === "agents" && <AgentsTab query={searchQuery} />}
                 {sidebarTab === "tasks" && <TasksTab query={searchQuery} />}
                 {sidebarTab === "tools" && <ToolsTab query={searchQuery} />}
+                {sidebarTab === "triggers" && <TriggersTab query={searchQuery} />}
+                {sidebarTab === "actions" && <ActionsTab query={searchQuery} />}
+                {sidebarTab === "outputs" && <OutputsTab query={searchQuery} />}
               </motion.div>
             </AnimatePresence>
           </div>
