@@ -10,6 +10,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/workflows/trigger",
   "/api/workflows/status/(.*)",
   "/api/cron/(.*)",
+  "/api/test-deploy",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
