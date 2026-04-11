@@ -28,7 +28,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/server/db";
-import { enqueueWorkflowExecution } from "@/lib/server/queue";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { resolveTools } from "@/lib/server/engine/tools";
 import { buildMessageArray } from "@/lib/server/engine/prompts";
@@ -105,30 +104,8 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  // ── 6. Try async (BullMQ) first ────────────────────
-  const jobId = await enqueueWorkflowExecution({
-    executionLogId: executionLog.id,
-    workflowId: workflow.id,
-    userId: workflow.user.id,
-    graphJson: compiled as Record<string, unknown>,
-    type: "run",
-  });
-
-  if (jobId) {
-    // Async mode — return immediately
-    const origin = request.nextUrl.origin;
-    return NextResponse.json({
-      executionId: executionLog.id,
-      jobId,
-      status: "queued",
-      message: "Workflow queued for execution. Poll status or provide a webhookUrl.",
-      pollUrl: `${origin}/api/workflows/status/${executionLog.id}`,
-      workflowName: workflow.name,
-      stepsTotal: executionOrder.length,
-    }, { status: 202 });
-  }
-
-  // ── 7. Fallback: sync execution (no Redis) ─────────
+  // ── 6. Execute synchronously ────────────────────────
+  // Direct execution — no queue needed. Reliable and simple.
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: "ANTHROPIC_API_KEY not set" }, { status: 500 });

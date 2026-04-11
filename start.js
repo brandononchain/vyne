@@ -60,17 +60,11 @@ let workerProcess = null;
 
 if (process.env.REDIS_URL) {
   console.log("[Vyne] 🔄 REDIS_URL detected — starting background worker...");
-  const tsxBin = path.join(__dirname, "node_modules", ".bin", "tsx");
-  const workerPath = path.join(__dirname, "src", "lib", "server", "worker-standalone.js");
+  const workerPath = path.join(__dirname, "worker-standalone.js");
 
-  // Check if standalone worker exists, fall back to tsx worker.ts
   const fs = require("fs");
-  const workerFile = fs.existsSync(workerPath)
-    ? workerPath
-    : path.join(__dirname, "src", "lib", "server", "worker-entry.js");
-
-  if (fs.existsSync(workerFile)) {
-    workerProcess = spawn("node", [workerFile], {
+  if (fs.existsSync(workerPath)) {
+    workerProcess = spawn("node", [workerPath], {
       stdio: "inherit",
       env: { ...process.env },
     });
@@ -80,15 +74,20 @@ if (process.env.REDIS_URL) {
     });
 
     workerProcess.on("exit", (code) => {
-      console.log(`[Vyne] Worker exited with code ${code}`);
+      if (code !== 0 && code !== null) {
+        console.log(`[Vyne] Worker exited with code ${code} — restarting in 5s...`);
+        setTimeout(() => {
+          workerProcess = spawn("node", [workerPath], { stdio: "inherit", env: { ...process.env } });
+        }, 5000);
+      }
     });
+
+    console.log("[Vyne] 🟢 Background worker started.");
   } else {
-    console.log("[Vyne] ⚠️ Worker file not found — background jobs disabled.");
-    console.log("[Vyne]    Workflows can still be triggered via /api/workflows/trigger (sync mode).");
+    console.log("[Vyne] ⚠️ worker-standalone.js not found — background jobs disabled.");
   }
 } else {
-  console.log("[Vyne] ℹ️  No REDIS_URL — background worker disabled.");
-  console.log("[Vyne]    Workflows execute synchronously via /api/workflows/trigger.");
+  console.log("[Vyne] ℹ️  No REDIS_URL — background worker disabled. Workflows execute synchronously.");
 }
 
 // Graceful shutdown
