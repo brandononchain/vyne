@@ -52,13 +52,54 @@ nextProcess.on("exit", (code) => {
   process.exit(code || 0);
 });
 
+// ── Start BullMQ Worker (if Redis available) ─────────────────────────
+// This runs the background job processor that executes deployed workflows
+// autonomously — no user needs to be logged in.
+
+let workerProcess = null;
+
+if (process.env.REDIS_URL) {
+  console.log("[Vyne] 🔄 REDIS_URL detected — starting background worker...");
+  const tsxBin = path.join(__dirname, "node_modules", ".bin", "tsx");
+  const workerPath = path.join(__dirname, "src", "lib", "server", "worker-standalone.js");
+
+  // Check if standalone worker exists, fall back to tsx worker.ts
+  const fs = require("fs");
+  const workerFile = fs.existsSync(workerPath)
+    ? workerPath
+    : path.join(__dirname, "src", "lib", "server", "worker-entry.js");
+
+  if (fs.existsSync(workerFile)) {
+    workerProcess = spawn("node", [workerFile], {
+      stdio: "inherit",
+      env: { ...process.env },
+    });
+
+    workerProcess.on("error", (err) => {
+      console.error("[Vyne] ⚠️ Worker failed to start:", err.message);
+    });
+
+    workerProcess.on("exit", (code) => {
+      console.log(`[Vyne] Worker exited with code ${code}`);
+    });
+  } else {
+    console.log("[Vyne] ⚠️ Worker file not found — background jobs disabled.");
+    console.log("[Vyne]    Workflows can still be triggered via /api/workflows/trigger (sync mode).");
+  }
+} else {
+  console.log("[Vyne] ℹ️  No REDIS_URL — background worker disabled.");
+  console.log("[Vyne]    Workflows execute synchronously via /api/workflows/trigger.");
+}
+
 // Graceful shutdown
 process.on("SIGTERM", () => {
   console.log("[Vyne] SIGTERM received, shutting down...");
   nextProcess.kill("SIGTERM");
+  if (workerProcess) workerProcess.kill("SIGTERM");
 });
 
 process.on("SIGINT", () => {
   console.log("[Vyne] SIGINT received, shutting down...");
   nextProcess.kill("SIGINT");
+  if (workerProcess) workerProcess.kill("SIGINT");
 });

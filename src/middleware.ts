@@ -8,6 +8,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/health",
   "/api/generate-logo",
   "/api/workflows/trigger",
+  "/api/workflows/status/(.*)",
+  "/api/cron/(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

@@ -1,48 +1,44 @@
 /**
  * ── POST /api/workflows/trigger ────────────────────────────────────
  *
- * External API endpoint for triggering deployed workflows autonomously.
- * This is what makes "Deploy → Run without human" work.
+ * External API endpoint for triggering deployed workflows.
+ * Supports two modes:
+ *
+ * 1. ASYNC (default): Enqueues to BullMQ worker for background execution.
+ *    Returns immediately with executionId for polling.
+ *
+ * 2. SYNC (fallback): If Redis is unavailable, executes inline.
+ *    Returns full results when complete.
  *
  * Auth: API key in Authorization header (Bearer vyne_xxx)
- * No Clerk session required — this is for external systems, cron jobs,
- * webhooks, and programmatic access.
- *
- * Flow:
- * 1. Validate API key → find workflow
- * 2. Execute all steps sequentially via Claude
- * 3. Return full results as JSON
+ * No Clerk session required.
  *
  * Usage:
  *   curl -X POST https://your-app.railway.app/api/workflows/trigger \
  *     -H "Authorization: Bearer vyne_xxx" \
  *     -H "Content-Type: application/json" \
  *     -d '{"input": "Analyze competitors in the CRM space"}'
+ *
+ * Response (async):
+ *   { "executionId": "xxx", "status": "queued", "pollUrl": "/api/workflows/status/xxx" }
+ *
+ * Response (sync):
+ *   { "success": true, "finalOutput": "...", "stepOutputs": {...} }
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/server/db";
+import { enqueueWorkflowExecution } from "@/lib/server/queue";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { resolveTools } from "@/lib/server/engine/tools";
 import { buildMessageArray } from "@/lib/server/engine/prompts";
-
-// ── Persona extractor ────────────────────────────────────────────────
-
-function extractPersona(systemPrompt: string) {
-  return {
-    goal: "",
-    backstory: "",
-    tone: "professional" as const,
-    customInstructions: systemPrompt,
-  };
-}
 
 // ── Main handler ─────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
-  // ── 1. Extract API key ────────────────────────────
+  // ── 1. Auth ────────────────────────────────────────
   const authHeader = request.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return NextResponse.json(
@@ -51,7 +47,6 @@ export async function POST(request: NextRequest) {
     );
   }
   const apiKeyRaw = authHeader.slice(7).trim();
-
   if (!apiKeyRaw.startsWith("vyne_")) {
     return NextResponse.json(
       { error: "Invalid API key format. Keys start with vyne_" },
@@ -59,13 +54,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // ── 2. Find workflow by API key ───────────────────
-  // The deploy system stores the API key directly on the workflow record
+  // ── 2. Find workflow ───────────────────────────────
   const workflow = await db.workflow.findFirst({
-    where: {
-      apiKey: apiKeyRaw,
-      status: "LIVE",
-    },
+    where: { apiKey: apiKeyRaw, status: "LIVE" },
     include: { user: true },
   });
 
@@ -76,7 +67,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // ── 3. Check credits ──────────────────────────────
+  // ── 3. Credits ─────────────────────────────────────
   const creditCost = 10;
   const remaining = workflow.user.creditsTotal - workflow.user.creditsUsed;
   if (remaining < creditCost) {
@@ -86,9 +77,67 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // ── 4. Parse the workflow graph ───────────────────
+  // ── 4. Parse input ─────────────────────────────────
+  let userInput = "";
+  let webhookUrl: string | null = null;
+  try {
+    const body = await request.json();
+    userInput = body.input || body.userInput || "";
+    webhookUrl = body.webhookUrl || null;
+  } catch {
+    // No body is fine
+  }
+
+  // ── 5. Create execution log ────────────────────────
   const graphJson = workflow.graphJson as Record<string, unknown>;
   const compiled = (graphJson as { compiled?: Record<string, unknown> }).compiled || graphJson;
+  const executionOrder = (compiled.executionOrder || []) as Array<{ nodeId: string }>;
+
+  const executionLog = await db.executionLog.create({
+    data: {
+      workflowId: workflow.id,
+      userId: workflow.user.id,
+      type: "RUN",
+      status: "QUEUED",
+      stepsTotal: executionOrder.length,
+      inputJson: { input: userInput, webhookUrl },
+      startedAt: new Date(),
+    },
+  });
+
+  // ── 6. Try async (BullMQ) first ────────────────────
+  const jobId = await enqueueWorkflowExecution({
+    executionLogId: executionLog.id,
+    workflowId: workflow.id,
+    userId: workflow.user.id,
+    graphJson: compiled as Record<string, unknown>,
+    type: "run",
+  });
+
+  if (jobId) {
+    // Async mode — return immediately
+    const origin = request.nextUrl.origin;
+    return NextResponse.json({
+      executionId: executionLog.id,
+      jobId,
+      status: "queued",
+      message: "Workflow queued for execution. Poll status or provide a webhookUrl.",
+      pollUrl: `${origin}/api/workflows/status/${executionLog.id}`,
+      workflowName: workflow.name,
+      stepsTotal: executionOrder.length,
+    }, { status: 202 });
+  }
+
+  // ── 7. Fallback: sync execution (no Redis) ─────────
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: "ANTHROPIC_API_KEY not set" }, { status: 500 });
+  }
+
+  await db.executionLog.update({
+    where: { id: executionLog.id },
+    data: { status: "RUNNING" },
+  });
 
   const agents = (compiled.agents || []) as Array<{
     id: string; name: string; role: string; systemPrompt: string; tools: string[];
@@ -98,38 +147,8 @@ export async function POST(request: NextRequest) {
     expectedInput: string; expectedOutput: string; outputFormat: string;
     assignedAgentId: string | null;
   }>;
-  const executionOrder = (compiled.executionOrder || []) as Array<{
-    nodeId: string; nodeType: string; name: string;
-  }>;
-  const connections = (compiled.connections || []) as Array<{
-    from: string; to: string;
-  }>;
+  const connections = (compiled.connections || []) as Array<{ from: string; to: string }>;
 
-  if (executionOrder.length === 0) {
-    return NextResponse.json(
-      { error: "Workflow has no executable steps" },
-      { status: 400 }
-    );
-  }
-
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "Server misconfigured: ANTHROPIC_API_KEY not set" },
-      { status: 500 }
-    );
-  }
-
-  // ── 5. Parse user input ───────────────────────────
-  let userInput = "";
-  try {
-    const body = await request.json();
-    userInput = body.input || body.userInput || "";
-  } catch {
-    // No body is fine — first step will get the default prompt
-  }
-
-  // ── 6. Execute each step ──────────────────────────
   const agentMap = new Map(agents.map((a) => [a.id, a]));
   const taskMap = new Map(tasks.map((t) => [t.id, t]));
 
@@ -137,24 +156,10 @@ export async function POST(request: NextRequest) {
   const stepOutputs: Record<string, { name: string; output: string; durationMs: number }> = {};
   const errors: string[] = [];
 
-  // Create execution log
-  const executionLog = await db.executionLog.create({
-    data: {
-      workflowId: workflow.id,
-      userId: workflow.user.id,
-      type: "RUN",
-      status: "RUNNING",
-      stepsTotal: executionOrder.length,
-      inputJson: { input: userInput },
-      startedAt: new Date(),
-    },
-  });
-
   for (let i = 0; i < executionOrder.length; i++) {
-    const step = executionOrder[i];
+    const step = executionOrder[i] as { nodeId: string; nodeType: string; name: string };
     const stepStart = Date.now();
 
-    // Resolve agent and task
     let agent = step.nodeType === "agent"
       ? agentMap.get(step.nodeId)
       : (() => {
@@ -168,22 +173,17 @@ export async function POST(request: NextRequest) {
 
     if (!agent) {
       agent = {
-        id: `generic_${i}`,
-        name: step.name,
-        role: "General Purpose Agent",
-        systemPrompt: "You are a helpful assistant executing a workflow task.",
-        tools: [],
+        id: `generic_${i}`, name: step.name, role: "General Purpose Agent",
+        systemPrompt: "You are a helpful assistant executing a workflow task.", tools: [],
       };
     }
 
-    // Build messages
     const messages = buildMessageArray(
-      { name: agent.name, role: agent.role, tools: agent.tools, persona: extractPersona(agent.systemPrompt) },
+      { name: agent.name, role: agent.role, tools: agent.tools, persona: { goal: "", backstory: "", tone: "professional", customInstructions: agent.systemPrompt } },
       task ? { name: task.name, description: task.description, instructions: task.instructions, expectedInput: task.expectedInput, expectedOutput: task.expectedOutput, outputFormat: task.outputFormat } : null,
       previousOutput || null
     );
 
-    // Execute with tool call loop
     const llm = new ChatAnthropic({ model: "claude-sonnet-4-20250514", anthropicApiKey: apiKey, temperature: 0.7, maxTokens: 2048 });
     const tools = resolveTools(agent.tools);
     const model = tools.length > 0 ? llm.bindTools(tools) : llm;
@@ -193,7 +193,6 @@ export async function POST(request: NextRequest) {
       const conversationMessages = [...messages];
       for (let round = 0; round < 5; round++) {
         const response = await model.invoke(conversationMessages);
-
         const textContent = typeof response.content === "string"
           ? response.content
           : Array.isArray(response.content)
@@ -226,22 +225,19 @@ export async function POST(request: NextRequest) {
       fullOutput = `[Error: ${msg}]`;
     }
 
-    const stepDuration = Date.now() - stepStart;
-    stepOutputs[step.nodeId] = { name: step.name, output: fullOutput, durationMs: stepDuration };
+    stepOutputs[step.nodeId] = { name: step.name, output: fullOutput, durationMs: Date.now() - stepStart };
     previousOutput = fullOutput;
 
-    // Update execution log progress
     await db.executionLog.update({
       where: { id: executionLog.id },
       data: { stepsCompleted: i + 1 },
     });
   }
 
-  // ── 7. Finalize ───────────────────────────────────
+  // ── 8. Finalize ────────────────────────────────────
   const totalDuration = Date.now() - startTime;
   const success = errors.length === 0;
 
-  // Update execution log
   await db.executionLog.update({
     where: { id: executionLog.id },
     data: {
@@ -255,11 +251,25 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  // Deduct credits
   await db.user.update({
     where: { id: workflow.user.id },
     data: { creditsUsed: { increment: creditCost } },
   });
+
+  // ── 9. Webhook callback ────────────────────────────
+  if (webhookUrl) {
+    fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        executionId: executionLog.id,
+        workflowName: workflow.name,
+        status: success ? "completed" : "failed",
+        finalOutput: previousOutput,
+        totalDurationMs: totalDuration,
+      }),
+    }).catch(() => {});
+  }
 
   return NextResponse.json({
     success,
@@ -270,7 +280,7 @@ export async function POST(request: NextRequest) {
     creditsUsed: creditCost,
     finalOutput: previousOutput,
     stepOutputs: Object.fromEntries(
-      Object.entries(stepOutputs).map(([id, data]) => [data.name, { output: data.output, durationMs: data.durationMs }])
+      Object.entries(stepOutputs).map(([, data]) => [data.name, { output: data.output, durationMs: data.durationMs }])
     ),
     errors: errors.length > 0 ? errors : undefined,
   });
