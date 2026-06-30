@@ -242,7 +242,9 @@ export function AgentConfigPanel({ nodeId }: { nodeId: string }) {
     updateNodeData(nodeId, { tools } as Partial<AgentNodeData>);
   };
 
-  const promptPreview = generateAgentPromptPreview(data);
+  // Only compute the preview when it's actually shown (avoids running the
+  // prompt builder on every keystroke while the section is collapsed).
+  const promptPreview = showPromptPreview ? generateAgentPromptPreview(data) : "";
 
   return (
     <div className="space-y-6">

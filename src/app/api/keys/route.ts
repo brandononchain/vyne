@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/server/db";
 import { createHash, randomBytes } from "crypto";
+import { parse, createApiKeySchema } from "@/lib/server/validation";
 
 function hashKey(key: string): string {
   return createHash("sha256").update(key).digest("hex");
@@ -53,10 +54,11 @@ export async function POST(request: NextRequest) {
     const user = await db.user.findUnique({ where: { clerkId } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const body = await request.json();
-    const { name } = body;
-
-    if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    const parsed = parse(createApiKeySchema, await request.json());
+    if (!parsed.ok) {
+      return NextResponse.json({ error: "Invalid request", details: parsed.error }, { status: 400 });
+    }
+    const { name } = parsed.data;
 
     // Generate key
     const rawKey = generateApiKey();

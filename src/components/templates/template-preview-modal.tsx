@@ -142,10 +142,25 @@ export function TemplatePreviewModal({
   template: WorkflowTemplate | null;
   onClose: () => void;
 }) {
+  return (
+    <AnimatePresence>
+      {template && (
+        <TemplatePreviewModalContent template={template} onClose={onClose} />
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ── Modal content — only mounted when a template is selected ──────────
+function TemplatePreviewModalContent({
+  template,
+  onClose,
+}: {
+  template: WorkflowTemplate;
+  onClose: () => void;
+}) {
   const loadTemplate = useWorkflowStore((s) => s.loadTemplate);
   const { setCurrentView } = useDeployStore();
-
-  if (!template) return null;
 
   const agentCount = template.nodes.filter((n) => (n.data as VyneNodeData).type === "agent").length;
   const taskCount = template.nodes.filter((n) => (n.data as VyneNodeData).type === "task").length;
@@ -162,9 +177,7 @@ export function TemplatePreviewModal({
   };
 
   return (
-    <AnimatePresence>
-      {template && (
-        <>
+    <>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -280,8 +293,6 @@ export function TemplatePreviewModal({
               </p>
             </div>
           </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+    </>
   );
 }

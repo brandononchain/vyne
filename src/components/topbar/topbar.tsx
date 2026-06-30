@@ -73,8 +73,10 @@ export function TopBar() {
     redo,
     isSimulating,
     simulationProgress,
-    startSimulation,
+    runWorkflow,
     stopSimulation,
+    saveWorkflow,
+    isSaving,
   } = useWorkflowStore();
   const { openDeployModal, setCurrentView, deployedWorkflows } = useDeployStore();
   const { canAffordSimulation, canAffordDeployment, openUpgradeModal } = useBillingStore();
@@ -199,8 +201,12 @@ export function TopBar() {
                 </span>
               )}
             </TopBarButton>
-            <TopBarButton label="Save workflow">
-              <Save size={14} />
+            <TopBarButton
+              label="Save workflow"
+              disabled={nodes.length === 0 || isSaving}
+              onClick={() => { saveWorkflow(); }}
+            >
+              {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             </TopBarButton>
             <div className="w-px h-6 bg-[var(--vyne-border)] mx-1" />
             <TopBarButton
@@ -244,7 +250,7 @@ export function TopBar() {
                 );
                 return;
               }
-              startSimulation();
+              runWorkflow();
             }}
           >
             <Play size={13} />

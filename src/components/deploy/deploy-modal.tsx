@@ -367,46 +367,63 @@ export function DeployModal() {
   const handleDeploy = async () => {
     setDeployModalStep("deploying");
 
-    // Compile & create deployed workflow
     const compiled = compileGraphToJSON(nodes, edges);
-    const deployed = deployWorkflow(
-      compiled,
-      deployModal.workflowName,
-      deployModal.triggerType,
-      nodes,
-      edges
-    );
+    const agentCount = compiled.agents.length;
+    const taskCount = compiled.tasks.length;
 
-    // Save to database
+    // Persist + mint credentials SERVER-SIDE. The server returns the id,
+    // endpointUrl, apiKey and webhookSecret (generated with a CSPRNG).
     try {
-      await fetch("/api/workflows", {
+      const res = await fetch("/api/workflows", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: deployed.name,
-          description: deployed.description,
-          graphJson: {
-            compiled,
-            sourceNodes: nodes,
-            sourceEdges: edges,
-          },
-          triggerType: deployed.triggerType,
-          agentCount: deployed.agentCount,
-          taskCount: deployed.taskCount,
+          name: deployModal.workflowName,
+          description: `${agentCount} agents, ${taskCount} tasks`,
+          graphJson: { compiled, sourceNodes: nodes, sourceEdges: edges },
+          triggerType: deployModal.triggerType,
+          agentCount,
+          taskCount,
           status: "LIVE",
         }),
       });
-    } catch (err) {
-      console.error("[Deploy] Failed to save to DB:", err);
-    }
 
-    addDeployedWorkflow(deployed);
-    setDeployedData({
-      endpointUrl: deployed.endpointUrl,
-      apiKey: deployed.apiKey,
-      webhookSecret: deployed.webhookSecret,
-    });
-    setDeployModalStep("success");
+      if (!res.ok) throw new Error(`Deploy failed (${res.status})`);
+      const server = await res.json();
+
+      const deployed = deployWorkflow(
+        compiled,
+        deployModal.workflowName,
+        deployModal.triggerType,
+        {
+          id: server.id,
+          endpointUrl: server.endpointUrl ?? "",
+          apiKey: server.apiKey ?? "",
+          webhookSecret: server.webhookSecret ?? "",
+          createdAt: server.createdAt,
+        },
+        nodes,
+        edges
+      );
+
+      addDeployedWorkflow(deployed);
+      setDeployedData({
+        endpointUrl: deployed.endpointUrl,
+        apiKey: deployed.apiKey,
+        webhookSecret: deployed.webhookSecret,
+      });
+      setDeployModalStep("success");
+    } catch (err) {
+      // Surface the failure instead of showing a false "Live!" screen.
+      console.error("[Deploy] Failed:", err);
+      setDeployModalStep("configure");
+      useWorkflowStore.getState().addToast({
+        type: "error",
+        title: "Deployment failed",
+        message: "We couldn't deploy your workflow. Please try again.",
+        duration: 5000,
+      });
+    }
   };
 
   // Reset on close

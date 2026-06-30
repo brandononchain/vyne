@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/server/db";
+import { parse, saveWorkflowSchema } from "@/lib/server/validation";
+import {
+  generateWorkflowApiKey,
+  generateWebhookSecret,
+  buildEndpointUrl,
+} from "@/lib/server/credentials";
 
 // ── GET /api/workflows — List user's workflows ───────────────────────
 
@@ -30,8 +36,6 @@ export async function GET() {
         agentCount: true,
         taskCount: true,
         endpointUrl: true,
-        apiKey: true,
-        webhookSecret: true,
         deployedAt: true,
         createdAt: true,
         updatedAt: true,
@@ -70,12 +74,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const body = await request.json();
-    const { name, description, graphJson, triggerType, agentCount, taskCount, status } = body;
-
-    if (!name || !graphJson) {
-      return NextResponse.json({ error: "Missing required fields: name, graphJson" }, { status: 400 });
+    const parsed = parse(saveWorkflowSchema, await request.json());
+    if (!parsed.ok) {
+      return NextResponse.json({ error: "Invalid request", details: parsed.error }, { status: 400 });
     }
+    const { name, description, graphJson, triggerType, agentCount, taskCount, status } = parsed.data;
+
+    const isDeploying = status === "LIVE";
+
+    // When deploying, mint credentials SERVER-SIDE with a CSPRNG. The
+    // client no longer dictates the API key / webhook secret.
+    const deployFields = isDeploying
+      ? {
+          apiKey: generateWorkflowApiKey(),
+          webhookSecret: generateWebhookSecret(),
+        }
+      : {};
 
     const workflow = await db.workflow.create({
       data: {
@@ -87,15 +101,27 @@ export async function POST(request: NextRequest) {
         agentCount: agentCount || 0,
         taskCount: taskCount || 0,
         status: status || "DRAFT",
-        deployedAt: status === "LIVE" ? new Date() : null,
+        deployedAt: isDeploying ? new Date() : null,
+        ...deployFields,
       },
     });
+
+    // Persist the public endpoint URL (needs the generated id).
+    let endpointUrl: string | null = null;
+    if (isDeploying) {
+      endpointUrl = buildEndpointUrl(workflow.id);
+      await db.workflow.update({ where: { id: workflow.id }, data: { endpointUrl } });
+    }
 
     return NextResponse.json({
       id: workflow.id,
       name: workflow.name,
       status: workflow.status,
       createdAt: workflow.createdAt,
+      // Returned ONCE so the client can display them; secrets are stored server-side.
+      ...(isDeploying
+        ? { endpointUrl, apiKey: workflow.apiKey, webhookSecret: workflow.webhookSecret }
+        : {}),
     }, { status: 201 });
   } catch (error) {
     console.error("[API] POST /api/workflows error:", error);

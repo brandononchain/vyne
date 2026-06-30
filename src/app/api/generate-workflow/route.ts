@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { ANTHROPIC_MODEL } from "@/lib/server/engine/config";
+import { parse, generatedWorkflowSchema } from "@/lib/server/validation";
 
 const SYSTEM_PROMPT = `You are the Vyne Workflow Architect — an expert AI system that designs multi-agent workflows.
 
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: ANTHROPIC_MODEL,
         max_tokens: 2000,
         system: SYSTEM_PROMPT,
         messages: [{ role: "user", content: userMessage }],
@@ -106,26 +108,35 @@ export async function POST(request: NextRequest) {
     const text = data.content?.[0]?.text || "";
 
     // Parse the JSON from Claude's response
-    let workflow;
+    let raw: unknown;
     try {
       // Strip any markdown fences if present
       const clean = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-      workflow = JSON.parse(clean);
+      raw = JSON.parse(clean);
     } catch {
       console.error("[Generate] Failed to parse JSON:", text.slice(0, 200));
       return NextResponse.json({ error: "Failed to parse workflow structure" }, { status: 500 });
     }
 
-    // Validate structure
-    if (!workflow.nodes || !Array.isArray(workflow.nodes) || workflow.nodes.length < 2) {
-      return NextResponse.json({ error: "Invalid workflow structure" }, { status: 500 });
+    // Validate the model's output against a strict schema (node/edge/tool
+    // shape, tones, indices) instead of trusting arbitrary JSON.
+    const validated = parse(generatedWorkflowSchema, raw);
+    if (!validated.ok) {
+      console.error("[Generate] Invalid workflow structure:", validated.error);
+      return NextResponse.json({ error: "Invalid workflow structure", details: validated.error }, { status: 502 });
     }
+    const workflow = validated.data;
+
+    // Drop edges that reference out-of-range node indices.
+    const safeEdges = workflow.edges.filter(
+      (e) => e.from >= 0 && e.to >= 0 && e.from < workflow.nodes.length && e.to < workflow.nodes.length
+    );
 
     return NextResponse.json({
       title: workflow.title || "Generated Workflow",
       description: workflow.description || "",
       nodes: workflow.nodes,
-      edges: workflow.edges || [],
+      edges: safeEdges,
     });
   } catch (error) {
     console.error("[Generate] Error:", error);

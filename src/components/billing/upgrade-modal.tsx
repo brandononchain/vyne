@@ -13,6 +13,10 @@ function PlanCard({
   isCurrent: boolean;
   onSelect: () => void;
 }) {
+  // Paid plans require a payment backend that isn't wired up yet, so they are
+  // not selectable. The free plan remains selectable.
+  const isComingSoon = !isCurrent && plan.price > 0;
+  const isDisabled = isCurrent || isComingSoon;
   return (
     <div
       className={`
@@ -49,19 +53,21 @@ function PlanCard({
 
       <button
         onClick={onSelect}
-        disabled={isCurrent}
+        disabled={isDisabled}
         className={`
           w-full py-2 rounded-xl text-[11px] font-semibold transition-all
           ${
             isCurrent
               ? "bg-[var(--vyne-bg)] text-[var(--vyne-text-tertiary)] cursor-default"
+              : isComingSoon
+              ? "bg-[var(--vyne-bg)] text-[var(--vyne-text-tertiary)] cursor-not-allowed"
               : plan.highlighted
               ? "bg-[var(--vyne-accent)] text-white hover:opacity-90 shadow-sm"
               : "bg-[var(--vyne-bg-warm)] text-[var(--vyne-text-secondary)] hover:bg-[var(--vyne-border)]"
           }
         `}
       >
-        {isCurrent ? "Current Plan" : `Upgrade to ${plan.name}`}
+        {isCurrent ? "Current Plan" : isComingSoon ? "Coming soon" : `Switch to ${plan.name}`}
       </button>
     </div>
   );
@@ -139,8 +145,8 @@ export function UpgradeModal() {
                   Your workflows have been busy!
                 </p>
                 <p className="text-[10px] text-emerald-700 leading-snug">
-                  You've automated {creditsUsed.toLocaleString()} actions so far this month.
-                  That's hours of manual work saved. Upgrading means your agents never stop working.
+                  You&apos;ve automated {creditsUsed.toLocaleString()} actions so far this month.
+                  That&apos;s hours of manual work saved. Upgrading means your agents never stop working.
                 </p>
               </div>
             </div>
@@ -160,8 +166,8 @@ export function UpgradeModal() {
             {/* Footer */}
             <div className="px-6 py-3 border-t border-[var(--vyne-border)] bg-[var(--vyne-bg-warm)] text-center">
               <p className="text-[10px] text-[var(--vyne-text-tertiary)]">
-                Credits reset on the 1st of each month. Unused credits don't roll over.
-                Cancel anytime.
+                Credits reset on the 1st of each month. Unused credits don&apos;t roll over.
+                Paid plans aren&apos;t available yet — you won&apos;t be charged.
               </p>
             </div>
           </motion.div>

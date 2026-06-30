@@ -24,6 +24,9 @@ export function UserDropdown() {
 
   const remaining = creditsTotal - creditsUsed;
   const plan = PLANS.find((p) => p.tier === currentPlan);
+  // Guard against creditsTotal === 0 (NaN/Infinity) and clamp to 0–100.
+  const remainingRatio = creditsTotal > 0 ? remaining / creditsTotal : 0;
+  const remainingPercent = Math.min(100, Math.max(0, remainingRatio * 100));
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -105,8 +108,8 @@ export function UserDropdown() {
                 <div
                   className="h-full rounded-full transition-all duration-300"
                   style={{
-                    width: `${Math.max(2, (remaining / creditsTotal) * 100)}%`,
-                    backgroundColor: remaining / creditsTotal > 0.4 ? "var(--vyne-success)" : remaining / creditsTotal > 0.15 ? "var(--vyne-warning)" : "var(--vyne-error)",
+                    width: `${Math.max(2, remainingPercent)}%`,
+                    backgroundColor: remainingRatio > 0.4 ? "var(--vyne-success)" : remainingRatio > 0.15 ? "var(--vyne-warning)" : "var(--vyne-error)",
                   }}
                 />
               </div>

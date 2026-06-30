@@ -66,7 +66,7 @@ export function ToolConfigPanel({ nodeId }: { nodeId: string }) {
               Not connected to any agents yet.
             </p>
             <p className="text-[10px] text-[var(--vyne-text-tertiary)] mt-1">
-              Drag from this tool's handle to an agent to equip it.
+              Drag from this tool&apos;s handle to an agent to equip it.
             </p>
           </div>
         ) : (
@@ -129,7 +129,7 @@ export function ToolConfigPanel({ nodeId }: { nodeId: string }) {
             <p className="text-[10px] text-[var(--vyne-text-secondary)] leading-relaxed">
               Tools give agents new capabilities. Connect this tool to an agent by
               dragging from the <ArrowRight size={8} className="inline" /> handle on
-              the right to an agent's left handle. The agent will then be able to use
+              the right to an agent&apos;s left handle. The agent will then be able to use
               this tool when working on tasks.
             </p>
           </div>

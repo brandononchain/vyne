@@ -152,7 +152,8 @@ export function TaskConfigPanel({ nodeId }: { nodeId: string }) {
     updateNodeData(nodeId, { config: newConfig } as Partial<TaskNodeData>);
   };
 
-  const promptPreview = generateTaskPromptPreview(data);
+  // Only compute when shown — avoids rebuilding the payload every keystroke.
+  const promptPreview = showPromptPreview ? generateTaskPromptPreview(data) : "";
 
   return (
     <div className="space-y-6">

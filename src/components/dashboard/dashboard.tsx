@@ -116,12 +116,21 @@ function MetricPill({
 // ── Workflow card ─────────────────────────────────────────────────────
 function WorkflowCard({ workflow }: { workflow: DeployedWorkflow }) {
   const { toggleWorkflowStatus, removeDeployedWorkflow, setCurrentView } = useDeployStore();
-  const { loadTemplate } = useWorkflowStore();
+  const { loadWorkflowData } = useWorkflowStore();
 
   const handleOpenWorkflow = () => {
     if (workflow.sourceNodes && workflow.sourceNodes.length > 0) {
-      loadTemplate(workflow.sourceNodes, workflow.sourceEdges);
+      // Rehydrate the canvas AND track the workflow id so a subsequent
+      // save updates this workflow instead of creating a duplicate.
+      loadWorkflowData(workflow.sourceNodes, workflow.sourceEdges, workflow.id);
       setCurrentView("canvas");
+    }
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`Delete "${workflow.name}"? This can't be undone.`)) {
+      removeDeployedWorkflow(workflow.id);
     }
   };
 
@@ -176,7 +185,7 @@ function WorkflowCard({ workflow }: { workflow: DeployedWorkflow }) {
             {workflow.status === "live" ? <Pause size={13} /> : <Play size={13} />}
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); removeDeployedWorkflow(workflow.id); }}
+            onClick={handleDelete}
             className="w-7 h-7 rounded-lg flex items-center justify-center
                        text-[var(--vyne-text-tertiary)] hover:text-[var(--vyne-error)]
                        hover:bg-red-50 transition-colors"

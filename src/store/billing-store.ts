@@ -114,6 +114,10 @@ export const useBillingStore = create<BillingState>((set, get) => ({
   creditsTotal: 1000,
   usageHistory: [],
 
+  // NOTE: Local-only and non-authoritative. This mutates client state for the
+  // current session and is NOT wired to any payment/billing backend — it does
+  // not perform a real plan change, charge, or persist anything. Until a real
+  // backend exists, callers should not treat this as an actual upgrade.
   setPlan: (tier) => {
     const plan = PLANS.find((p) => p.tier === tier);
     if (plan) set({ currentPlan: tier, creditsTotal: plan.monthlyCredits });
@@ -125,6 +129,10 @@ export const useBillingStore = create<BillingState>((set, get) => ({
 
   creditsRemaining: () => get().creditsTotal - get().creditsUsed,
 
+  // NOTE: Local-only and non-authoritative. This adjusts in-memory credit
+  // counters for the current session only — it is NOT wired to a backend and
+  // does not persist usage or enforce real billing limits. The returned boolean
+  // reflects local state, not a server-side authorization.
   consumeCredits: (amount, workflowId, workflowName, type) => {
     const remaining = get().creditsRemaining();
     if (remaining < amount) return false;

@@ -8,8 +8,12 @@ import {
   Info,
   X,
 } from "lucide-react";
+import { useEffect } from "react";
 import { useWorkflowStore } from "@/store/workflow-store";
 import type { Toast } from "@/lib/types";
+
+// Auto-dismiss each toast after this delay (ms).
+const TOAST_TIMEOUT_MS = 5000;
 
 const iconMap = {
   success: CheckCircle2,
@@ -54,9 +58,19 @@ function ToastCard({ toast }: { toast: Toast }) {
   const Icon = iconMap[toast.type];
   const colors = colorMap[toast.type];
 
+  // Auto-dismiss after a timeout; manual dismiss (button) still works since it
+  // removes the toast, which unmounts this card and clears the timer.
+  useEffect(() => {
+    const timer = setTimeout(() => removeToast(toast.id), TOAST_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [toast.id, removeToast]);
+
   return (
     <motion.div
       layout
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       initial={{ opacity: 0, x: 80, scale: 0.9 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 80, scale: 0.9 }}
@@ -103,7 +117,12 @@ export function ToastContainer() {
   const toasts = useWorkflowStore((s) => s.toasts);
 
   return (
-    <div className="fixed top-[calc(var(--topbar-height)+12px)] right-4 z-[100] flex flex-col gap-2">
+    <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="false"
+      className="fixed top-[calc(var(--topbar-height)+12px)] right-4 z-[100] flex flex-col gap-2"
+    >
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <ToastCard key={toast.id} toast={toast} />
