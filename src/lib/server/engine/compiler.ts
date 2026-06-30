@@ -18,10 +18,16 @@
 
 import { ChatAnthropic } from "@langchain/anthropic";
 import { StateGraph, Annotation, END, START } from "@langchain/langgraph";
-import type { BaseMessage } from "@langchain/core/messages";
+import { ToolMessage, type BaseMessage, type AIMessage } from "@langchain/core/messages";
 import { resolveTools } from "./tools";
 import { buildMessageArray } from "./prompts";
 import { withRetry } from "./retry";
+import {
+  ANTHROPIC_MODEL,
+  MAX_TOKENS,
+  DEFAULT_TEMPERATURE,
+  MAX_TOOL_ITERATIONS,
+} from "./config";
 
 // ── Agent State ──────────────────────────────────────────────────────
 // The universal state that flows through the entire LangGraph.
@@ -99,6 +105,26 @@ interface CompiledWorkflowPayload {
   connections: { from: string; to: string; fromName: string; toName: string }[];
 }
 
+// ── Payload normalization ────────────────────────────────────────────
+// The frontend saves graphJson as { compiled, sourceNodes, sourceEdges },
+// but older drafts stored the compiled payload at the top level. This
+// unwraps either shape into the CompiledWorkflowPayload the engine expects.
+
+export function normalizeWorkflowPayload(
+  graphJson: unknown
+): CompiledWorkflowPayload {
+  const g = (graphJson ?? {}) as Record<string, unknown>;
+  const candidate =
+    g.compiled && typeof g.compiled === "object"
+      ? (g.compiled as Record<string, unknown>)
+      : g;
+
+  if (!Array.isArray(candidate.executionOrder)) {
+    throw new Error("Workflow graph is missing a compiled executionOrder");
+  }
+  return candidate as unknown as CompiledWorkflowPayload;
+}
+
 // ── Progress callback type ───────────────────────────────────────────
 
 export interface StepProgress {
@@ -115,7 +141,7 @@ export type OnStepProgress = (progress: StepProgress) => Promise<void>;
 
 // ── LLM Factory ──────────────────────────────────────────────────────
 
-function createLLM(temperature = 0.7) {
+function createLLM(temperature = DEFAULT_TEMPERATURE) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     throw new Error(
@@ -124,11 +150,90 @@ function createLLM(temperature = 0.7) {
   }
 
   return new ChatAnthropic({
-    model: "claude-sonnet-4-20250514",
+    model: ANTHROPIC_MODEL,
     anthropicApiKey: apiKey,
     temperature,
-    maxTokens: 4096,
+    maxTokens: MAX_TOKENS,
   });
+}
+
+// ── Text extraction ──────────────────────────────────────────────────
+// Anthropic responses may be a string or an array of content blocks.
+
+function extractText(content: AIMessage["content"]): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .filter(
+        (block): block is { type: "text"; text: string } =>
+          typeof block === "object" &&
+          block !== null &&
+          "type" in block &&
+          block.type === "text"
+      )
+      .map((block) => block.text)
+      .join("\n");
+  }
+  return JSON.stringify(content);
+}
+
+// ── ReAct tool loop ──────────────────────────────────────────────────
+// Invokes the model, executes any tool calls it returns, feeds the
+// results back, and repeats until the model stops calling tools (or we
+// hit MAX_TOOL_ITERATIONS). Without this loop, bound tools are never run.
+
+async function runWithToolLoop(
+  model: ReturnType<typeof createLLM> | ReturnType<ReturnType<typeof createLLM>["bindTools"]>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toolInstances: any[],
+  messages: BaseMessage[]
+): Promise<{ output: string; messages: BaseMessage[] }> {
+  const toolsByName = new Map(toolInstances.map((t) => [t.name, t]));
+  const conversation: BaseMessage[] = [...messages];
+
+  for (let iter = 0; iter < MAX_TOOL_ITERATIONS; iter++) {
+    const response = (await withRetry(() => model.invoke(conversation), {
+      maxRetries: 3,
+      baseDelayMs: 2000,
+    })) as AIMessage;
+
+    conversation.push(response);
+
+    const toolCalls = response.tool_calls ?? [];
+    if (toolCalls.length === 0) {
+      return { output: extractText(response.content), messages: conversation };
+    }
+
+    // Execute each requested tool call and feed the result back.
+    for (const call of toolCalls) {
+      const tool = toolsByName.get(call.name);
+      let result: string;
+      if (!tool) {
+        result = `Error: tool "${call.name}" is not available.`;
+      } else {
+        try {
+          const raw = await tool.invoke(call.args);
+          result = typeof raw === "string" ? raw : JSON.stringify(raw);
+        } catch (err) {
+          result = `Error executing ${call.name}: ${
+            err instanceof Error ? err.message : "unknown error"
+          }`;
+        }
+      }
+      conversation.push(
+        new ToolMessage({ content: result, tool_call_id: call.id ?? call.name })
+      );
+    }
+  }
+
+  // Exhausted the loop — do a final non-tool call to force a text answer.
+  const finalLLM = "bindTools" in model ? createLLM() : model;
+  const finalResponse = (await withRetry(() => finalLLM.invoke(conversation), {
+    maxRetries: 2,
+    baseDelayMs: 2000,
+  })) as AIMessage;
+  conversation.push(finalResponse);
+  return { output: extractText(finalResponse.content), messages: conversation };
 }
 
 // ── Node Factories ───────────────────────────────────────────────────
@@ -139,10 +244,12 @@ function createAgentNode(
   agent: CompiledAgent,
   task: CompiledTask | null,
   stepIndex: number,
+  /** Original canvas node id for this step (keys stepOutputs for fan-in). */
+  sourceNodeId: string,
+  /** Upstream canvas node ids whose outputs feed this step. */
+  upstreamNodeIds: { id: string; name: string }[],
   onProgress?: OnStepProgress
 ) {
-  const nodeId = `step_${stepIndex}`;
-
   return async (state: AgentStateType): Promise<Partial<AgentStateType>> => {
     // Report: step starting
     await onProgress?.({
@@ -154,7 +261,24 @@ function createAgentNode(
     });
 
     try {
-      // 1. Build the message array from persona + task config
+      // 1. Gather actual upstream outputs (DAG fan-in). When a step has
+      // multiple upstream nodes (convergence), label each so the model can
+      // tell them apart. Falls back to previousOutput for linear chains.
+      let upstreamInput: string | null = null;
+      if (upstreamNodeIds.length > 1) {
+        upstreamInput = upstreamNodeIds
+          .map((u) => {
+            const out = state.stepOutputs[u.id];
+            return out ? `### Input from "${u.name}"\n${out}` : null;
+          })
+          .filter(Boolean)
+          .join("\n\n");
+      } else if (upstreamNodeIds.length === 1) {
+        upstreamInput = state.stepOutputs[upstreamNodeIds[0].id] ?? state.previousOutput;
+      } else {
+        upstreamInput = state.previousOutput || null;
+      }
+
       const messages = buildMessageArray(
         {
           name: agent.name,
@@ -172,7 +296,7 @@ function createAgentNode(
               outputFormat: task.outputFormat,
             }
           : null,
-        state.previousOutput || null
+        upstreamInput
       );
 
       // 2. Create the model and bind tools
@@ -180,32 +304,8 @@ function createAgentNode(
       const tools = resolveTools(agent.tools);
       const model = tools.length > 0 ? baseLLM.bindTools(tools) : baseLLM;
 
-      // 3. Invoke with retry (handles 429 rate limits)
-      const response = await withRetry(
-        () => model.invoke(messages),
-        {
-          maxRetries: 3,
-          baseDelayMs: 2000,
-          onRetry: (attempt, error, delayMs) => {
-            console.warn(
-              `[Compiler] Retry ${attempt} for agent "${agent.name}": ${error.message} (waiting ${delayMs}ms)`
-            );
-          },
-        }
-      );
-
-      // 4. Extract the text output
-      const output =
-        typeof response.content === "string"
-          ? response.content
-          : Array.isArray(response.content)
-          ? response.content
-              .filter((block): block is { type: "text"; text: string } =>
-                typeof block === "object" && block !== null && "type" in block && block.type === "text"
-              )
-              .map((block) => block.text)
-              .join("\n")
-          : JSON.stringify(response.content);
+      // 3. Run the agent⇄tool loop (executes any tool calls, feeds results back)
+      const { output, messages: convo } = await runWithToolLoop(model, tools, messages);
 
       // Report: step complete
       await onProgress?.({
@@ -218,10 +318,10 @@ function createAgentNode(
       });
 
       return {
-        messages: [response],
+        messages: convo.slice(messages.length), // only the new turns
         previousOutput: output,
         currentStep: stepIndex + 1,
-        stepOutputs: { [nodeId]: output },
+        stepOutputs: { [sourceNodeId]: output },
       };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Unknown error";
@@ -283,10 +383,25 @@ export function compileToLangGraph(
 
   const nodeNames: string[] = [];
 
+  // Set of executable canvas node ids (agents + tasks) so we ignore
+  // non-executable upstreams (e.g. tool nodes) when gathering fan-in.
+  const execNodeIds = new Set(executionOrder.map((s) => s.nodeId));
+
+  // Real upstream nodes per step, derived from the canvas connections.
+  const upstreamFor = (nodeId: string) =>
+    (payload.connections ?? [])
+      .filter((c) => c.to === nodeId && execNodeIds.has(c.from))
+      .map((c) => ({ id: c.from, name: c.fromName }));
+
   for (let i = 0; i < executionOrder.length; i++) {
     const step = executionOrder[i];
     const nodeName = `step_${i}`;
     nodeNames.push(nodeName);
+
+    // Wrap progress callback with total steps count
+    const wrappedProgress: OnStepProgress | undefined = onProgress
+      ? async (p) => onProgress({ ...p, totalSteps: executionOrder.length })
+      : undefined;
 
     if (step.nodeType === "agent") {
       const agent = agentMap.get(step.nodeId);
@@ -297,14 +412,16 @@ export function compileToLangGraph(
       // Find if there's a downstream task assigned to this agent
       const assignedTask = tasks.find((t) => t.assignedAgentId === step.nodeId);
 
-      // Wrap progress callback with total steps count
-      const wrappedProgress: OnStepProgress | undefined = onProgress
-        ? async (p) => onProgress({ ...p, totalSteps: executionOrder.length })
-        : undefined;
-
       graph.addNode(
         nodeName,
-        createAgentNode(agent, assignedTask || null, i, wrappedProgress)
+        createAgentNode(
+          agent,
+          assignedTask || null,
+          i,
+          step.nodeId,
+          upstreamFor(step.nodeId),
+          wrappedProgress
+        )
       );
     } else if (step.nodeType === "task") {
       // Task nodes without an assigned agent use a generic executor
@@ -332,13 +449,16 @@ export function compileToLangGraph(
         icon: "Zap",
       };
 
-      const wrappedProgress: OnStepProgress | undefined = onProgress
-        ? async (p) => onProgress({ ...p, totalSteps: executionOrder.length })
-        : undefined;
-
       graph.addNode(
         nodeName,
-        createAgentNode(executorAgent, task, i, wrappedProgress)
+        createAgentNode(
+          executorAgent,
+          task,
+          i,
+          step.nodeId,
+          upstreamFor(step.nodeId),
+          wrappedProgress
+        )
       );
     }
   }

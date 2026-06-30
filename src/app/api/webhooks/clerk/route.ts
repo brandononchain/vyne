@@ -1,23 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { db } from "@/lib/server/db";
 
 // ── Clerk Webhook Handler ────────────────────────────────────────────
 
-interface ClerkWebhookEvent {
-  type: string;
-  data: {
-    id: string;
-    email_addresses: { email_address: string }[];
-    first_name: string | null;
-    last_name: string | null;
-    image_url: string | null;
-  };
+interface ClerkUserData {
+  id: string;
+  email_addresses: { email_address: string }[];
+  first_name: string | null;
+  last_name: string | null;
+  image_url: string | null;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as ClerkWebhookEvent;
-    const { type, data } = body;
+    // Verify the Svix signature against CLERK_WEBHOOK_SECRET. This REJECTS
+    // any unsigned/forged request — without it, anyone could create, update,
+    // or delete users by POSTing to this endpoint.
+    let evt;
+    try {
+      evt = await verifyWebhook(request);
+    } catch (err) {
+      console.error("[Clerk Webhook] Signature verification failed:", err);
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    const type = evt.type;
+    const data = evt.data as unknown as ClerkUserData;
 
     const primaryEmail = data.email_addresses?.[0]?.email_address;
     const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;

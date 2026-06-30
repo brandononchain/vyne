@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/server/db";
+import { parse, chatMessageSchema } from "@/lib/server/validation";
 
 // ── GET /api/chat — Load chat history ────────────────────────────────
 
@@ -43,8 +44,11 @@ export async function POST(request: NextRequest) {
     const user = await db.user.findUnique({ where: { clerkId } });
     if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    const body = await request.json();
-    const { role, content, metadata } = body;
+    const parsed = parse(chatMessageSchema, await request.json());
+    if (!parsed.ok) {
+      return NextResponse.json({ error: "Invalid request", details: parsed.error }, { status: 400 });
+    }
+    const { role, content, metadata } = parsed.data;
 
     const message = await db.chatMessage.create({
       data: {

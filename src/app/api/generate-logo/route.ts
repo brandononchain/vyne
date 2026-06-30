@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(request: NextRequest) {
   try {
+    // Require an authenticated session — this route calls a paid image API,
+    // so leaving it public is a cost-abuse / DoS vector.
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { prompt, index } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
-    
+
     if (!apiKey) {
       return NextResponse.json({ error: "GEMINI_API_KEY not set" }, { status: 500 });
     }
