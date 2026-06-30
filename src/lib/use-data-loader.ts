@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useBillingStore } from "@/store/billing-store";
 import { useDeployStore } from "@/store/deploy-store";
+import { useVyneMemory } from "@/store/vyne-memory";
 import type { DeployedWorkflow } from "@/store/deploy-store";
 
 /**
@@ -15,10 +16,14 @@ export function useDataLoader() {
   const loaded = useRef(false);
   const { setCredits, setPlan } = useBillingStore();
   const { setDeployedWorkflows } = useDeployStore();
+  const loadHistory = useVyneMemory((s) => s.loadHistory);
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn || loaded.current) return;
     loaded.current = true;
+
+    // Load persisted Vyne chat history.
+    loadHistory();
 
     // Load user profile + credits
     fetch("/api/user")
@@ -66,5 +71,5 @@ export function useDataLoader() {
         }
       })
       .catch((err) => console.error("[DataLoader] Failed to load workflows:", err));
-  }, [isLoaded, isSignedIn, setCredits, setPlan, setDeployedWorkflows]);
+  }, [isLoaded, isSignedIn, setCredits, setPlan, setDeployedWorkflows, loadHistory]);
 }

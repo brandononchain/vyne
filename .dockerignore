@@ -1,0 +1,18 @@
+# Keep the Docker build context small and avoid copying host artifacts
+# into the image (the build installs deps + builds fresh).
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+npm-debug.log*
+*.log
+.DS_Store
+.vscode
+.idea
+coverage
+.claude
+.agents
+.aidesigner
+scratchpad
