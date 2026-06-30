@@ -117,6 +117,20 @@ export function CopilotOmnibar() {
   const [bloomIndex, setBloomIndex] = useState(-1);
   const { nodes, edges, loadTemplate } = useWorkflowStore();
 
+  // Track the in-flight request and bloom timers so we can cancel them on
+  // unmount (prevents setState-after-unmount and a leaked interval).
+  const abortRef = useRef<AbortController | null>(null);
+  const bloomTimers = useRef<{ interval?: ReturnType<typeof setInterval>; timeout?: ReturnType<typeof setTimeout> }>({});
+
+  useEffect(() => {
+    const timers = bloomTimers.current;
+    return () => {
+      abortRef.current?.abort();
+      if (timers.interval) clearInterval(timers.interval);
+      if (timers.timeout) clearTimeout(timers.timeout);
+    };
+  }, []);
+
   // Keyboard shortcut: CMD+K or Ctrl+K
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -153,11 +167,16 @@ export function CopilotOmnibar() {
     setPhase("generating");
     setError(null);
 
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       const res = await fetch("/api/generate-workflow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: p, existingNodeCount: nodes.length }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -169,6 +188,7 @@ export function CopilotOmnibar() {
       setGenerated(workflow);
       setPhase("preview");
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return; // cancelled
       setError(err instanceof Error ? err.message : "Something went wrong");
       setPhase("input");
     }
@@ -195,7 +215,7 @@ export function CopilotOmnibar() {
       if (i >= newNodes.length) {
         clearInterval(interval);
         // Load all at once after bloom completes
-        setTimeout(() => {
+        bloomTimers.current.timeout = setTimeout(() => {
           loadTemplate(finalNodes, finalEdges);
           setPhase("idle");
           setGenerated(null);
@@ -204,6 +224,7 @@ export function CopilotOmnibar() {
         }, 400);
       }
     }, 280);
+    bloomTimers.current.interval = interval;
   }, [generated, nodes, edges, loadTemplate]);
 
   // ── Discard ────────────────────────────────────────────────────

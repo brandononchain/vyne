@@ -58,7 +58,7 @@ function ConfirmStep({
         {/* Key benefits */}
         {!isDowngrade && (
           <div className="bg-[var(--vyne-bg)] rounded-2xl p-4 mb-6 text-left">
-            <p className="text-[10px] font-semibold text-[var(--vyne-text-tertiary)] uppercase tracking-wider mb-2.5">What you'll get</p>
+            <p className="text-[10px] font-semibold text-[var(--vyne-text-tertiary)] uppercase tracking-wider mb-2.5">What you&apos;ll get</p>
             <div className="space-y-2">
               {plan.features.slice(0, 4).map((f) => (
                 <div key={f} className="flex items-center gap-2">
@@ -93,7 +93,7 @@ function ConfirmStep({
         <p className="text-[10px] text-[var(--vyne-text-tertiary)] mt-3">
           {isDowngrade
             ? "Changes take effect at the end of your current billing period."
-            : "You'll be charged the prorated difference immediately."}
+            : "Paid plans aren't available yet — you won't be charged."}
         </p>
       </div>
     </motion.div>
@@ -110,6 +110,10 @@ function PricingCard({
   isCurrent: boolean;
   onSelect: () => void;
 }) {
+  // Paid plans require a payment backend that isn't wired up yet, so they are
+  // not selectable. The free plan remains selectable (e.g. as a downgrade).
+  const isComingSoon = !isCurrent && plan.price > 0;
+  const isDisabled = isCurrent || isComingSoon;
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -151,18 +155,20 @@ function PricingCard({
 
       <button
         onClick={onSelect}
-        disabled={isCurrent}
+        disabled={isDisabled}
         className={`
           w-full py-3 rounded-2xl text-[12px] font-semibold transition-all flex items-center justify-center gap-1.5
           ${isCurrent
             ? "bg-[var(--vyne-bg)] text-[var(--vyne-text-tertiary)] cursor-default border border-[var(--vyne-border)]"
+            : isComingSoon
+            ? "bg-[var(--vyne-bg)] text-[var(--vyne-text-tertiary)] cursor-not-allowed border border-[var(--vyne-border)]"
             : plan.highlighted
             ? "bg-[var(--vyne-accent)] text-white hover:opacity-90 shadow-md"
             : "bg-[var(--vyne-bg-warm)] text-[var(--vyne-text-primary)] hover:bg-[var(--vyne-border)] border border-[var(--vyne-border)]"}
         `}
       >
-        {isCurrent ? "Current Plan" : plan.price === 0 ? "Downgrade" : "Upgrade"}
-        {!isCurrent && <ArrowRight size={12} />}
+        {isCurrent ? "Current Plan" : isComingSoon ? "Coming soon" : "Downgrade"}
+        {!isDisabled && <ArrowRight size={12} />}
       </button>
     </motion.div>
   );
