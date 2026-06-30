@@ -17,22 +17,66 @@
 
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { safeFetch } from "./net-guard";
+
+// Strip HTML to readable text (no DOM dependency in the worker).
+function htmlToText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 // ── Tool Definitions ─────────────────────────────────────────────────
 // Each tool is a LangChain tool that the Anthropic model can invoke.
-// In production, these would make real API calls. For the MVP, they
-// return mock responses to demonstrate the flow.
+//
+// REAL: web_search (Tavily, via TAVILY_API_KEY), url_reader, api_connector
+//       (both go through the SSRF-guarded safeFetch).
+// SIMULATED (still return mock data — need a provider/sandbox to be real):
+//       csv_reader, code_executor, email_client, text_editor,
+//       grammar_checker, chart_generator.
 
 const webSearchTool = tool(
   async ({ query }: { query: string }) => {
-    // TODO: Replace with Tavily, SerpAPI, or Brave Search
-    return JSON.stringify({
-      results: [
-        { title: `Top result for: ${query}`, url: "https://example.com/1", snippet: `Relevant information about ${query}...` },
-        { title: `${query} - Recent analysis`, url: "https://example.com/2", snippet: `Latest findings on ${query}...` },
-        { title: `${query} guide`, url: "https://example.com/3", snippet: `Comprehensive guide to ${query}...` },
-      ],
-    });
+    const apiKey = process.env.TAVILY_API_KEY;
+    if (!apiKey) {
+      return JSON.stringify({
+        error: "web_search is not configured. Set TAVILY_API_KEY to enable live search.",
+        results: [],
+      });
+    }
+    try {
+      const res = await safeFetch(
+        "https://api.tavily.com/search",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            api_key: apiKey,
+            query,
+            max_results: 5,
+            include_answer: true,
+            search_depth: "basic",
+          }),
+        },
+        { timeoutMs: 20000 }
+      );
+      const data = JSON.parse(res.text || "{}");
+      return JSON.stringify({
+        answer: data.answer ?? null,
+        results: (data.results ?? []).map((r: { title?: string; url?: string; content?: string }) => ({
+          title: r.title, url: r.url, snippet: r.content,
+        })),
+      });
+    } catch (err) {
+      return JSON.stringify({ error: `Search failed: ${err instanceof Error ? err.message : "unknown"}`, results: [] });
+    }
   },
   {
     name: "web_search",
@@ -45,12 +89,22 @@ const webSearchTool = tool(
 
 const urlReaderTool = tool(
   async ({ url }: { url: string }) => {
-    // TODO: Replace with actual web scraper (Cheerio, Puppeteer, or Firecrawl)
-    return JSON.stringify({
-      title: `Content from ${url}`,
-      text: `Extracted article content from ${url}. This would contain the full text of the page, cleaned of navigation and ads.`,
-      wordCount: 850,
-    });
+    try {
+      const res = await safeFetch(url, { headers: { "User-Agent": "VyneBot/1.0" } });
+      if (res.status >= 400) {
+        return JSON.stringify({ error: `Request failed with status ${res.status}`, url });
+      }
+      const titleMatch = res.text.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      const text = htmlToText(res.text).slice(0, 8000);
+      return JSON.stringify({
+        url,
+        title: titleMatch ? htmlToText(titleMatch[1]) : url,
+        text,
+        wordCount: text ? text.split(/\s+/).length : 0,
+      });
+    } catch (err) {
+      return JSON.stringify({ error: err instanceof Error ? err.message : "Failed to read URL", url });
+    }
   },
   {
     name: "url_reader",
@@ -128,13 +182,24 @@ const emailClientTool = tool(
 
 const apiConnectorTool = tool(
   async ({ url, method, body }: { url: string; method: string; body?: string }) => {
-    // TODO: Replace with actual HTTP client (fetch or axios)
-    return JSON.stringify({
-      status: 200,
-      headers: { "content-type": "application/json" },
-      body: { message: `Mock ${method} response from ${url}` },
-      durationMs: 145,
-    });
+    const start = Date.now();
+    try {
+      const res = await safeFetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", "User-Agent": "VyneBot/1.0" },
+        ...(body && method !== "GET" ? { body } : {}),
+      });
+      let parsed: unknown = res.text;
+      try { parsed = JSON.parse(res.text); } catch { /* keep raw text */ }
+      return JSON.stringify({
+        status: res.status,
+        headers: res.headers,
+        body: parsed,
+        durationMs: Date.now() - start,
+      });
+    } catch (err) {
+      return JSON.stringify({ error: err instanceof Error ? err.message : "Request failed", url });
+    }
   },
   {
     name: "api_connector",

@@ -14,6 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useWorkflowStore } from "@/store/workflow-store";
+import { useVyneMemory } from "@/store/vyne-memory";
 import { DEFAULT_AGENT_PERSONA, DEFAULT_TASK_CONFIG } from "@/lib/types";
 import type { VyneNode, VyneEdge, AgentNodeData, TaskNodeData } from "@/lib/types";
 
@@ -116,6 +117,13 @@ export function CopilotOmnibar() {
   const [error, setError] = useState<string | null>(null);
   const [bloomIndex, setBloomIndex] = useState(-1);
   const { nodes, edges, loadTemplate } = useWorkflowStore();
+  const recordMessage = useVyneMemory((s) => s.recordMessage);
+  const history = useVyneMemory((s) => s.messages);
+
+  // Most recent distinct user prompts, newest first (for the Recent list).
+  const recentPrompts = Array.from(
+    new Set(history.filter((m) => m.role === "user").map((m) => m.content).reverse())
+  ).slice(0, 4);
 
   // Track the in-flight request and bloom timers so we can cancel them on
   // unmount (prevents setState-after-unmount and a leaked interval).
@@ -166,6 +174,7 @@ export function CopilotOmnibar() {
     setPrompt(p);
     setPhase("generating");
     setError(null);
+    recordMessage({ id: `u-${Date.now()}`, role: "user", content: p, timestamp: Date.now() });
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -187,12 +196,21 @@ export function CopilotOmnibar() {
       const workflow: GeneratedWorkflow = await res.json();
       setGenerated(workflow);
       setPhase("preview");
+      recordMessage({
+        id: `v-${Date.now()}`,
+        role: "vyne",
+        content: `Designed "${workflow.title}" — ${workflow.nodes.length} node${workflow.nodes.length !== 1 ? "s" : ""}`,
+        timestamp: Date.now(),
+        status: "complete",
+        builtNodes: workflow.nodes.length,
+        action: nodes.length > 0 ? "expand" : "create",
+      });
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return; // cancelled
       setError(err instanceof Error ? err.message : "Something went wrong");
       setPhase("input");
     }
-  }, [prompt, nodes.length]);
+  }, [prompt, nodes.length, recordMessage]);
 
   // ── Accept workflow ────────────────────────────────────────────
 
@@ -347,6 +365,30 @@ export function CopilotOmnibar() {
                     <p className="text-[11px] text-[var(--vyne-text-tertiary)] text-center mt-3 italic">
                       Vyne is architecting your workflow...
                     </p>
+                  </div>
+                )}
+
+                {/* Recent prompts (from persisted Vyne history) */}
+                {phase === "input" && !prompt && recentPrompts.length > 0 && (
+                  <div className="border-t border-[var(--vyne-border)]/50">
+                    <p className="px-5 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--vyne-text-tertiary)]">
+                      Recent
+                    </p>
+                    <div className="px-3 pb-1">
+                      {recentPrompts.map((text) => (
+                        <button
+                          key={text}
+                          onClick={() => { setPrompt(text); handleGenerate(text); }}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-xl
+                                     text-left text-[13px] text-[var(--vyne-text-secondary)]
+                                     hover:bg-[var(--vyne-bg-warm)] hover:text-[var(--vyne-text-primary)]
+                                     transition-colors"
+                        >
+                          <RotateCcw size={13} className="shrink-0 text-[var(--vyne-text-tertiary)]" />
+                          <span className="truncate">{text}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
